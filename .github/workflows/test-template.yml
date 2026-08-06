@@ -1,0 +1,89 @@
+name: Test Template
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  render-and-test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: defaults
+            extra_args: ""
+          - name: no-redis
+            extra_args: "--data use_redis=false"
+          - name: custom-app-async
+            extra_args: "--data initial_app_name=widgets --data use_async=true"
+
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_DB: app
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7-alpine
+        ports: ["6379:6379"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+
+      - name: Set up Python
+        run: uv python install 3.14
+
+      - name: Install copier
+        run: uv tool install copier
+
+      - name: Render template (${{ matrix.name }})
+        run: >
+          uv tool run copier copy --defaults --force ${{ matrix.extra_args }}
+          "${{ github.workspace }}" "${{ github.workspace }}/../rendered-${{ matrix.name }}"
+
+      - name: Write .env for rendered project
+        working-directory: ${{ github.workspace }}/../rendered-${{ matrix.name }}
+        run: |
+          cat > .env <<EOF
+          DJANGO_SETTINGS_MODULE=config.settings.dev
+          DJANGO_SECRET_KEY=ci-secret-key
+          DJANGO_DEBUG=True
+          DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1
+          DATABASE_URL=postgres://postgres:postgres@localhost:5432/app
+          REDIS_URL=redis://localhost:6379/0
+          JWT_SIGNING_KEY=ci-jwt-key
+          JWT_ACCESS_TOKEN_LIFETIME_MIN=15
+          JWT_REFRESH_TOKEN_LIFETIME_DAYS=7
+          EOF
+
+      - name: Install rendered project deps
+        working-directory: ${{ github.workspace }}/../rendered-${{ matrix.name }}
+        run: uv sync --all-extras --dev
+
+      - name: Migrate
+        working-directory: ${{ github.workspace }}/../rendered-${{ matrix.name }}
+        run: uv run python manage.py migrate --noinput
+
+      - name: Pytest
+        working-directory: ${{ github.workspace }}/../rendered-${{ matrix.name }}
+        run: uv run pytest
+
+      - name: Ruff
+        working-directory: ${{ github.workspace }}/../rendered-${{ matrix.name }}
+        run: uv run ruff check .
+
+      - name: Pyright
+        working-directory: ${{ github.workspace }}/../rendered-${{ matrix.name }}
+        run: uv run pyright

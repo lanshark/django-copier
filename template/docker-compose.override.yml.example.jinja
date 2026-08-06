@@ -1,0 +1,19 @@
+# Copy to docker-compose.override.yml for local development.
+# docker-compose automatically merges this file in.
+
+services:
+  web:
+    build:
+      target: builder
+    command: ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+    volumes:
+      - .:/app
+    environment:
+      DJANGO_SETTINGS_MODULE: config.settings.dev
+{% if use_redis %}
+  worker:
+    volumes:
+      - .:/app
+    environment:
+      DJANGO_SETTINGS_MODULE: config.settings.dev
+{% endif %}

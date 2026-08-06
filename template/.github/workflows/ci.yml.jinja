@@ -1,0 +1,60 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+env:
+  DJANGO_SETTINGS_MODULE: config.settings.test
+  DJANGO_SECRET_KEY: ci-secret-key
+  JWT_SIGNING_KEY: ci-jwt-key
+  DATABASE_URL: postgres://postgres:postgres@localhost:5432/app
+{% if use_redis %}
+  REDIS_URL: redis://localhost:6379/0
+{% endif %}
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_DB: app
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+{% if use_redis %}
+      redis:
+        image: redis:7-alpine
+        ports: ["6379:6379"]
+{% endif %}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          version: "latest"
+
+      - name: Set up Python
+        run: uv python install {{ python_version }}
+
+      - name: Install dependencies
+        run: uv sync --all-extras --dev
+
+      - name: Run pre-commit (ruff + pyright)
+        run: uv run pre-commit run --all-files
+
+      - name: Run migrations
+        run: uv run python manage.py migrate --noinput
+
+      - name: Run tests
+        run: uv run pytest

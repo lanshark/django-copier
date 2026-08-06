@@ -1,0 +1,45 @@
+# {{ project_name }}
+
+Django + django-shinobi starter: Python {{ python_version }}, Django 5.2 LTS, Postgres 17,
+JWT auth, django-tasks{% if use_redis %} on RQ/Redis{% else %} (synchronous backend){% endif %}, PyTest, uv, ruff, pyright, Docker.
+
+## Quickstart
+
+```bash
+cp .env.example .env
+cp docker-compose.override.yml.example docker-compose.override.yml
+docker compose up --build
+```
+
+The API is live at `http://localhost:8000/api/v1/health`.
+
+## Local (non-Docker) dev
+
+```bash
+uv sync --all-extras --dev
+uv run pre-commit install
+uv run python manage.py migrate
+uv run python manage.py runserver
+```
+
+## Tests
+
+```bash
+uv run pytest
+```
+
+## Background tasks
+{% if use_redis %}
+Tasks are defined with `django_tasks.task()` (see `apps/{{ initial_app_name }}/tasks.py`)
+and run on the RQ backend against Redis. A `worker` service in `docker-compose.yml` runs
+`manage.py rqworker default --job-class django_tasks_rq.backend.Job`. In tests, the
+`ImmediateBackend` runs tasks synchronously so no Redis is needed in CI.
+{% else %}
+Tasks are defined with `django_tasks.task()` (see `apps/{{ initial_app_name }}/tasks.py`)
+and run synchronously in-process via `ImmediateBackend` — no Redis or worker process
+needed. This is fine for simple apps, but it blocks the request while the task runs.
+Regenerate this project with `use_redis=true` to switch to the RQ-backed async backend.
+{% endif %}
+This project uses `django-tasks` (the Django 6.0 `django.tasks` backport) so the
+migration path to native Django 6.0 LTS task support (~April 2027) should mainly involve
+an import-path swap.

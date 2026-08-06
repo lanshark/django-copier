@@ -1,0 +1,8 @@
+from .base import *  # noqa: F401,F403
+
+DEBUG = True
+{% if use_redis %}
+# Use synchronous (immediate) task backend locally if Redis isn't running,
+# uncomment to override the RQ backend from base.py:
+# TASKS = {"default": {"BACKEND": "django_tasks.backends.immediate.ImmediateBackend"}}
+{% endif %}

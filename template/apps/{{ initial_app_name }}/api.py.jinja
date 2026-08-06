@@ -1,0 +1,36 @@
+from django.contrib.auth import authenticate
+from ninja import NinjaAPI
+
+from .auth import JWTAuth, make_access_token, make_refresh_token
+from .schemas import HealthOut, TokenObtainIn, TokenPairOut
+from .tasks import example_background_task
+
+api = NinjaAPI(title="{{ project_name }} API", version="1.0.0")
+
+
+@api.get("/health", response=HealthOut, auth=None)
+def health(request):
+    return {"status": "ok"}
+
+
+@api.post("/auth/token", response=TokenPairOut, auth=None)
+def obtain_token(request, payload: TokenObtainIn):
+    user = authenticate(request, username=payload.username, password=payload.password)
+    if user is None:
+        return api.create_response(request, {"detail": "Invalid credentials"}, status=401)
+    return {
+        "access": make_access_token(user),
+        "refresh": make_refresh_token(user),
+    }
+
+
+@api.get("/me", auth=JWTAuth())
+def me(request):
+    return {"id": request.user.pk, "username": request.user.username}
+
+
+@api.post("/example-task", auth=JWTAuth())
+def trigger_example_task(request):
+    """Demonstrates enqueuing a django-tasks job onto the RQ backend."""
+    result = example_background_task.enqueue(request.user.pk)
+    return {"task_id": str(result.id)}

@@ -1,0 +1,6 @@
+__pycache__/
+*.py[cod]
+.venv/
+.copier-answers.yml
+.pytest_cache/
+.ruff_cache/

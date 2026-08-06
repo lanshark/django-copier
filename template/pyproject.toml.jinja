@@ -1,0 +1,67 @@
+[project]
+name = "{{ project_slug }}"
+version = "0.1.0"
+description = "{{ project_name }}"
+{% if author_name or author_email %}
+authors = [
+    { name = "{{ author_name }}", email = "{{ author_email }}" },
+]
+{% endif %}
+requires-python = ">={{ python_version }}"
+dependencies = [
+    "django>=5.2,<5.3",
+    "django-shinobi",
+    "psycopg[binary]>=3",
+    "python-decouple",
+    "dj-database-url",
+    "django-tasks",
+{% if use_redis %}
+    "django-tasks-rq",
+    "redis",
+{% endif %}
+    "pyjwt",
+{% if use_async %}
+    "uvicorn[standard]",
+{% else %}
+    "gunicorn",
+{% endif %}
+    "whitenoise",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "pytest-django",
+    "pytest-cov",
+    "model-bakery",
+    "faker",
+    "pre-commit",
+    "ruff",
+    "pyright",
+    "django-stubs",
+]
+
+[tool.uv]
+package = false
+
+[tool.ruff]
+target-version = "py{{ python_version.replace('.', '') }}"
+line-length = 100
+extend-exclude = ["migrations", "typings"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "DJ"]
+
+[tool.pyright]
+include = ["config", "apps"]
+exclude = ["**/migrations", "**/__pycache__"]
+pythonVersion = "{{ python_version }}"
+typeCheckingMode = "basic"
+reportMissingImports = true
+venvPath = "."
+venv = ".venv"
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "config.settings.test"
+python_files = ["tests.py", "test_*.py", "*_tests.py"]
+addopts = "--cov=apps --cov-report=term-missing"

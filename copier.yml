@@ -1,0 +1,63 @@
+_subdirectory: template
+_envops:
+  trim_blocks: true
+  lstrip_blocks: true
+  keep_trailing_newline: true
+_exclude:
+  - "copier.yml"
+  - "**/__pycache__"
+  - "**/*.pyc"
+  - ".venv"
+
+project_name:
+  type: str
+  help: Human-readable project name
+  default: My Project
+
+project_slug:
+  type: str
+  help: Python-safe slug (used in pyproject.toml, Docker image names, etc.)
+  default: "{{ project_name.lower().replace(' ', '-').replace('_', '-') }}"
+
+initial_app_name:
+  type: str
+  help: Name of the first Django app to scaffold
+  default: core
+
+author_name:
+  type: str
+  help: Your name (used in pyproject.toml authors)
+  default: ""
+
+author_email:
+  type: str
+  help: Your email (used in pyproject.toml authors)
+  default: ""
+
+python_version:
+  type: str
+  help: Python version to target
+  default: "3.14"
+  choices:
+    - "3.13"
+    - "3.14"
+
+use_redis:
+  type: bool
+  help: >-
+    Include Redis + django-tasks-rq for background tasks?
+    (No = synchronous ImmediateBackend, no extra infra needed)
+  default: true
+
+use_async:
+  type: bool
+  help: Serve via ASGI/uvicorn instead of WSGI/gunicorn?
+  default: false
+
+open_source_license:
+  type: str
+  help: License for the project
+  default: "None"
+  choices:
+    - "MIT"
+    - "None"
