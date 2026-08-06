@@ -1,0 +1,152 @@
+# Makefile for {{ project_name }}
+# Thin wrappers around `docker compose` and `manage.py` for common dev tasks.
+# Run `make help` to list available commands.
+
+SHELL := /bin/bash
+
+# Colors (degrade gracefully when there's no TTY)
+NC     = $(shell tput sgr0 2>/dev/null)
+BOLD   = $(shell tput bold 2>/dev/null)
+GREEN  = $(shell tput setaf 2 2>/dev/null)
+YELLOW = $(shell tput setaf 3 2>/dev/null)
+CYAN   = $(shell tput setaf 6 2>/dev/null)
+H1     = $(BOLD)$(CYAN)
+
+# Docker Compose command and services (match docker-compose.yml)
+COMPOSE     ?= docker compose
+WEB_SERVICE ?= web
+DB_SERVICE  ?= db
+SERVICE     ?=
+
+# Postgres connection for the psql helper (match docker-compose.yml defaults)
+POSTGRES_USER ?= postgres
+POSTGRES_DB   ?= app
+
+# Optional path passed to `make test` (e.g. `make test TEST_PATH=apps/core`)
+TEST_PATH ?=
+
+# manage.py runs inside the running web container by default.
+# Set LOCAL=1 to run against your local uv environment instead.
+ifeq ($(LOCAL),1)
+	MANAGE = uv run python manage.py
+else
+	MANAGE = $(COMPOSE) exec $(WEB_SERVICE) python manage.py
+endif
+
+.DEFAULT_GOAL := help
+
+## Docker
+.PHONY: build up up-build down stop start restart ps logs shell
+build: # Build the service images
+	@echo "Building images.."
+	@$(COMPOSE) build
+
+up: # Start all services in the background
+	@echo "Starting services.."
+	@$(COMPOSE) up -d
+	@echo "Web is live at $(GREEN)http://localhost:8000$(NC)"
+
+up-build: # Rebuild images and start services
+	@echo "Building and starting services.."
+	@$(COMPOSE) up -d --build
+
+down: # Stop and remove containers and networks
+	@echo "Stopping and removing services.."
+	@$(COMPOSE) down
+
+stop: # Stop services without removing them
+	@$(COMPOSE) stop
+
+start: # Start previously stopped services
+	@$(COMPOSE) start
+
+restart: # Restart services
+	@$(COMPOSE) restart
+
+ps: # List running services
+	@$(COMPOSE) ps
+
+logs: # Tail logs (optionally SERVICE=web)
+	@$(COMPOSE) logs -f $(SERVICE)
+
+shell: # Open a shell in the web container
+	@$(COMPOSE) exec $(WEB_SERVICE) /bin/sh
+
+## Django
+.PHONY: runserver migrate makemigrations migrations checkmigrations superuser collectstatic django-shell check
+runserver: # Run the Django dev server on port 8000
+	@echo "Starting the Django dev server.."
+	@$(MANAGE) runserver 0.0.0.0:8000
+
+migrate: # Apply database migrations
+	@echo "Applying migrations.."
+	@$(MANAGE) migrate
+
+makemigrations: # Create new migrations
+	@echo "Creating migrations.."
+	@$(MANAGE) makemigrations
+
+migrations: # Create and apply migrations
+	@$(MAKE) makemigrations
+	@$(MAKE) migrate
+
+checkmigrations: # Fail if model changes have no migration
+	@echo "Checking for missing migrations.."
+	@$(MANAGE) makemigrations --check --dry-run
+
+superuser: # Create a Django superuser
+	@$(MANAGE) createsuperuser
+
+collectstatic: # Collect static files
+	@$(MANAGE) collectstatic --noinput
+
+django-shell: # Open the Django shell
+	@$(MANAGE) shell
+
+check: # Run Django system checks
+	@$(MANAGE) check
+
+## Database
+.PHONY: psql dbshell
+psql: # Open a psql prompt in the db container
+	@$(COMPOSE) exec $(DB_SERVICE) psql -U $(POSTGRES_USER) -d $(POSTGRES_DB)
+
+dbshell: # Open Django's dbshell
+	@$(MANAGE) dbshell
+
+## Setup, tests & quality (run against the local uv environment)
+.PHONY: install test lint format typecheck
+install: # Install dependencies and pre-commit hooks
+	@echo "Syncing dependencies.."
+	@uv sync --all-extras --dev
+	@uv run pre-commit install
+
+test: # Run the test suite (optionally TEST_PATH=path/to/tests)
+	@echo "Running tests.."
+	@uv run pytest $(TEST_PATH)
+
+lint: # Lint with ruff
+	@uv run ruff check .
+
+format: # Auto-fix lint issues and format with ruff
+	@uv run ruff check --fix .
+	@uv run ruff format .
+
+typecheck: # Type-check with pyright
+	@uv run pyright
+
+## Help
+.PHONY: help
+help: # Show this help
+	@echo "$(H1){{ project_name }}$(NC) — make targets"
+	@grep -E '^(## |[a-zA-Z0-9_-]+:.*#)' $(MAKEFILE_LIST) \
+		| while IFS= read -r line; do \
+			if echo "$$line" | grep -q '^## '; then \
+				printf "\n$(H1)%s$(NC)\n" "$$(echo "$$line" | sed 's/^## //')"; \
+			else \
+				target=$$(echo "$$line" | cut -d: -f1); \
+				desc=$$(echo "$$line" | sed 's/^[^#]*# *//'); \
+				printf "  $(GREEN)%-16s$(NC) %s\n" "$$target" "$$desc"; \
+			fi; \
+		done
+	@echo ""
