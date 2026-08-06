@@ -12,4 +12,5 @@ All notable changes to this project are documented in this file.
 - Ship the repo's AGENTS.md coding standards to generated projects, single-sourced from the root AGENTS.md via a Jinja `{% include %}`
 - Add CLAUDE.md to generated projects, importing AGENTS.md via `@AGENTS.md`
 - Add a generic CHANGELOG.md to generated projects, titled from the project name
-- Add CLAUDE.md and CHANGELOG.md for the template repo itself
+- Add a generic Makefile to generated projects wrapping `docker compose` and `manage.py` (build/up/down, runserver, migrations, superuser, psql, tests, lint, typecheck, help)
+- Add CLAUDE.md and CHANGELOG.md for the template repo itself, and remove the rmove-central-specific root Makefile
