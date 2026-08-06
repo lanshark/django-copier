@@ -13,4 +13,4 @@ All notable changes to this project are documented in this file.
 - Add CLAUDE.md to generated projects, importing AGENTS.md via `@AGENTS.md`
 - Add a generic CHANGELOG.md to generated projects, titled from the project name
 - Add a generic Makefile to generated projects wrapping `docker compose` and `manage.py` (build/up/down, runserver, migrations, superuser, psql, tests, lint, typecheck, help)
-- Add CLAUDE.md and CHANGELOG.md for the template repo itself, and remove the rmove-central-specific root Makefile
+- Add CLAUDE.md and CHANGELOG.md for the template repo itself, and remove the example root Makefile
