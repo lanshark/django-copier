@@ -8,6 +8,18 @@ authors = [
 ]
 {% endif %}
 requires-python = ">={{ python_version }}"
+{% if open_source_license != "None" %}
+{% set license_spdx = {
+    "MIT": "MIT",
+    "BSD-3-Clause": "BSD-3-Clause",
+    "Apache-2.0": "Apache-2.0",
+    "GNU GPLv3": "GPL-3.0-or-later",
+    "GNU AGPLv3": "AGPL-3.0-or-later",
+    "Proprietary": "LicenseRef-Proprietary",
+}[open_source_license] %}
+license = "{{ license_spdx }}"
+license-files = ["LICENSE"]
+{% endif %}
 dependencies = [
     "django>=5.2,<5.3",
     "django-shinobi",

@@ -43,3 +43,15 @@ Regenerate this project with `use_redis=true` to switch to the RQ-backed async b
 This project uses `django-tasks` (the Django 6.0 `django.tasks` backport) so the
 migration path to native Django 6.0 LTS task support (~April 2027) should mainly involve
 an import-path swap.
+
+
+## License
+
+{% if open_source_license == "None" %}
+This project is not currently licensed for public use. All rights are reserved by the
+author unless a license is added.
+{% elif open_source_license == "Proprietary" %}
+Proprietary — all rights reserved. See [LICENSE](LICENSE).
+{% else %}
+Released under the {{ open_source_license }} license. See [LICENSE](LICENSE).
+{% endif %}

@@ -1,0 +1,13 @@
+{% if open_source_license == "MIT" %}
+{% include "template/licenses/mit.txt" %}
+{% elif open_source_license == "BSD-3-Clause" %}
+{% include "template/licenses/bsd-3-clause.txt" %}
+{% elif open_source_license == "Apache-2.0" %}
+{% include "template/licenses/apache-2.0.txt" %}
+{% elif open_source_license == "GNU GPLv3" %}
+{% include "template/licenses/gpl-3.0.txt" %}
+{% elif open_source_license == "GNU AGPLv3" %}
+{% include "template/licenses/agpl-3.0.txt" %}
+{% elif open_source_license == "Proprietary" %}
+{% include "template/licenses/proprietary.txt" %}
+{% endif %}

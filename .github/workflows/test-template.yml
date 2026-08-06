@@ -18,6 +18,8 @@ jobs:
             extra_args: "--data use_redis=false"
           - name: custom-app-async
             extra_args: "--data initial_app_name=widgets --data use_async=true"
+          - name: apache-license
+            extra_args: "--data open_source_license=Apache-2.0"
 
     services:
       postgres:
