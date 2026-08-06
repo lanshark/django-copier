@@ -22,7 +22,9 @@ license-files = ["LICENSE"]
 {% endif %}
 dependencies = [
     "django>=5.2,<5.3",
+{% if use_shinobi %}
     "django-shinobi",
+{% endif %}
     "psycopg[binary]>=3",
     "python-decouple",
     "dj-database-url",
@@ -31,7 +33,9 @@ dependencies = [
     "django-tasks-rq",
     "redis",
 {% endif %}
+{% if use_shinobi %}
     "pyjwt",
+{% endif %}
 {% if use_async %}
     "uvicorn[standard]",
 {% else %}

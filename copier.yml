@@ -57,6 +57,13 @@ use_async:
   help: Serve via ASGI/uvicorn instead of WSGI/gunicorn?
   default: false
 
+use_shinobi:
+  type: bool
+  help: >-
+    Include a django-shinobi (Django Ninja) API layer with JWT auth and an
+    example health/token/me API? (No = no API layer, admin site only)
+  default: true
+
 open_source_license:
   type: str
   help: License for the project
