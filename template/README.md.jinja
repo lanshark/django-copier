@@ -1,7 +1,7 @@
 # {{ project_name }}
 
-Django + django-shinobi starter: Python {{ python_version }}, Django 5.2 LTS, Postgres 17,
-JWT auth, django-tasks{% if use_redis %} on RQ/Redis{% else %} (synchronous backend){% endif %}, PyTest, uv, ruff, pyright, Docker.
+Django{% if use_shinobi %} + django-shinobi{% endif %} starter: Python {{ python_version }}, Django 5.2 LTS, Postgres 17,
+{% if use_shinobi %}JWT auth, {% endif %}django-tasks{% if use_redis %} on RQ/Redis{% else %} (synchronous backend){% endif %}, PyTest, uv, ruff, pyright, Docker.
 
 ## Quickstart
 
@@ -11,7 +11,11 @@ cp docker-compose.override.yml.example docker-compose.override.yml
 docker compose up --build
 ```
 
+{% if use_shinobi %}
 The API is live at `http://localhost:8000/api/v1/health`.
+{% else %}
+The admin site is at `http://localhost:8000/admin/`.
+{% endif %}
 
 ## Local (non-Docker) dev
 

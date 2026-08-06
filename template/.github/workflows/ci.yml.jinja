@@ -8,7 +8,9 @@ on:
 env:
   DJANGO_SETTINGS_MODULE: config.settings.test
   DJANGO_SECRET_KEY: ci-secret-key
+{% if use_shinobi %}
   JWT_SIGNING_KEY: ci-jwt-key
+{% endif %}
   DATABASE_URL: postgres://postgres:postgres@localhost:5432/app
 {% if use_redis %}
   REDIS_URL: redis://localhost:6379/0

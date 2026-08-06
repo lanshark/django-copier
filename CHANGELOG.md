@@ -4,7 +4,7 @@ All notable changes to this project are documented in this file.
 
 ## Next Release
 
--
+- Make the django-shinobi API layer optional via a `use_shinobi` question (default yes); when disabled the project ships with no API layer (admin site only) — dropping django-shinobi/pyjwt, the JWT settings and env vars, the `api`/`auth`/`schemas` modules, and the API tests, with an always-present smoke test keeping the suite non-empty
 
 ## 2026-08-06: Release-2026.08.06.01
 

@@ -20,6 +20,8 @@ jobs:
             extra_args: "--data initial_app_name=widgets --data use_async=true"
           - name: apache-license
             extra_args: "--data open_source_license=Apache-2.0"
+          - name: no-shinobi
+            extra_args: "--data use_shinobi=false"
 
     services:
       postgres:

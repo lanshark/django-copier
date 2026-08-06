@@ -20,7 +20,9 @@ INSTALLED_APPS = [
 {% if use_redis %}
     "django_rq",  # provides the `rqworker` management command used by django-tasks-rq
 {% endif %}
+{% if use_shinobi %}
     "ninja",  # django-shinobi
+{% endif %}
     "apps.{{ initial_app_name }}",
 ]
 
@@ -112,8 +114,10 @@ TASKS = {
     }
 }
 {% endif %}
+{% if use_shinobi %}
 
 # --- JWT (used by django-shinobi auth) ---
 JWT_SIGNING_KEY = config("JWT_SIGNING_KEY")
 JWT_ACCESS_TOKEN_LIFETIME_MIN = config("JWT_ACCESS_TOKEN_LIFETIME_MIN", default=15, cast=int)
 JWT_REFRESH_TOKEN_LIFETIME_DAYS = config("JWT_REFRESH_TOKEN_LIFETIME_DAYS", default=7, cast=int)
+{% endif %}
