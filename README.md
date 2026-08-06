@@ -1,4 +1,4 @@
-# Django + django-shinobi Copier Template
+# LANshark django-copier Template
 
 A [copier](https://copier.readthedocs.io/) template for generating Django + django-shinobi
 API projects: Python 3.13/3.14, Django 5.2 LTS, Postgres 17, JWT auth, django-tasks,
