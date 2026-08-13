@@ -1,0 +1,111 @@
+# Architecture
+
+## Status
+
+Early development. This document is the source of truth for architecture and
+conventions in {{ project_name }}. Update it as durable decisions are made, and
+capture the reasoning in a feature-scoped ADR.
+
+## Architecture Principles
+
+- Documents are the source of truth for intent and constraints.
+- Code changes are generated from documented feature requirements.
+- Decisions with lasting architectural impact belong in ADRs.
+- Prefer the smallest useful change and explicit contracts over broad restructuring.
+- Keep concerns separate and changes reviewable.
+
+## System Overview
+
+{{ project_name }} is a Django project built on:
+
+- Python {{ python_version }}, Django 5.2 LTS, PostgreSQL.
+{% if use_shinobi %}
+- A django-shinobi (Django Ninja) API layer with JWT auth under `apps/{{ initial_app_name }}/`.
+{% else %}
+- The Django admin site (no HTTP API layer in this project).
+{% endif %}
+- Background work via `django-tasks`{% if use_redis %}, running on the RQ/Redis backend with a dedicated worker{% else %} (synchronous in-process backend){% endif %}.
+- Tooling: uv, ruff, pyright, pytest, and Docker Compose.
+
+## Repository Layout
+
+```text
+.
+├── AGENTS.md                # how the AI coding agent works here (+ workflow)
+├── CLAUDE.md                # imports AGENTS.md for Claude Code
+├── vision.md                # product vision
+├── architecture.md          # this document
+├── Makefile                 # docker compose + manage.py task wrappers
+├── manage.py
+├── pyproject.toml
+├── docker-compose.yml
+├── docker/                  # Dockerfile + entrypoint
+├── config/
+│   ├── settings/            # base / dev / prod / test
+│   ├── urls.py
+│   ├── wsgi.py
+│   └── asgi.py
+├── apps/
+│   └── {{ initial_app_name }}/
+│       ├── AGENTS.md        # module-specific invariants
+│       ├── models.py
+│       ├── tasks.py
+{% if use_shinobi %}
+│       ├── api.py           # django-shinobi routes
+│       ├── auth.py          # JWT bearer auth
+│       ├── schemas.py
+{% endif %}
+│       └── tests/
+├── scripts/
+├── .agents/skills/          # Codex skill symlinks -> features/<slug>
+├── .claude/skills/          # Claude Code skill symlinks -> features/<slug>
+└── features/                # document-first workflow (this scaffold)
+    ├── _template/           # copy (or `make new-feature`) to start a feature
+    │   ├── feature.md        # current normative state
+    │   ├── SKILL.md          # feature-specific agent guidance
+    │   ├── history.md        # append-only prompt/impl/verification log
+    │   └── adr/
+    └── ai-driven-development/
+```
+
+## Development Flow
+
+1. Read `AGENTS.md`, `vision.md`, and `architecture.md`.
+2. Select or create the relevant `features/<feature-slug>/` folder (from `features/_template/`).
+3. Record the modifying prompt in `features/<feature-slug>/feature.md`.
+4. Update requirements, acceptance criteria, and open questions.
+5. Add or update ADRs for architectural choices.
+6. Implement only what the documents specify.
+7. Validate with focused tests or checks (`make test`, `make lint`, `make typecheck`).
+8. Record implementation and verification notes in the feature document.
+
+## Conventions
+
+- Python style, formatting, and code-change behavior are defined in `AGENTS.md`.
+- Lint with ruff and type-check with pyright; both must stay clean.
+- Test with pytest (`pytest-django`); keep tests close to the app they cover.
+- Run the project through the `Makefile` targets (`make up`, `make migrate`, `make test`, …).
+- Configuration is read from the environment via `python-decouple`; never commit secrets.
+
+## Feature Folder Convention
+
+Each feature folder contains:
+
+- `feature.md`: current normative state — purpose, requirements, acceptance criteria, constraints.
+- `SKILL.md`: instructions the AI coding agent follows when changing the feature; discoverable via `.agents/skills/` (Codex) and `.claude/skills/` (Claude Code).
+- `history.md`: append-only prompt log, implementation summaries, and verification results.
+- `adr/`: feature-scoped architecture decision records.
+
+Create a new feature with `make new-feature name=<slug>`, which copies `_template/`
+and adds both skill symlinks.
+
+## ADR Convention
+
+Use an ADR when a choice has durable consequences: runtime/framework/library/storage
+choices, data-model or API-contract decisions, security or privacy decisions,
+cross-feature abstractions, or significant tradeoffs. Each ADR records Title, Status,
+Date, Context, Decision, Consequences, and Alternatives Considered.
+
+## Open Architecture Questions
+
+- Question 1.

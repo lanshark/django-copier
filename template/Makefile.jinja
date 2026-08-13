@@ -135,6 +135,18 @@ format: # Auto-fix lint issues and format with ruff
 typecheck: # Type-check with pyright
 	@uv run pyright
 
+## Document-first workflow
+.PHONY: new-feature
+new-feature: # Scaffold a feature folder + skill symlinks (name=<slug>)
+	@if [ -z "$(name)" ]; then echo "Usage: make new-feature name=<feature-slug>"; exit 1; fi
+	@if [ -e "features/$(name)" ]; then echo "features/$(name) already exists"; exit 1; fi
+	@cp -R features/_template "features/$(name)"
+	@mkdir -p .agents/skills .claude/skills
+	@ln -sfn "../../features/$(name)" ".agents/skills/$(name)"
+	@ln -sfn "../../features/$(name)" ".claude/skills/$(name)"
+	@echo "Created $(GREEN)features/$(name)$(NC) with .agents/skills and .claude/skills symlinks"
+	@echo "Next: fill in features/$(name)/feature.md and record the prompt in history.md"
+
 ## Help
 .PHONY: help
 help: # Show this help

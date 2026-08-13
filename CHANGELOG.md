@@ -5,6 +5,7 @@ All notable changes to this project are documented in this file.
 ## Next Release
 
 - Make the django-shinobi API layer optional via a `use_shinobi` question (default yes); when disabled the project ships with no API layer (admin site only) — dropping django-shinobi/pyjwt, the JWT settings and env vars, the `api`/`auth`/`schemas` modules, and the API tests, with an always-present smoke test keeping the suite non-empty
+- Add a document-first / AI-driven development scaffold to every generated project: `vision.md`, a Django-tailored `architecture.md`, an `apps/<app>/AGENTS.md` module doc, and a `features/` folder (each feature has `feature.md` for current state, `history.md` for the append-only prompt log, `SKILL.md`, and `adr/`). Feature skills are discoverable by both Codex (`.agents/skills/`) and Claude Code (`.claude/skills/`) via symlinks; the workflow and a source-of-truth order are merged into `AGENTS.md`, and `make new-feature name=<slug>` scaffolds a feature with both symlinks
 
 ## 2026-08-06: Release-2026.08.06.01
 

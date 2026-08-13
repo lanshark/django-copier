@@ -1,1 +1,57 @@
 {% include "AGENTS.md" %}
+
+## Document-First Development Workflow
+
+This project uses document-first, AI-assisted development. Treat the repository's
+documents as the source of truth for product intent, architecture, and feature
+behavior. Read `vision.md`, `architecture.md`, and the relevant
+`features/<feature-slug>/feature.md` and `SKILL.md` before modifying code.
+
+For every prompt that changes code or shipped behavior:
+
+1. Identify the relevant feature folder in `features/`. If none exists, create one with
+   `make new-feature name=<slug>` (copies `features/_template/` and adds the skill
+   symlinks).
+2. Record the prompt in that feature's append-only `history.md` before editing code.
+3. Update the feature's `feature.md` (requirements, acceptance criteria, constraints).
+4. Update the feature's `SKILL.md` when its development guidance changes.
+5. Add or update ADRs in the feature's `adr/` folder for durable architectural decisions.
+6. Generate the code change from the documented requirements.
+7. Run the smallest useful validation, then record the implementation summary and
+   verification result in `history.md`.
+
+### Repository Documents
+
+- `vision.md`: product vision, goals, scope, success criteria, and open product questions.
+- `architecture.md`: architecture, repository layout, conventions, and cross-feature constraints.
+- `AGENTS.md`: how the AI coding agent should work in this repository (this file).
+- `apps/<app>/AGENTS.md`: module-specific invariants layered over these root instructions.
+- `features/<feature-slug>/feature.md`: current feature purpose, requirements, acceptance criteria, and constraints.
+- `features/<feature-slug>/history.md`: append-only prompts, implementation summaries, and verification results.
+- `features/<feature-slug>/SKILL.md`: feature-specific guidance, discoverable via `.agents/skills/` (Codex) and `.claude/skills/` (Claude Code).
+- `features/<feature-slug>/adr/`: feature-scoped architecture decision records.
+
+### Source-of-Truth Order
+
+When sources disagree, use this order and reconcile stale documents in the same change:
+
+1. Code and automated tests define current executable behavior.
+2. The relevant `feature.md` defines current intended feature behavior.
+3. Accepted ADRs define the rationale and constraints of durable decisions.
+4. `architecture.md` defines the cross-feature overview and project-wide conventions.
+5. `history.md` preserves non-normative historical context.
+
+Keep current normative behavior in `feature.md`; keep historical records in `history.md`.
+
+### Naming Conventions
+
+- Feature folders use kebab-case, e.g. `features/user-onboarding/`.
+- Feature documents are `feature.md`; feature histories are `history.md`; feature skills are `SKILL.md`.
+- ADR files use a numeric prefix and kebab-case title, e.g. `0001-use-celery-for-tasks.md`.
+- ADR numbering is scoped to each feature folder.
+
+### When to Ask
+
+Ask before implementing when product intent is ambiguous, when a change needs a major
+technology or data-model choice not already covered by `architecture.md` or an ADR, or
+when the request conflicts with existing vision, architecture, or feature documents.

@@ -1,16 +1,19 @@
 _subdirectory: template
+# Keep the .agents/skills and .claude/skills entries as symlinks to the feature
+# folders instead of dereferencing them into copies.
+_preserve_symlinks: true
 _envops:
   trim_blocks: true
   lstrip_blocks: true
   keep_trailing_newline: true
 _exclude:
-  - "copier.yml"
-  - "**/__pycache__"
-  - "**/*.pyc"
-  - ".venv"
+  - 'copier.yml'
+  - '**/__pycache__'
+  - '**/*.pyc'
+  - '.venv'
   # Raw license texts are pulled in via {% include %} by the LICENSE file;
   # they must not be copied into the rendered project themselves.
-  - "licenses"
+  - 'licenses'
 
 project_name:
   type: str
@@ -30,20 +33,19 @@ initial_app_name:
 author_name:
   type: str
   help: Your name (used in pyproject.toml authors)
-  default: ""
+  default: ''
 
 author_email:
   type: str
   help: Your email (used in pyproject.toml authors)
-  default: ""
+  default: ''
 
 python_version:
   type: str
   help: Python version to target
-  default: "3.14"
+  default: '3.14'
   choices:
-    - "3.13"
-    - "3.14"
+    - '3.14'
 
 use_redis:
   type: bool
@@ -67,24 +69,24 @@ use_shinobi:
 open_source_license:
   type: str
   help: License for the project
-  default: "MIT"
+  default: 'MIT'
   choices:
-    "MIT": "MIT"
-    "BSD 3-Clause": "BSD-3-Clause"
-    "Apache License 2.0": "Apache-2.0"
-    "GNU GPL v3": "GNU GPLv3"
-    "GNU AGPL v3": "GNU AGPLv3"
-    "Proprietary (all rights reserved)": "Proprietary"
-    "None": "None"
+    'MIT': 'MIT'
+    'BSD 3-Clause': 'BSD-3-Clause'
+    'Apache License 2.0': 'Apache-2.0'
+    'GNU GPL v3': 'GNU GPLv3'
+    'GNU AGPL v3': 'GNU AGPLv3'
+    'Proprietary (all rights reserved)': 'Proprietary'
+    'None': 'None'
 
 copyright_holder:
   type: str
   help: Name to appear in the copyright notice
-  default: "{{ author_name if author_name else project_name }}"
+  default: '{{ author_name if author_name else project_name }}'
   when: "{{ open_source_license not in ['None', 'Apache-2.0', 'GNU GPLv3', 'GNU AGPLv3'] }}"
 
 copyright_year:
   type: str
   help: Year to appear in the copyright notice
-  default: "2026"
+  default: '2026'
   when: "{{ open_source_license not in ['None', 'Apache-2.0', 'GNU GPLv3', 'GNU AGPLv3'] }}"
