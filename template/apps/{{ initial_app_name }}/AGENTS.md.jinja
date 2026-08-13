@@ -1,0 +1,24 @@
+# {{ initial_app_name }} App Instructions
+
+These instructions supplement the repository root `AGENTS.md` for work under
+`apps/{{ initial_app_name }}/`.
+
+## Scope
+
+- Keep this app focused on its own domain. Project-wide configuration belongs in
+  `config/`, not here.
+- Keep this app's models,{% if use_shinobi %} API routes,{% endif %} background tasks, and tests co-located in this folder.
+
+## Implementation Invariants
+
+- Change models and add their migration in the same change; keep `make checkmigrations` clean.
+{% if use_shinobi %}
+- Keep API request/response shapes in `schemas.py` and bearer auth in `auth.py`; register routes in `api.py`.
+{% endif %}
+- Define background work with `django_tasks.task()` in `tasks.py`.
+- Read configuration from the environment via `python-decouple`; never hardcode secrets.
+
+## Validation
+
+- Write or update tests before production code for behavior changes.
+- Run `make test`, `make lint`, and `make typecheck` (or their `uv run` equivalents).
