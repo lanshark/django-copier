@@ -1,0 +1,16 @@
+"""Minimal Django settings for running this app's test suite."""
+
+SECRET_KEY = "test-secret-key"
+DEBUG = True
+USE_TZ = True
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+DATABASES = {
+    "default": {"ENGINE": "django.db.backends.sqlite3", "NAME": ":memory:"},
+}
+
+INSTALLED_APPS = [
+    "django.contrib.contenttypes",
+    "django.contrib.auth",
+    "{{ package_name }}",
+]

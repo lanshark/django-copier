@@ -9,3 +9,6 @@ staticfiles/
 htmlcov/
 .mypy_cache/
 .ruff_cache/
+{% if project_type == "reusable_app" %}
+dist/
+{% endif %}

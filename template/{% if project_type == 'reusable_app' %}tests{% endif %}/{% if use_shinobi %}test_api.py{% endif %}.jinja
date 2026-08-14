@@ -1,0 +1,10 @@
+from ninja.testing import TestClient
+
+from {{ package_name }}.api import router
+
+
+def test_ping():
+    client = TestClient(router)
+    response = client.get("/ping")
+    assert response.status_code == 200
+    assert response.json() == {"pong": True}

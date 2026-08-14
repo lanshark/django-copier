@@ -1,0 +1,17 @@
+from django.contrib import admin
+from django.urls import path
+{% if use_shinobi %}
+from ninja import NinjaAPI
+
+from {{ package_name }}.api import router
+
+api = NinjaAPI()
+api.add_router("/{{ package_name }}/", router)
+{% endif %}
+
+urlpatterns = [
+    path("admin/", admin.site.urls),
+{% if use_shinobi %}
+    path("api/", api.urls),
+{% endif %}
+]

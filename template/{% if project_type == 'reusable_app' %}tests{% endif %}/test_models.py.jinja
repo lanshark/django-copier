@@ -1,0 +1,13 @@
+from django.apps import apps
+
+from {{ package_name }}.models import TimeStampedModel
+
+
+def test_app_is_installed():
+    assert apps.is_installed("{{ package_name }}")
+
+
+def test_timestamped_model_is_abstract():
+    assert TimeStampedModel._meta.abstract
+    field_names = {field.name for field in TimeStampedModel._meta.get_fields()}
+    assert {"created_at", "updated_at"} <= field_names
