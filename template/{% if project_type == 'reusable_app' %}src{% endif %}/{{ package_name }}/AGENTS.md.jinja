@@ -1,0 +1,27 @@
+# {{ package_name }} — Package Instructions
+
+These instructions supplement the repository root `AGENTS.md` for work under
+`src/{{ package_name }}/`.
+
+## Scope
+
+- This is a reusable Django app installed into host projects via `INSTALLED_APPS`.
+  Do not add project-only concerns (settings, WSGI/ASGI, deployment) here.
+- Keep the public import surface small and stable; it is the package's contract.
+{% if use_shinobi %}
+- Expose API endpoints as a django-shinobi `Router` in `api.py` for the host to mount;
+  do not create a project-owned `NinjaAPI` here.
+{% endif %}
+
+## Implementation Invariants
+
+- Ship migrations with the package; add a migration in the same change as a model change.
+- Keep the package importable without a configured Django project at import time
+  (no settings access at module import).
+- Keep the app type-clean (`py.typed` ships); run pyright.
+
+## Validation
+
+- Write or update tests in `tests/` (pytest-django, sqlite) before production code.
+- Run `make test`, `make lint`, and `make typecheck`.
+- Run `make build` when packaging or the public surface changes.
