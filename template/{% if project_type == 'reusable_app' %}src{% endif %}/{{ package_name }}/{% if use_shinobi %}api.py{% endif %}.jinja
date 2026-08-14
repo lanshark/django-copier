@@ -1,0 +1,11 @@
+from ninja import Router
+
+from .schemas import PingOut
+
+router = Router()
+
+
+@router.get("/ping", response=PingOut)
+def ping(request):
+    """Example endpoint. Mount this router on the host project's NinjaAPI."""
+    return {"pong": True}

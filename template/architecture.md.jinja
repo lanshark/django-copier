@@ -16,6 +16,7 @@ capture the reasoning in a feature-scoped ADR.
 
 ## System Overview
 
+{% if project_type == 'full_project' %}
 {{ project_name }} is a Django project built on:
 
 - Python {{ python_version }}, Django 5.2 LTS, PostgreSQL.
@@ -26,9 +27,21 @@ capture the reasoning in a feature-scoped ADR.
 {% endif %}
 - Background work via `django-tasks`{% if use_redis %}, running on the RQ/Redis backend with a dedicated worker{% else %} (synchronous in-process backend){% endif %}.
 - Tooling: uv, ruff, pyright, pytest, and Docker Compose.
+{% else %}
+{{ project_name }} is a reusable Django app built on:
+
+- Python {{ python_version }}, Django 5.2 LTS.
+- A `src/{{ package_name }}/` package installed into a host project's `INSTALLED_APPS`.
+{% if use_shinobi %}
+- A django-shinobi (Django Ninja) `Router` the host project mounts on its own `NinjaAPI`.
+{% endif %}
+- Tests against a bundled `tests/` settings module (sqlite) via pytest-django.
+- Packaging with hatchling (src layout); tooling: uv, ruff, pyright, pytest.
+{% endif %}
 
 ## Repository Layout
 
+{% if project_type == 'full_project' %}
 ```text
 .
 ├── AGENTS.md                # how the AI coding agent works here (+ workflow)
@@ -67,6 +80,40 @@ capture the reasoning in a feature-scoped ADR.
     │   └── adr/
     └── ai-driven-development/
 ```
+{% else %}
+```text
+.
+├── AGENTS.md                # how the AI coding agent works here (+ workflow)
+├── CLAUDE.md                # imports AGENTS.md for Claude Code
+├── vision.md                # product vision
+├── architecture.md          # this document
+├── Makefile                 # uv dev + packaging task wrappers
+├── pyproject.toml           # hatchling build; deps; tool config
+├── src/
+│   └── {{ package_name }}/
+│       ├── AGENTS.md        # module-specific invariants
+│       ├── apps.py
+│       ├── models.py
+│       ├── admin.py
+{% if use_shinobi %}
+│       ├── api.py           # django-shinobi Router
+│       ├── schemas.py
+{% endif %}
+│       ├── migrations/
+│       └── py.typed
+├── tests/                   # pytest-django settings + tests (sqlite)
+├── example/                 # runnable project that installs this app
+├── .agents/skills/          # Codex skill symlinks -> features/<slug>
+├── .claude/skills/          # Claude Code skill symlinks -> features/<slug>
+└── features/                # document-first workflow (this scaffold)
+    ├── _template/           # copy (or `make new-feature`) to start a feature
+    │   ├── feature.md        # current normative state
+    │   ├── SKILL.md          # feature-specific agent guidance
+    │   ├── history.md        # append-only prompt/impl/verification log
+    │   └── adr/
+    └── ai-driven-development/
+```
+{% endif %}
 
 ## Development Flow
 
@@ -84,8 +131,13 @@ capture the reasoning in a feature-scoped ADR.
 - Python style, formatting, and code-change behavior are defined in `AGENTS.md`.
 - Lint with ruff and type-check with pyright; both must stay clean.
 - Test with pytest (`pytest-django`); keep tests close to the app they cover.
+{% if project_type == 'full_project' %}
 - Run the project through the `Makefile` targets (`make up`, `make migrate`, `make test`, …).
 - Configuration is read from the environment via `python-decouple`; never commit secrets.
+{% else %}
+- Run tasks through the `Makefile` targets (`make test`, `make lint`, `make build`, …).
+- Ship migrations with the package; keep the public import surface stable and typed (`py.typed`).
+{% endif %}
 
 ## Feature Folder Convention
 

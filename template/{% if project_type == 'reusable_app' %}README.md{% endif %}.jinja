@@ -1,0 +1,71 @@
+# {{ project_name }}
+
+A reusable Django app{% if use_shinobi %} with a django-shinobi (Django Ninja) API{% endif %} —
+Python {{ python_version }}, Django 5.2 LTS. Install it into any Django project.
+
+## Install
+
+```bash
+pip install {{ project_slug }}
+```
+
+Add the app to `INSTALLED_APPS`:
+
+```python
+INSTALLED_APPS = [
+    # ...
+    "{{ package_name }}",
+]
+```
+{% if use_shinobi %}
+
+Mount the API router on your project's `NinjaAPI` (or include it in your URLs):
+
+```python
+from ninja import NinjaAPI
+from {{ package_name }}.api import router as {{ package_name }}_router
+
+api = NinjaAPI()
+api.add_router("/{{ package_name }}/", {{ package_name }}_router)
+```
+{% endif %}
+
+Apply migrations:
+
+```bash
+python manage.py migrate
+```
+
+## Local development
+
+```bash
+uv sync --all-extras --dev
+uv run pre-commit install
+make test        # pytest against the bundled tests/ settings (sqlite)
+make lint        # ruff
+make typecheck   # pyright
+```
+
+The bundled `example/` project installs this app so you can try it end to end:
+
+```bash
+make runserver   # migrates + runs the example project
+```
+
+## Packaging
+
+```bash
+make build       # build sdist + wheel into dist/
+make publish     # build + upload to PyPI (uv publish)
+```
+
+## License
+
+{% if open_source_license == "None" %}
+This project is not currently licensed for public use. All rights are reserved by the
+author unless a license is added.
+{% elif open_source_license == "Proprietary" %}
+Proprietary — all rights reserved. See [LICENSE](LICENSE).
+{% else %}
+Released under the {{ open_source_license }} license. See [LICENSE](LICENSE).
+{% endif %}

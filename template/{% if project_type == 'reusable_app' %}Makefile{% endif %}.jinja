@@ -1,0 +1,89 @@
+# Makefile for {{ project_name }}
+# Thin wrappers around uv for developing and packaging this reusable Django app.
+# Run `make help` to list available commands.
+
+SHELL := /bin/bash
+
+# Colors (degrade gracefully when there's no TTY)
+NC     = $(shell tput sgr0 2>/dev/null)
+BOLD   = $(shell tput bold 2>/dev/null)
+GREEN  = $(shell tput setaf 2 2>/dev/null)
+YELLOW = $(shell tput setaf 3 2>/dev/null)
+CYAN   = $(shell tput setaf 6 2>/dev/null)
+H1     = $(BOLD)$(CYAN)
+
+# Optional path passed to `make test` (e.g. `make test TEST_PATH=tests/test_models.py`)
+TEST_PATH ?=
+
+.DEFAULT_GOAL := help
+
+## Setup, tests & quality
+.PHONY: install test lint format typecheck
+install: # Install dependencies and pre-commit hooks
+	@echo "Syncing dependencies.."
+	@uv sync --all-extras --dev
+	@uv run pre-commit install
+
+test: # Run the test suite (optionally TEST_PATH=path/to/tests)
+	@echo "Running tests.."
+	@uv run pytest $(TEST_PATH)
+
+lint: # Lint with ruff
+	@uv run ruff check .
+
+format: # Auto-fix lint issues and format with ruff
+	@uv run ruff check --fix .
+	@uv run ruff format .
+
+typecheck: # Type-check with pyright
+	@uv run pyright
+
+## Django
+.PHONY: makemigrations runserver
+makemigrations: # Create migrations for this app (uses tests settings)
+	@uv run python -m django makemigrations {{ package_name }} --settings=tests.settings
+
+runserver: # Run the bundled example project
+	@cd example && uv run python manage.py migrate && uv run python manage.py runserver
+
+## Packaging
+.PHONY: build publish
+build: # Build sdist + wheel into dist/
+	@echo "Building distributions.."
+	@uv build
+
+publish: # Publish to PyPI with uv (needs credentials / trusted publishing)
+	@if [ -z "$(FORCE_YES)" ]; then \
+		read -p "Publish {{ project_slug }} to PyPI? [y/N] " -n 1 -r; echo ""; \
+		[[ $$REPLY =~ ^[Yy]$$ ]] || { echo "Aborted."; exit 1; }; \
+	fi
+	@uv build
+	@uv publish
+
+## Document-first workflow
+.PHONY: new-feature
+new-feature: # Scaffold a feature folder + skill symlinks (name=<slug>)
+	@if [ -z "$(name)" ]; then echo "Usage: make new-feature name=<feature-slug>"; exit 1; fi
+	@if [ -e "features/$(name)" ]; then echo "features/$(name) already exists"; exit 1; fi
+	@cp -R features/_template "features/$(name)"
+	@mkdir -p .agents/skills .claude/skills
+	@ln -sfn "../../features/$(name)" ".agents/skills/$(name)"
+	@ln -sfn "../../features/$(name)" ".claude/skills/$(name)"
+	@echo "Created $(GREEN)features/$(name)$(NC) with .agents/skills and .claude/skills symlinks"
+	@echo "Next: fill in features/$(name)/feature.md and record the prompt in history.md"
+
+## Help
+.PHONY: help
+help: # Show this help
+	@echo "$(H1){{ project_name }}$(NC) — make targets"
+	@grep -E '^(## |[a-zA-Z0-9_-]+:.*#)' $(MAKEFILE_LIST) \
+		| while IFS= read -r line; do \
+			if echo "$$line" | grep -q '^## '; then \
+				printf "\n$(H1)%s$(NC)\n" "$$(echo "$$line" | sed 's/^## //')"; \
+			else \
+				target=$$(echo "$$line" | cut -d: -f1); \
+				desc=$$(echo "$$line" | sed 's/^[^#]*# *//'); \
+				printf "  $(GREEN)%-16s$(NC) %s\n" "$$target" "$$desc"; \
+			fi; \
+		done
+	@echo ""

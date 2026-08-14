@@ -91,3 +91,51 @@ jobs:
       - name: Pyright
         working-directory: ${{ github.workspace }}/../rendered-${{ matrix.name }}
         run: uv run pyright
+
+  render-and-test-app:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: app-defaults
+            extra_args: "--data project_type=reusable_app"
+          - name: app-no-shinobi
+            extra_args: "--data project_type=reusable_app --data use_shinobi=false"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+
+      - name: Set up Python
+        run: uv python install 3.14
+
+      - name: Install copier
+        run: uv tool install copier
+
+      - name: Render template (${{ matrix.name }})
+        run: >
+          uv tool run copier copy --defaults --force ${{ matrix.extra_args }}
+          "${{ github.workspace }}" "${{ github.workspace }}/../rendered-${{ matrix.name }}"
+
+      - name: Install rendered app deps
+        working-directory: ${{ github.workspace }}/../rendered-${{ matrix.name }}
+        run: uv sync --all-extras --dev
+
+      - name: Pytest
+        working-directory: ${{ github.workspace }}/../rendered-${{ matrix.name }}
+        run: uv run pytest
+
+      - name: Ruff
+        working-directory: ${{ github.workspace }}/../rendered-${{ matrix.name }}
+        run: uv run ruff check .
+
+      - name: Pyright
+        working-directory: ${{ github.workspace }}/../rendered-${{ matrix.name }}
+        run: uv run pyright
+
+      - name: Build distributions
+        working-directory: ${{ github.workspace }}/../rendered-${{ matrix.name }}
+        run: uv build

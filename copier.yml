@@ -25,10 +25,25 @@ project_slug:
   help: Python-safe slug (used in pyproject.toml, Docker image names, etc.)
   default: "{{ project_name.lower().replace(' ', '-').replace('_', '-') }}"
 
+project_type:
+  type: str
+  help: What should this template produce?
+  default: full_project
+  choices:
+    "Full Django project (runnable site)": full_project
+    "Reusable Django app (pip-installable into another project)": reusable_app
+
+package_name:
+  type: str
+  help: Python import package name for the reusable app (snake_case)
+  default: "{{ project_slug.replace('-', '_') }}"
+  when: "{{ project_type == 'reusable_app' }}"
+
 initial_app_name:
   type: str
   help: Name of the first Django app to scaffold
   default: core
+  when: "{{ project_type == 'full_project' }}"
 
 author_name:
   type: str
@@ -53,11 +68,13 @@ use_redis:
     Include Redis + django-tasks-rq for background tasks?
     (No = synchronous ImmediateBackend, no extra infra needed)
   default: true
+  when: "{{ project_type == 'full_project' }}"
 
 use_async:
   type: bool
   help: Serve via ASGI/uvicorn instead of WSGI/gunicorn?
   default: false
+  when: "{{ project_type == 'full_project' }}"
 
 use_shinobi:
   type: bool
