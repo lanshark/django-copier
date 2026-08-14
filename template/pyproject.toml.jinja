@@ -20,11 +20,20 @@ requires-python = ">={{ python_version }}"
 license = "{{ license_spdx }}"
 license-files = ["LICENSE"]
 {% endif %}
+{% if project_type == 'reusable_app' %}
+classifiers = [
+    "Framework :: Django",
+    "Framework :: Django :: 5.2",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+]
+{% endif %}
 dependencies = [
     "django>=5.2,<5.3",
 {% if use_shinobi %}
     "django-shinobi",
 {% endif %}
+{% if project_type == 'full_project' %}
     "psycopg[binary]>=3",
     "python-decouple",
     "dj-database-url",
@@ -42,6 +51,7 @@ dependencies = [
     "gunicorn",
 {% endif %}
     "whitenoise",
+{% endif %}
 ]
 
 [project.optional-dependencies]
@@ -49,27 +59,47 @@ dev = [
     "pytest",
     "pytest-django",
     "pytest-cov",
+{% if project_type == 'full_project' %}
     "model-bakery",
     "faker",
+{% endif %}
     "pre-commit",
     "ruff",
     "pyright",
     "django-stubs",
 ]
+{% if project_type == 'reusable_app' %}
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/{{ package_name }}"]
+{% else %}
 
 [tool.uv]
 package = false
+{% endif %}
 
 [tool.ruff]
 target-version = "py{{ python_version.replace('.', '') }}"
 line-length = 100
+{% if project_type == 'reusable_app' %}
+extend-exclude = ["migrations"]
+{% else %}
 extend-exclude = ["migrations", "typings"]
+{% endif %}
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "DJ"]
 
 [tool.pyright]
+{% if project_type == 'reusable_app' %}
+include = ["src", "tests"]
+{% else %}
 include = ["config", "apps"]
+{% endif %}
 exclude = ["**/migrations", "**/__pycache__"]
 pythonVersion = "{{ python_version }}"
 typeCheckingMode = "basic"
@@ -78,6 +108,14 @@ venvPath = "."
 venv = ".venv"
 
 [tool.pytest.ini_options]
+{% if project_type == 'reusable_app' %}
+DJANGO_SETTINGS_MODULE = "tests.settings"
+{% else %}
 DJANGO_SETTINGS_MODULE = "config.settings.test"
+{% endif %}
 python_files = ["tests.py", "test_*.py", "*_tests.py"]
+{% if project_type == 'reusable_app' %}
+addopts = "--cov=src --cov-report=term-missing"
+{% else %}
 addopts = "--cov=apps --cov-report=term-missing"
+{% endif %}
