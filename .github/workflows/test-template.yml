@@ -13,15 +13,15 @@ jobs:
       matrix:
         include:
           - name: defaults
-            extra_args: ""
+            extra_args: ''
           - name: no-redis
-            extra_args: "--data use_redis=false"
+            extra_args: '--data use_redis=false'
           - name: custom-app-async
-            extra_args: "--data initial_app_name=widgets --data use_async=true"
+            extra_args: '--data initial_app_name=widgets --data use_async=true'
           - name: apache-license
-            extra_args: "--data open_source_license=Apache-2.0"
+            extra_args: '--data open_source_license=Apache-2.0'
           - name: no-shinobi
-            extra_args: "--data use_shinobi=false"
+            extra_args: '--data use_shinobi=false'
 
     services:
       postgres:
@@ -30,7 +30,7 @@ jobs:
           POSTGRES_DB: app
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
-        ports: ["5432:5432"]
+        ports: ['5432:5432']
         options: >-
           --health-cmd "pg_isready -U postgres"
           --health-interval 5s
@@ -38,13 +38,13 @@ jobs:
           --health-retries 5
       redis:
         image: redis:7-alpine
-        ports: ["6379:6379"]
+        ports: ['6379:6379']
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7.0.1
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v3
+        uses: astral-sh/setup-uv@v10.0.1
 
       - name: Set up Python
         run: uv python install 3.14
@@ -99,15 +99,15 @@ jobs:
       matrix:
         include:
           - name: app-defaults
-            extra_args: "--data project_type=reusable_app"
+            extra_args: '--data project_type=reusable_app'
           - name: app-no-shinobi
-            extra_args: "--data project_type=reusable_app --data use_shinobi=false"
+            extra_args: '--data project_type=reusable_app --data use_shinobi=false'
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7.0.1
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v3
+        uses: astral-sh/setup-uv@v10.0.1
 
       - name: Set up Python
         run: uv python install 3.14
