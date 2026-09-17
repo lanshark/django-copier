@@ -1,8 +1,12 @@
 # LANshark django-copier Template
 
-A [copier](https://copier.readthedocs.io/) template for generating Django + django-shinobi
-API projects: Python 3.13/3.14, Django 5.2 LTS, Postgres 17, JWT auth, django-tasks,
-PyTest, uv, ruff, pyright, Docker, and GitHub Actions CI.
+A [copier](https://copier.readthedocs.io/) template for generating Django projects:
+Python 3.14, Django 5.2 LTS, Postgres 17, django-tasks, PyTest, uv, ruff, pyright,
+and GitHub Actions CI. It can produce either a full runnable site (Docker Compose,
+optional django-shinobi API layer with JWT auth) or a pip-installable reusable Django
+app (hatchling package, sqlite tests, PyPI release workflow). Every generated project
+also ships a document-first AI-development scaffold (`vision.md`, `architecture.md`,
+per-feature docs and skills) for working with Claude Code or Codex.
 
 ## Usage
 
@@ -19,12 +23,16 @@ You'll be prompted for:
 |---|---|
 | `project_name` | Human-readable name (used in README, API title, pyproject description) |
 | `project_slug` | Package/image-safe slug, auto-derived from `project_name` |
-| `initial_app_name` | Name of the first Django app (`apps/<name>/`) |
+| `project_type` | `full_project` (runnable site) or `reusable_app` (pip-installable Django app) |
+| `package_name` | *(reusable_app only)* Python import package name, auto-derived from `project_slug` |
+| `initial_app_name` | *(full_project only)* Name of the first Django app (`apps/<name>/`) |
 | `author_name` / `author_email` | Populates `pyproject.toml` authors |
-| `python_version` | `3.13` or `3.14` |
-| `use_redis` | `true` → django-tasks on RQ/Redis with a `worker` compose service; `false` → synchronous `ImmediateBackend`, no Redis needed |
-| `use_async` | `true` → serve via uvicorn/ASGI; `false` → gunicorn/WSGI |
-| `open_source_license` | `MIT` or `None` |
+| `python_version` | `3.14` |
+| `use_redis` | *(full_project only)* `true` → django-tasks on RQ/Redis with a `worker` compose service; `false` → synchronous `ImmediateBackend`, no Redis needed |
+| `use_async` | *(full_project only)* `true` → serve via uvicorn/ASGI; `false` → gunicorn/WSGI |
+| `use_shinobi` | `true` → include a django-shinobi (Django Ninja) API layer with JWT auth and an example health/token/me API; `false` → no API layer |
+| `open_source_license` | `MIT`, `BSD-3-Clause`, `Apache-2.0`, `GNU GPLv3`, `GNU AGPLv3`, `Proprietary`, or `None` |
+| `copyright_holder` / `copyright_year` | *(shown for licenses needing a copyright notice)* Populates the rendered `LICENSE` |
 
 ## Updating an existing generated project
 
@@ -35,6 +43,36 @@ copier update
 
 Copier will re-apply the template's latest changes on top of the project, respecting any
 local modifications where possible.
+
+## Project types
+
+- **`full_project`** (default) — a runnable Django site: `apps/<initial_app_name>/`,
+  Docker/Docker Compose, a Makefile wrapping `docker compose`/`manage.py`, and CI that
+  migrates, tests, lints, and type-checks against a real Postgres (and Redis, if
+  `use_redis=true`).
+- **`reusable_app`** — a pip-installable Django app: a hatchling `src/<package_name>/`
+  package (models/admin/migrations/`py.typed`, an optional shinobi `Router`,
+  `templates/`+`static/`), `pytest-django` tests on sqlite, a runnable `example/`
+  project, a uv-based Makefile (build/publish), an install-oriented README, and a
+  Postgres-free CI plus a PyPI `release.yml`. The project-only questions
+  (`initial_app_name`, `use_redis`, `use_async`) are hidden for this type.
+
+## Document-first AI development scaffold
+
+Every generated project ships a workflow for developing with an AI coding agent
+(Claude Code, Codex, etc.):
+
+- `vision.md` — project vision, goals, scope, success criteria, open product questions
+- `architecture.md` — architecture principles, repository layout, conventions
+- `AGENTS.md` (with a `CLAUDE.md` that imports it via `@AGENTS.md`) — how the agent
+  should work in the repo, including the document-first workflow and source-of-truth
+  order
+- `features/<feature-slug>/` — one folder per feature, each with `feature.md` (current
+  state), `history.md` (append-only prompt log), `SKILL.md`, and `adr/`
+
+Each feature folder is discoverable as a skill through `.agents/skills/<slug>` and
+`.claude/skills/<slug>` symlinks, and `make new-feature name=<slug>` scaffolds a new
+feature with both symlinks in place.
 
 ## Structure of this repo
 
@@ -50,20 +88,26 @@ byte-for-byte with no substitution.
 
 ## What's been verified
 
-Every combination below has actually been rendered and run — not just written — against
-a real Postgres 17-compatible Postgres and Redis: `migrate`, the pytest suite, `ruff
-check`, and `pyright` all pass clean in each case.
+CI (`.github/workflows/test-template.yml`) renders and runs each combination below —
+not just writes it — against a real Postgres 17 (and Redis, where relevant): `migrate`,
+the pytest suite, `ruff check`, and `pyright` all pass clean in each case.
+
+`full_project`:
 
 - Default answers (`use_redis=true`, `use_async=false`)
 - `use_redis=false` (synchronous task backend, no Redis/worker service generated)
 - Custom `initial_app_name` + `use_async=true` (app directory renamed correctly, all
   internal imports follow, Dockerfile CMD switches to uvicorn)
+- `open_source_license=Apache-2.0`
+- `use_shinobi=false` (no API layer; an always-present smoke test keeps the suite
+  non-empty)
+
+`reusable_app`:
+
+- Default answers, and `use_shinobi=false` — both also verified to `uv build` cleanly
 
 ## Known limitations
 
-- `open_source_license=MIT` generates a standard MIT `LICENSE` file; `None` skips it.
-  Other licenses aren't offered — add a `LICENSE.jinja` and a `copier.yml` choice if you
-  need one.
 - The `django-tasks-db` backend (Postgres-only, no Redis) mentioned in the original
   design spec was **not** used here in favor of the already-verified `ImmediateBackend`
   for the `use_redis=false` case — `django-tasks-db`'s exact API wasn't verified against
