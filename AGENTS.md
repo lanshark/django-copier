@@ -20,6 +20,7 @@ To ensure all assistant-generated code and suggestions are consistent with our p
 - If a requested change is broad, break it into a sequence of smaller steps and implement the smallest useful step first.
 - When in doubt, optimize for debuggability over speed of refactor.
 - If the correct solution spans multiple logical steps, stop after the first approved step unless the user explicitly asks you to continue through the rest.
+- Record every change made to this repo as a bullet under the "Next Release" heading in CHANGELOG.md before considering the change complete.
 
 ## General Python Style
 
