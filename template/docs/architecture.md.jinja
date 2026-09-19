@@ -46,8 +46,9 @@ capture the reasoning in a feature-scoped ADR.
 .
 ├── AGENTS.md                # how the AI coding agent works here (+ workflow)
 ├── CLAUDE.md                # imports AGENTS.md for Claude Code
-├── vision.md                # product vision
-├── architecture.md          # this document
+├── docs/
+│   ├── vision.md             # product vision
+│   └── architecture.md       # this document
 ├── Makefile                 # docker compose + manage.py task wrappers
 ├── manage.py
 ├── pyproject.toml
@@ -85,8 +86,9 @@ capture the reasoning in a feature-scoped ADR.
 .
 ├── AGENTS.md                # how the AI coding agent works here (+ workflow)
 ├── CLAUDE.md                # imports AGENTS.md for Claude Code
-├── vision.md                # product vision
-├── architecture.md          # this document
+├── docs/
+│   ├── vision.md             # product vision
+│   └── architecture.md       # this document
 ├── Makefile                 # uv dev + packaging task wrappers
 ├── pyproject.toml           # hatchling build; deps; tool config
 ├── src/
@@ -117,7 +119,7 @@ capture the reasoning in a feature-scoped ADR.
 
 ## Development Flow
 
-1. Read `AGENTS.md`, `vision.md`, and `architecture.md`.
+1. Read `AGENTS.md`, `docs/vision.md`, and `docs/architecture.md`.
 2. Select or create the relevant `features/<feature-slug>/` folder (from `features/_template/`).
 3. Record the modifying prompt in `features/<feature-slug>/feature.md`.
 4. Update requirements, acceptance criteria, and open questions.

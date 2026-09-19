@@ -10,7 +10,8 @@ code for <Feature Name>.
 
 ## Before Editing Code
 
-1. Read `AGENTS.md`, `vision.md`, `architecture.md`, and this feature's `feature.md`.
+1. Read `AGENTS.md`, `docs/vision.md`, `docs/architecture.md`, and this feature's
+   `feature.md`.
 2. Record the user's modifying prompt in this feature's `history.md`.
 3. Update requirements and acceptance criteria in `feature.md` before implementation.
 4. Add or update ADRs in `adr/` for durable architectural choices.
@@ -18,7 +19,7 @@ code for <Feature Name>.
 ## Implementation Guidance
 
 - Keep changes scoped to this feature unless an ADR justifies a broader change.
-- Follow established project conventions from `architecture.md` and `AGENTS.md`.
+- Follow established project conventions from `docs/architecture.md` and `AGENTS.md`.
 - Prefer explicit behavior and testable acceptance criteria.
 - Preserve existing user work.
 

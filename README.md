@@ -5,7 +5,8 @@ Python 3.14, Django 5.2 LTS, Postgres 17, django-tasks, PyTest, uv, ruff, pyrigh
 and GitHub Actions CI. It can produce either a full runnable site (Docker Compose,
 optional django-shinobi API layer with JWT auth) or a pip-installable reusable Django
 app (hatchling package, sqlite tests, PyPI release workflow). Every generated project
-also ships a document-first AI-development scaffold (`vision.md`, `architecture.md`,
+also ships a document-first AI-development scaffold (`docs/vision.md`,
+`docs/architecture.md`,
 per-feature docs and skills) for working with Claude Code or Codex.
 
 ## Usage
@@ -62,8 +63,8 @@ local modifications where possible.
 Every generated project ships a workflow for developing with an AI coding agent
 (Claude Code, Codex, etc.):
 
-- `vision.md` — project vision, goals, scope, success criteria, open product questions
-- `architecture.md` — architecture principles, repository layout, conventions
+- `docs/vision.md` — project vision, goals, scope, success criteria, open product questions
+- `docs/architecture.md` — architecture principles, repository layout, conventions
 - `AGENTS.md` (with a `CLAUDE.md` that imports it via `@AGENTS.md`) — how the agent
   should work in the repo, including the document-first workflow and source-of-truth
   order

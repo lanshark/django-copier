@@ -4,7 +4,7 @@
 
 This project uses document-first, AI-assisted development. Treat the repository's
 documents as the source of truth for product intent, architecture, and feature
-behavior. Read `vision.md`, `architecture.md`, and the relevant
+behavior. Read `docs/vision.md`, `docs/architecture.md`, and the relevant
 `features/<feature-slug>/feature.md` and `SKILL.md` before modifying code.
 
 For every prompt that changes code or shipped behavior:
@@ -22,8 +22,8 @@ For every prompt that changes code or shipped behavior:
 
 ### Repository Documents
 
-- `vision.md`: product vision, goals, scope, success criteria, and open product questions.
-- `architecture.md`: architecture, repository layout, conventions, and cross-feature constraints.
+- `docs/vision.md`: product vision, goals, scope, success criteria, and open product questions.
+- `docs/architecture.md`: architecture, repository layout, conventions, and cross-feature constraints.
 - `AGENTS.md`: how the AI coding agent should work in this repository (this file).
 - `apps/<app>/AGENTS.md`: module-specific invariants layered over these root instructions.
 - `features/<feature-slug>/feature.md`: current feature purpose, requirements, acceptance criteria, and constraints.
@@ -38,7 +38,7 @@ When sources disagree, use this order and reconcile stale documents in the same 
 1. Code and automated tests define current executable behavior.
 2. The relevant `feature.md` defines current intended feature behavior.
 3. Accepted ADRs define the rationale and constraints of durable decisions.
-4. `architecture.md` defines the cross-feature overview and project-wide conventions.
+4. `docs/architecture.md` defines the cross-feature overview and project-wide conventions.
 5. `history.md` preserves non-normative historical context.
 
 Keep current normative behavior in `feature.md`; keep historical records in `history.md`.
@@ -53,5 +53,5 @@ Keep current normative behavior in `feature.md`; keep historical records in `his
 ### When to Ask
 
 Ask before implementing when product intent is ambiguous, when a change needs a major
-technology or data-model choice not already covered by `architecture.md` or an ADR, or
+technology or data-model choice not already covered by `docs/architecture.md` or an ADR, or
 when the request conflicts with existing vision, architecture, or feature documents.

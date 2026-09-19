@@ -44,6 +44,45 @@ Verification:
 - Reviewed the repository file layout and confirmed both skill symlinks resolve to the
   feature folder.
 
+### 2026-09-19 - Move vision.md and architecture.md into docs/
+
+Prompt:
+
+> I want to update the ai-driven-development feature of the template. Make a top-level
+> /docs directory, and move architecture.md, vision.md to that directory.
+
+Intent:
+
+- Move the root-level `vision.md` and `architecture.md` documents into a top-level
+  `docs/` directory to reduce root clutter.
+- Keep all workflow references (agent instructions, feature docs, skill templates)
+  consistent with the new paths.
+
+Affected documents:
+
+- `AGENTS.md`
+- `docs/vision.md`
+- `docs/architecture.md`
+- `features/_template/SKILL.md`
+- `features/ai-driven-development/feature.md`
+- `features/ai-driven-development/SKILL.md`
+- `features/ai-driven-development/history.md`
+
+Implementation summary:
+
+- Moved `vision.md.jinja` and `architecture.md.jinja` to `template/docs/` so generated
+  projects render them at `docs/vision.md` and `docs/architecture.md`.
+- Updated all references to these documents in `AGENTS.md.jinja`, the moved
+  `architecture.md.jinja`'s own repository-layout diagrams and development-flow steps,
+  `features/ai-driven-development/feature.md`, and `features/_template/SKILL.md`.
+- Left this feature's ADR and the top-level `CHANGELOG.md` untouched, per the user's
+  instruction, since they are historical records.
+
+Verification:
+
+- Confirmed no remaining references to root-level `vision.md`/`architecture.md` paths
+  in the template source.
+
 ## Consolidated Implementation Notes
 
 - The document-first workflow instructions live in `AGENTS.md` (imported by `CLAUDE.md`),

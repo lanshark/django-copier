@@ -15,10 +15,10 @@ Accepted
 
 - `AGENTS.md` defines how the AI coding agent works in this repository, including the
   document-first workflow and the source-of-truth order.
-- `vision.md` contains project vision, goals, scope, success criteria, and open product
-  questions.
-- `architecture.md` contains architecture principles, repository layout, conventions,
-  and open architecture questions.
+- `docs/vision.md` contains project vision, goals, scope, success criteria, and open
+  product questions.
+- `docs/architecture.md` contains architecture principles, repository layout,
+  conventions, and open architecture questions.
 - Feature documents live under `features/<feature-slug>/`.
 - Each feature folder contains `feature.md`, `SKILL.md`, `history.md`, and an `adr/`
   folder.
@@ -31,7 +31,7 @@ Accepted
 
 ## Acceptance Criteria
 
-- The repository has `AGENTS.md`, `vision.md`, and `architecture.md`.
+- The repository has `AGENTS.md`, `docs/vision.md`, and `docs/architecture.md`.
 - The repository has a reusable feature template folder with `feature.md`, `SKILL.md`,
   and `history.md`.
 - The AI-driven development workflow is captured as a feature and an ADR.
