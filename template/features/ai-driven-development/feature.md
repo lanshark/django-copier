@@ -22,6 +22,9 @@ Accepted
 - Feature documents live under `features/<feature-slug>/`.
 - Each feature folder contains `feature.md`, `SKILL.md`, `history.md`, and an `adr/`
   folder.
+- `docs/adr/` holds project-wide architecture decision records for decisions that span
+  multiple features or the whole project; a feature's own `adr/` holds decisions
+  confined to that feature.
 - Each concrete feature is discoverable as a skill through `.agents/skills/<slug>` and
   `.claude/skills/<slug>` symlinks to its folder.
 - Every prompt that modifies code or shipped behavior is recorded in the feature's

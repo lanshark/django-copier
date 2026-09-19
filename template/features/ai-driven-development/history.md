@@ -83,6 +83,53 @@ Verification:
 - Confirmed no remaining references to root-level `vision.md`/`architecture.md` paths
   in the template source.
 
+### 2026-09-19 - Add top-level docs/adr directory
+
+Prompt:
+
+> now I want to create a top-level ADR directory for architecture decisions related to
+> the entire project rather than a specific feature.
+>
+> stage these changes with them in docs/adr
+
+Intent:
+
+- Add a top-level `docs/adr/` directory for architecture decisions that span multiple
+  features or the whole project, complementing the existing feature-scoped
+  `features/<feature-slug>/adr/` directories.
+- Update workflow documents and this feature's own documents to describe when to use
+  each location.
+- Record the decision to add this directory as a new ADR, since it revises part of
+  ADR 0001 (which had rejected a global ADR folder).
+
+Affected documents:
+
+- `docs/adr/0001-template.md`
+- `docs/architecture.md`
+- `AGENTS.md`
+- `features/ai-driven-development/feature.md`
+- `features/ai-driven-development/SKILL.md`
+- `features/ai-driven-development/adr/0002-add-top-level-adr-directory.md`
+- `features/ai-driven-development/history.md`
+
+Implementation summary:
+
+- Created `docs/adr/0001-template.md`, seeded with the same fill-in-the-blank stub used
+  by `features/_template/adr/0001-template.md`.
+- Updated `architecture.md`'s repository-layout diagrams (both project types) and ADR
+  Convention section to describe the two ADR locations and when to use each.
+- Updated `AGENTS.md`'s Repository Documents list, workflow step 5, and Naming
+  Conventions to cover both `docs/adr/` and feature-scoped ADRs.
+- Updated this feature's `feature.md` requirements and `SKILL.md` Required Reading to
+  reference `docs/adr/`.
+- Added ADR 0002 documenting the decision itself, since it revises part of ADR 0001's
+  original rationale; left ADR 0001 untouched as a historical record.
+
+Verification:
+
+- Reviewed all updated documents for consistent references to `docs/adr/` vs.
+  `features/<feature-slug>/adr/`.
+
 ## Consolidated Implementation Notes
 
 - The document-first workflow instructions live in `AGENTS.md` (imported by `CLAUDE.md`),

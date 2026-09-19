@@ -48,7 +48,8 @@ capture the reasoning in a feature-scoped ADR.
 ├── CLAUDE.md                # imports AGENTS.md for Claude Code
 ├── docs/
 │   ├── vision.md             # product vision
-│   └── architecture.md       # this document
+│   ├── architecture.md       # this document
+│   └── adr/                  # project-wide architecture decision records
 ├── Makefile                 # docker compose + manage.py task wrappers
 ├── manage.py
 ├── pyproject.toml
@@ -88,7 +89,8 @@ capture the reasoning in a feature-scoped ADR.
 ├── CLAUDE.md                # imports AGENTS.md for Claude Code
 ├── docs/
 │   ├── vision.md             # product vision
-│   └── architecture.md       # this document
+│   ├── architecture.md       # this document
+│   └── adr/                  # project-wide architecture decision records
 ├── Makefile                 # uv dev + packaging task wrappers
 ├── pyproject.toml           # hatchling build; deps; tool config
 ├── src/
@@ -159,6 +161,16 @@ Use an ADR when a choice has durable consequences: runtime/framework/library/sto
 choices, data-model or API-contract decisions, security or privacy decisions,
 cross-feature abstractions, or significant tradeoffs. Each ADR records Title, Status,
 Date, Context, Decision, Consequences, and Alternatives Considered.
+
+ADRs live in one of two places, depending on scope:
+
+- `docs/adr/`: project-wide decisions that span multiple features or the whole
+  project (for example, runtime/framework choices, cross-cutting infrastructure,
+  or project-wide security/privacy posture).
+- `features/<feature-slug>/adr/`: decisions confined to that feature.
+
+ADR numbering is independent per folder — each `adr/` folder starts its own
+`0001-...` sequence.
 
 ## Open Architecture Questions
 

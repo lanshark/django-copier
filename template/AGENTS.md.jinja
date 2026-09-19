@@ -15,7 +15,9 @@ For every prompt that changes code or shipped behavior:
 2. Record the prompt in that feature's append-only `history.md` before editing code.
 3. Update the feature's `feature.md` (requirements, acceptance criteria, constraints).
 4. Update the feature's `SKILL.md` when its development guidance changes.
-5. Add or update ADRs in the feature's `adr/` folder for durable architectural decisions.
+5. Add or update ADRs for durable architectural decisions: `docs/adr/` for decisions
+   that span multiple features or the whole project, or the feature's `adr/` folder for
+   decisions confined to that feature.
 6. Generate the code change from the documented requirements.
 7. Run the smallest useful validation, then record the implementation summary and
    verification result in `history.md`.
@@ -24,6 +26,8 @@ For every prompt that changes code or shipped behavior:
 
 - `docs/vision.md`: product vision, goals, scope, success criteria, and open product questions.
 - `docs/architecture.md`: architecture, repository layout, conventions, and cross-feature constraints.
+- `docs/adr/`: project-wide architecture decision records, for decisions that span
+  multiple features or the whole project.
 - `AGENTS.md`: how the AI coding agent should work in this repository (this file).
 - `apps/<app>/AGENTS.md`: module-specific invariants layered over these root instructions.
 - `features/<feature-slug>/feature.md`: current feature purpose, requirements, acceptance criteria, and constraints.
@@ -48,7 +52,8 @@ Keep current normative behavior in `feature.md`; keep historical records in `his
 - Feature folders use kebab-case, e.g. `features/user-onboarding/`.
 - Feature documents are `feature.md`; feature histories are `history.md`; feature skills are `SKILL.md`.
 - ADR files use a numeric prefix and kebab-case title, e.g. `0001-use-celery-for-tasks.md`.
-- ADR numbering is scoped to each feature folder.
+- ADR numbering is scoped to each `adr/` folder: the top-level `docs/adr/` (project-wide
+  decisions) or a feature's `adr/` (decisions confined to that feature).
 
 ### When to Ask
 

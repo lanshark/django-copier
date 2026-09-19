@@ -12,6 +12,7 @@ Use this skill when modifying the repository workflow for AI-assisted developmen
 - `AGENTS.md`
 - `docs/vision.md`
 - `docs/architecture.md`
+- `docs/adr/`
 - `features/ai-driven-development/feature.md`
 - Relevant ADRs in `features/ai-driven-development/adr/`
 
