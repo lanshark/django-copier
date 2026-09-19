@@ -41,6 +41,7 @@ ENV PATH="/app/.venv/bin:$PATH"
 {% if use_vite %}
 COPY --from=frontend-builder /app/static/dist /app/static/dist
 {% endif %}
+RUN mkdir -p /app/staticfiles && chown app:app /app/staticfiles
 
 COPY docker/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
