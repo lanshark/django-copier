@@ -76,6 +76,14 @@ use_async:
   default: false
   when: "{{ project_type == 'full_project' }}"
 
+use_vite:
+  type: bool
+  help: >-
+    Add a Pico.css + Vite frontend build pipeline (django-vite, with an HMR
+    dev server)?
+  default: false
+  when: "{{ project_type == 'full_project' }}"
+
 use_shinobi:
   type: bool
   help: >-
