@@ -32,6 +32,7 @@ You'll be prompted for:
 | `use_redis` | *(full_project only)* `true` → django-tasks on RQ/Redis with a `worker` compose service; `false` → synchronous `ImmediateBackend`, no Redis needed |
 | `use_async` | *(full_project only)* `true` → serve via uvicorn/ASGI; `false` → gunicorn/WSGI |
 | `use_shinobi` | `true` → include a django-shinobi (Django Ninja) API layer with JWT auth and an example health/token/me API; `false` → no API layer |
+| `use_vite` | *(full_project only)* `true` → Pico.css + Vite frontend build pipeline (django-vite, HMR dev server, starter page); `false` → no frontend tooling |
 | `open_source_license` | `MIT`, `BSD-3-Clause`, `Apache-2.0`, `GNU GPLv3`, `GNU AGPLv3`, `Proprietary`, or `None` |
 | `copyright_holder` / `copyright_year` | *(shown for licenses needing a copyright notice)* Populates the rendered `LICENSE` |
 
@@ -57,6 +58,24 @@ local modifications where possible.
   project, a uv-based Makefile (build/publish), an install-oriented README, and a
   Postgres-free CI plus a PyPI `release.yml`. The project-only questions
   (`initial_app_name`, `use_redis`, `use_async`) are hidden for this type.
+
+## Frontend (Pico.css + Vite)
+
+When `use_vite=true`, the generated project ships a minimal frontend build pipeline:
+
+- `package.json` / `vite.config.js` / `frontend/main.js` — a Vite project that imports
+  `@picocss/pico` and builds a manifest to `static/dist/`.
+- `django-vite` reads that manifest so `{% vite_asset %}`/`{% vite_hmr_client %}` in
+  `apps/<initial_app_name>/templates/<initial_app_name>/base.html` resolve the right
+  asset in both dev and prod, controlled by `DJANGO_VITE_DEV_MODE` (defaults to
+  `DJANGO_DEBUG`).
+- A starter page (`apps/<initial_app_name>/views.py` + `urls.py`) renders at `/`.
+- In prod, the Docker image builds the frontend in a `node:22-slim` stage and copies
+  `static/dist/` into the runtime image, where whitenoise serves it.
+- For local dev, copy `docker-compose.override.yml.example` to
+  `docker-compose.override.yml`: it adds a `vite` service running the Vite dev server
+  with HMR on `localhost:5173`. `make frontend-install` / `make frontend-build` run the
+  equivalent commands against your local Node install.
 
 ## Document-first AI development scaffold
 
@@ -102,6 +121,8 @@ the pytest suite, `ruff check`, and `pyright` all pass clean in each case.
 - `open_source_license=Apache-2.0`
 - `use_shinobi=false` (no API layer; an always-present smoke test keeps the suite
   non-empty)
+- `use_vite=true` (Pico.css + Vite build pipeline, django-vite, starter page rendered
+  and `collectstatic` run against a `npm run build` manifest)
 
 `reusable_app`:
 
