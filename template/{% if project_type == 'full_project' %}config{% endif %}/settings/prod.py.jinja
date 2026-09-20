@@ -11,27 +11,28 @@ SECURE_HSTS_SECONDS = 60 * 60 * 24 * 7
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
 
-{% if email_provider|default("ses") == 'ses' %}
+{% set normalized_email_provider = email_provider|default("ses", true) %}
+{% if normalized_email_provider == 'ses' %}
 # --- Email (django-anymail: Amazon SES) ---
 # boto3 reads AWS credentials via its standard chain (AWS_ACCESS_KEY_ID /
 # AWS_SECRET_ACCESS_KEY / AWS_SESSION_TOKEN env vars, an IAM role, or
 # ~/.aws/credentials) and the region via AWS_DEFAULT_REGION — no ANYMAIL setting
 # is required here.
 EMAIL_BACKEND = "anymail.backends.amazon_ses.EmailBackend"
-{% elif email_provider|default("ses") == 'postmark' %}
+{% elif normalized_email_provider == 'postmark' %}
 # --- Email (django-anymail: Postmark) ---
 EMAIL_BACKEND = "anymail.backends.postmark.EmailBackend"
 ANYMAIL = {
     "POSTMARK_SERVER_TOKEN": config("ANYMAIL_POSTMARK_SERVER_TOKEN"),
 }
-{% elif email_provider|default("ses") == 'mailgun' %}
+{% elif normalized_email_provider == 'mailgun' %}
 # --- Email (django-anymail: Mailgun) ---
 EMAIL_BACKEND = "anymail.backends.mailgun.EmailBackend"
 ANYMAIL = {
     "MAILGUN_API_KEY": config("ANYMAIL_MAILGUN_API_KEY"),
     "MAILGUN_SENDER_DOMAIN": config("ANYMAIL_MAILGUN_SENDER_DOMAIN"),
 }
-{% elif email_provider|default("ses") == 'sendgrid' %}
+{% elif normalized_email_provider == 'sendgrid' %}
 # --- Email (django-anymail: SendGrid) ---
 EMAIL_BACKEND = "anymail.backends.sendgrid.EmailBackend"
 ANYMAIL = {

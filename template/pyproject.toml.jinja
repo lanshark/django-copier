@@ -52,15 +52,16 @@ dependencies = [
 {% endif %}
     "whitenoise",
 {% if project_type == 'full_project' %}
+{% set normalized_email_provider = email_provider|default("ses", true) %}
 {% set anymail_dependency = {
     "ses": "django-anymail[amazon-ses]",
     "postmark": "django-anymail[postmark]",
     "mailgun": "django-anymail[mailgun]",
     "sendgrid": "django-anymail[sendgrid]",
-}.get(email_provider|default("ses")) %}
+}.get(normalized_email_provider) %}
 {% if anymail_dependency %}
     "{{ anymail_dependency }}",
-{% if email_provider|default("ses") == "ses" %}
+{% if normalized_email_provider == "ses" %}
     "boto3",
 {% endif %}
 {% endif %}
