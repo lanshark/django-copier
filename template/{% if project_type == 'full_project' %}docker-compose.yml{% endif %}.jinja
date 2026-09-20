@@ -18,6 +18,12 @@ services:
     volumes:
       - redis_data:/data
 {% endif %}
+  mailpit:
+    # Dev-only SMTP catcher: web/worker send mail to it instead of a real relay.
+    # Web UI at http://localhost:8025 shows everything sent.
+    image: axllent/mailpit:v1.31
+    ports:
+      - "8025:8025"
   web:
     build:
       context: .
@@ -30,6 +36,8 @@ services:
       redis:
         condition: service_started
 {% endif %}
+      mailpit:
+        condition: service_started
     ports:
       - "8000:8000"
 {% if use_redis %}
@@ -45,6 +53,8 @@ services:
       db:
         condition: service_healthy
       redis:
+        condition: service_started
+      mailpit:
         condition: service_started
 {% endif %}
 volumes:

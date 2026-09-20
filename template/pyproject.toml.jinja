@@ -51,6 +51,13 @@ dependencies = [
     "gunicorn",
 {% endif %}
     "whitenoise",
+{% if email_provider == 'ses' %}
+    "django-anymail[amazon-ses]",
+{% elif email_provider == 'sendgrid' %}
+    "django-anymail[sendgrid]",
+{% else %}
+    "django-anymail",
+{% endif %}
 {% if use_vite %}
     "django-vite",
 {% endif %}

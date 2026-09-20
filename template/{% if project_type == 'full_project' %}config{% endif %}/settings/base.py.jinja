@@ -88,6 +88,19 @@ STORAGES = {
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
+# --- Email ---
+# Defaults target the mailpit service in docker-compose.yml (dev SMTP catcher, web
+# UI at http://localhost:8025). Override via env for a real SMTP relay in prod.
+EMAIL_BACKEND = config(
+    "DJANGO_EMAIL_BACKEND", default="django.core.mail.backends.smtp.EmailBackend"
+)
+EMAIL_HOST = config("DJANGO_EMAIL_HOST", default="mailpit")
+EMAIL_PORT = config("DJANGO_EMAIL_PORT", default=1025, cast=int)
+EMAIL_USE_TLS = config("DJANGO_EMAIL_USE_TLS", default=False, cast=bool)
+EMAIL_HOST_USER = config("DJANGO_EMAIL_HOST_USER", default="")
+EMAIL_HOST_PASSWORD = config("DJANGO_EMAIL_HOST_PASSWORD", default="")
+DEFAULT_FROM_EMAIL = config("DJANGO_DEFAULT_FROM_EMAIL", default="webmaster@localhost")
+
 {% if use_vite %}
 # --- django-vite ---
 # manifest_path points at Vite's own build output, not STATIC_ROOT: Vite nests its

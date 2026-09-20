@@ -28,6 +28,10 @@ capture the reasoning in a feature-scoped ADR.
 - The Django admin site (no HTTP API layer in this project).
 {% endif %}
 - Background work via `django-tasks`{% if use_redis %}, running on the RQ/Redis backend with a dedicated worker{% else %} (synchronous in-process backend){% endif %}.
+- Email via SMTP, caught in dev by a `mailpit` service (web UI at `localhost:8025`)
+  and captured in-memory during tests (`locmem` backend); production sends via
+  {{ {"ses": "Amazon SES", "postmark": "Postmark", "mailgun": "Mailgun", "sendgrid": "SendGrid"}[email_provider] }}
+  through `django-anymail`.
 {% if use_vite %}
 - A Pico.css + Vite frontend build pipeline (django-vite), with a starter page under
   `apps/{{ initial_app_name }}/`.

@@ -10,3 +10,6 @@ TASKS = {
         "BACKEND": "django_tasks.backends.immediate.ImmediateBackend",
     }
 }
+
+# Captured in django.core.mail.outbox instead of sent — no mailpit dependency in CI.
+EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"

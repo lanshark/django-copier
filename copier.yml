@@ -99,6 +99,19 @@ task_runner:
     'Makefile (make)': makefile
     'Justfile (just)': justfile
 
+email_provider:
+  type: str
+  help: >-
+    Production email provider (sent via django-anymail; local dev always uses
+    mailpit regardless of this choice)
+  default: ses
+  choices:
+    'Amazon SES': ses
+    'Postmark': postmark
+    'Mailgun': mailgun
+    'SendGrid': sendgrid
+  when: "{{ project_type == 'full_project' }}"
+
 open_source_license:
   type: str
   help: License for the project
