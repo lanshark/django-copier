@@ -1,7 +1,7 @@
 # LANshark django-copier Template
 
 A [copier](https://copier.readthedocs.io/) template for generating Django projects:
-Python 3.14, Django 5.2 LTS, Postgres 17, django-tasks, PyTest, uv, ruff, pyright,
+Python 3.14, Django 5.2 LTS, Postgres 18, django-tasks, PyTest, uv, ruff, pyright,
 and GitHub Actions CI. It can produce either a full runnable site (Docker Compose,
 optional django-shinobi API layer with JWT auth) or a pip-installable reusable Django
 app (hatchling package, sqlite tests, PyPI release workflow). Every generated project
@@ -29,6 +29,7 @@ You'll be prompted for:
 | `initial_app_name` | *(full_project only)* Name of the first Django app (`apps/<name>/`); can't be `accounts` (reserved for the custom user model) |
 | `author_name` / `author_email` | Populates `pyproject.toml` authors |
 | `python_version` | `3.14` (default), `3.13`, or `3.12` — Python version to target |
+| `postgres_version` | *(full_project only)* `18` (default), `17`, or `16` — PostgreSQL version to target |
 | `use_redis` | *(full_project only)* `true` → django-tasks on RQ/Redis with a `worker` compose service; `false` → synchronous `ImmediateBackend`, no Redis needed |
 | `use_async` | *(full_project only)* `true` → serve via uvicorn/ASGI; `false` → gunicorn/WSGI |
 | `use_shinobi` | `true` → include a django-shinobi (Django Ninja) API layer with JWT auth and an example health/token/me API; `false` → no API layer |

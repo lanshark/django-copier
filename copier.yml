@@ -80,6 +80,16 @@ python_version:
     - '3.13'
     - '3.12'
 
+postgres_version:
+  type: str
+  help: PostgreSQL version to target
+  default: '18'
+  choices:
+    - '18'
+    - '17'
+    - '16'
+  when: "{{ project_type == 'full_project' }}"
+
 use_redis:
   type: bool
   help: >-

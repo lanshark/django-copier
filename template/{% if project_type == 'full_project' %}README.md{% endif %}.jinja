@@ -1,6 +1,6 @@
 # {{ project_name }}
 
-Django{% if use_shinobi %} + django-shinobi{% endif %} starter: Python {{ python_version }}, Django 5.2 LTS, Postgres 17,
+Django{% if use_shinobi %} + django-shinobi{% endif %} starter: Python {{ python_version }}, Django 5.2 LTS, Postgres {{ postgres_version }},
 {% if use_shinobi %}JWT auth, {% endif %}django-tasks{% if use_redis %} on RQ/Redis{% else %} (synchronous backend){% endif %}, PyTest, uv, ruff, pyright, Docker.
 
 ## Quickstart

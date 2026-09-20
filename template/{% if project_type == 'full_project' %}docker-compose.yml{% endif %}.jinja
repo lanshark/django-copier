@@ -1,6 +1,6 @@
 services:
   db:
-    image: postgres:17
+    image: postgres:{{ postgres_version }}
     environment:
       POSTGRES_DB: app
       POSTGRES_USER: postgres
