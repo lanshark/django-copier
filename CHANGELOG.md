@@ -5,16 +5,13 @@ All notable changes to this project are documented in this file.
 ## Next Release
 
 - Set a dummy `DJANGO_DEFAULT_FROM_EMAIL` in the template CI's `email-*`
-  production-settings check so those jobs keep validating provider config after
-  `config.settings.prod` started requiring the sender address
+ production-settings check so those jobs validate provider config with an
+ explicit sender address
 - Install the matching `django-anymail` extras for full-project Postmark and
-  Mailgun renders so generated production email backends have their provider
-  dependencies out of the box
-- Require full-project production renders to set `DJANGO_DEFAULT_FROM_EMAIL`, so
-  generated `config.settings.prod` does not fall back to Django's
-  `webmaster@localhost` sender
+ Mailgun renders so generated production email backends have their provider
+ dependencies out of the box
 - Clarify the full-project generated README's non-Docker dev instructions so local
-  `uv run ... runserver` users know to run `docker compose up mailpit`, which publishes
+ `uv run ... runserver` users know to run `docker compose up mailpit`, which publishes
   Mailpit's SMTP listener on `localhost:1025` and its web UI on `localhost:8025`
 - Make the full-project Mailpit SMTP defaults work for both documented local-dev paths by defaulting `DJANGO_EMAIL_HOST` to `localhost` for non-Docker runs, publishing Mailpit's SMTP port on `127.0.0.1:1025`, and overriding Docker `web`/`worker` services to use the `mailpit` hostname
 - Add an `email_provider` question (full_project only: `Amazon SES` default, `Postmark`, `Mailgun`, or `SendGrid`) wiring production email through `django-anymail`. `config/settings/prod.py` (converted to `prod.py.jinja`) sets `EMAIL_BACKEND` to the chosen provider's anymail backend and, for Postmark/Mailgun/SendGrid, a required `ANYMAIL` dict sourced from env (`ANYMAIL_POSTMARK_SERVER_TOKEN`, `ANYMAIL_MAILGUN_API_KEY`/`ANYMAIL_MAILGUN_SENDER_DOMAIN`, or `ANYMAIL_SENDGRID_API_KEY`); SES needs no `ANYMAIL` setting since boto3 reads AWS credentials via its standard chain. `pyproject.toml` picks the right `django-anymail` extra (`amazon-ses`/`sendgrid`) per provider. Local dev (`mailpit`) and tests (`locmem`) are unaffected — this only changes `config.settings.prod`. CI gains `email-ses`/`email-postmark`/`email-mailgun`/`email-sendgrid` matrix entries running `manage.py check` under `config.settings.prod` with dummy provider secrets, since nothing previously exercised `prod.py` at all
