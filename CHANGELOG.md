@@ -4,6 +4,10 @@ All notable changes to this project are documented in this file.
 
 ## Next Release
 
+- Fix the `use_allauth` comment/doc wording (`config/settings/base.py`,
+  `docs/architecture.md`) that referenced "the JWT API auth above" even when
+  `use_shinobi=false`, when there's no JWT section to refer to — condition that
+  clause on `use_shinobi` as well
 - Fix `from django.urls import reverse` being imported unconditionally in
   `apps/<initial_app_name>/tests/test_views.py` — it's only used by the
   allauth-specific tests, so every non-allauth render failed `ruff check` with an

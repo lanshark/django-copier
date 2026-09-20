@@ -175,7 +175,7 @@ JWT_REFRESH_TOKEN_LIFETIME_DAYS = config("JWT_REFRESH_TOKEN_LIFETIME_DAYS", defa
 {% endif %}
 {% if use_allauth %}
 
-# --- django-allauth (session-based login, separate from the JWT API auth above) ---
+# --- django-allauth (session-based login{% if use_shinobi %}, separate from the JWT API auth above{% endif %}) ---
 LOGIN_REDIRECT_URL = "/"
 {% if user_identifier == 'email' %}
 # No username field on the custom user model (see apps/accounts) — tell allauth so
