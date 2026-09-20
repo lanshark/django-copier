@@ -1,0 +1,179 @@
+# Justfile for {{ project_name }}
+# Thin wrappers around `docker compose` and `manage.py` for common dev tasks.
+# Run `just` or `just help` to list available commands.
+#
+# Recipe args are positional rather than KEY=value (e.g. `just test apps/core`,
+# `just logs web`); env var overrides still work (e.g. `LOCAL=1 just migrate`).
+
+set shell := ["bash", "-uc"]
+
+# Docker Compose command and services (match docker-compose.yml)
+export compose := env_var_or_default("COMPOSE", "docker compose")
+export web_service := env_var_or_default("WEB_SERVICE", "web")
+export db_service := env_var_or_default("DB_SERVICE", "db")
+
+# Postgres connection for the psql recipe (match docker-compose.yml defaults)
+export postgres_user := env_var_or_default("POSTGRES_USER", "postgres")
+export postgres_db := env_var_or_default("POSTGRES_DB", "app")
+
+# manage.py runs inside the running web container by default.
+# Set LOCAL=1 to run against your local uv environment instead.
+export manage := if env_var_or_default("LOCAL", "") == "1" { "uv run python manage.py" } else { compose + " exec " + web_service + " python manage.py" }
+
+default: help
+
+## Docker
+
+# Build the service images
+build:
+	@echo "Building images.."
+	@$compose build
+
+# Start all services in the background
+up:
+	@echo "Starting services.."
+	@$compose up -d
+	@echo "Web is live at http://localhost:8000"
+
+# Rebuild images and start services
+up-build:
+	@echo "Building and starting services.."
+	@$compose up -d --build
+
+# Stop and remove containers and networks
+down:
+	@echo "Stopping and removing services.."
+	@$compose down
+
+# Stop services without removing them
+stop:
+	@$compose stop
+
+# Start previously stopped services
+start:
+	@$compose start
+
+# Restart services
+restart:
+	@$compose restart
+
+# List running services
+ps:
+	@$compose ps
+
+# Tail logs (optionally pass a service, e.g. `just logs web`)
+logs $service=env_var_or_default("SERVICE", ""):
+	@$compose logs -f $service
+
+# Open a shell in the web container
+shell:
+	@$compose exec $web_service /bin/sh
+
+## Django
+
+# Run the Django dev server on port 8000
+runserver:
+	@echo "Starting the Django dev server.."
+	@$manage runserver 0.0.0.0:8000
+
+# Apply database migrations
+migrate:
+	@echo "Applying migrations.."
+	@$manage migrate
+
+# Create new migrations
+makemigrations:
+	@echo "Creating migrations.."
+	@$manage makemigrations
+
+# Create and apply migrations
+migrations: makemigrations migrate
+
+# Fail if model changes have no migration
+checkmigrations:
+	@echo "Checking for missing migrations.."
+	@$manage makemigrations --check --dry-run
+
+# Create a Django superuser
+superuser:
+	@$manage createsuperuser
+
+# Collect static files
+collectstatic:
+	@$manage collectstatic --noinput
+
+# Open the Django shell
+django-shell:
+	@$manage shell
+
+# Run Django system checks
+check:
+	@$manage check
+
+## Database
+
+# Open a psql prompt in the db container
+psql:
+	@$compose exec $db_service psql -U $postgres_user -d $postgres_db
+
+# Open Django's dbshell
+dbshell:
+	@$manage dbshell
+
+## Setup, tests & quality (run against the local uv environment)
+
+# Install dependencies and pre-commit hooks
+install:
+	@echo "Syncing dependencies.."
+	@uv sync --all-extras --dev
+	@uv run pre-commit install
+
+# Run the test suite (optionally pass a path, e.g. `just test apps/core`)
+test $test_path=env_var_or_default("TEST_PATH", ""):
+	@echo "Running tests.."
+	@uv run pytest $test_path
+
+# Lint with ruff
+lint:
+	@uv run ruff check .
+
+# Auto-fix lint issues and format with ruff
+format:
+	@uv run ruff check --fix .
+	@uv run ruff format .
+
+# Type-check with pyright
+typecheck:
+	@uv run pyright
+
+{% if use_vite %}
+## Frontend (Pico.css + Vite)
+
+# Install frontend dependencies
+frontend-install:
+	@echo "Installing frontend dependencies.."
+	@npm install
+
+# Build frontend assets with Vite
+frontend-build:
+	@echo "Building frontend assets.."
+	@npm run build
+
+{% endif %}
+## Document-first workflow
+
+# Scaffold a feature folder + skill symlinks (pass name=<feature-slug>)
+new-feature $name:
+	@if [ -e "features/$name" ]; then echo "features/$name already exists"; exit 1; fi
+	@cp -R features/_template "features/$name"
+	@mkdir -p .agents/skills .claude/skills
+	@ln -sfn "../../features/$name" ".agents/skills/$name"
+	@ln -sfn "../../features/$name" ".claude/skills/$name"
+	@echo "Created features/$name with .agents/skills and .claude/skills symlinks"
+	@echo "Next: fill in features/$name/feature.md and record the prompt in history.md"
+
+## Help
+
+# Show this help
+help:
+	@just --list --unsorted
