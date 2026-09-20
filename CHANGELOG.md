@@ -4,6 +4,9 @@ All notable changes to this project are documented in this file.
 
 ## Next Release
 
+- Replace the README's placeholder Copier source with this repository's actual
+  GitHub path, document `--vcs-ref=HEAD` for the latest template revision, and
+  add a release-tag example for reproducible project creation
 - Make `postgres_version` selectable among `16`, `17`, and `18` (default `18`,
   full_project only) — parameterizes the hardcoded `postgres:17` image in
   `docker-compose.yml` and `ci.yml`, plus the Postgres mentions in the generated
