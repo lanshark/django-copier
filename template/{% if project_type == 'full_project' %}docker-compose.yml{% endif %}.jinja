@@ -44,6 +44,7 @@ services:
     ports:
       - "8000:8000"
 {% if use_redis %}
+  # Redis-backed worker service (only rendered when use_redis=true).
   worker:
     build:
       context: .
@@ -54,7 +55,6 @@ services:
     env_file: .env
     environment:
       DJANGO_EMAIL_HOST: mailpit
-{% if use_redis %}
     depends_on:
       db:
         condition: service_healthy
@@ -62,7 +62,6 @@ services:
         condition: service_started
       mailpit:
         condition: service_started
-{% endif %}
 {% endif %}
 volumes:
   postgres_data:
