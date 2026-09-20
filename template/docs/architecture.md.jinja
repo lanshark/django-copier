@@ -21,7 +21,7 @@ capture the reasoning in a feature-scoped ADR.
 {% if project_type == 'full_project' %}
 {{ project_name }} is a Django project built on:
 
-- Python {{ python_version }}, Django 5.2 LTS, PostgreSQL {{ postgres_version }}.
+- Python {{ python_version }}, Django {{ django_version }}{% if django_version == '5.2' %} LTS{% endif %}, PostgreSQL {{ postgres_version }}.
 - A custom user model (`apps/accounts`), identified by
   {{ 'email address' if user_identifier == 'email' else 'username' }} (`AUTH_USER_MODEL`).
 - A home page at `apps/{{ initial_app_name }}/` (view, URL, `templates/`).
@@ -44,10 +44,26 @@ capture the reasoning in a feature-scoped ADR.
 - A Pico.css + Vite frontend build pipeline (django-vite) for the home page.
 {% endif %}
 - Tooling: uv, ruff, pyright, pytest, and Docker Compose.
+{% if django_version == '6.1' %}
+
+**Known Django 6.1 caveats (not yet addressed, tracked for future work):**
+
+- Django 6.0+ ships a built-in `django.tasks` background-task framework using
+  the same `TASKS` setting name as the third-party `django-tasks`/
+  `django-tasks-rq` packages this project uses (see `config/settings/base.py`).
+  They don't currently conflict — this project's own `TASKS` backend classes
+  still work — but migrating to Django's native framework hasn't been
+  evaluated.
+- The `EMAIL_HOST`/`EMAIL_HOST_USER`/`EMAIL_HOST_PASSWORD`/`EMAIL_BACKEND`/
+  `EMAIL_PORT`/`EMAIL_USE_TLS` settings this project configures in
+  `config/settings/base.py` are deprecated as of Django 6.1
+  (`RemovedInDjango70Warning`) in favor of a new `MAILERS` setting; they still
+  work today but this project hasn't been migrated to `MAILERS`.
+{% endif %}
 {% else %}
 {{ project_name }} is a reusable Django app built on:
 
-- Python {{ python_version }}, Django 5.2 LTS.
+- Python {{ python_version }}, Django {{ django_version }}{% if django_version == '5.2' %} LTS{% endif %}.
 - A `src/{{ package_name }}/` package installed into a host project's `INSTALLED_APPS`.
 {% if use_shinobi %}
 - A django-shinobi (Django Ninja) `Router` the host project mounts on its own `NinjaAPI`.

@@ -38,6 +38,7 @@ You'll be prompted for:
 | `author_name` / `author_email` | Populates `pyproject.toml` authors |
 | `python_version` | `3.14` (default), `3.13`, or `3.12` — Python version to target |
 | `postgres_version` | *(full_project only)* `18` (default), `17`, or `16` — PostgreSQL version to target |
+| `django_version` | `5.2` LTS (default) or `6.1` — Django 6.1 is newer and not yet fully vetted here; the generated `docs/architecture.md` documents known caveats (`django-tasks`/`django-rq` vs. Django's built-in tasks framework, unverified email settings) when selected |
 | `use_redis` | *(full_project only)* `true` → django-tasks on RQ/Redis with a `worker` compose service; `false` → synchronous `ImmediateBackend`, no Redis needed |
 | `use_async` | *(full_project only)* `true` → serve via uvicorn/ASGI; `false` → gunicorn/WSGI |
 | `use_shinobi` | `true` → include a django-shinobi (Django Ninja) API layer with JWT auth and an example health/token/me API; `false` → no API layer |

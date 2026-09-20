@@ -90,6 +90,18 @@ postgres_version:
     - '16'
   when: "{{ project_type == 'full_project' }}"
 
+django_version:
+  type: str
+  help: >-
+    Django version to target. 6.1 works but has known caveats not yet
+    addressed here (django-tasks/django-rq vs. Django's built-in tasks
+    framework; deprecated EMAIL_* settings) — see docs/architecture.md in the
+    generated project.
+  default: '5.2'
+  choices:
+    - '5.2'
+    - '6.1'
+
 use_redis:
   type: bool
   help: >-
