@@ -40,6 +40,12 @@ jobs:
             extra_args: '--data use_allauth=true'
           - name: with-allauth-username
             extra_args: '--data use_allauth=true --data user_identifier=username'
+          - name: python-3.12
+            extra_args: '--data python_version=3.12'
+            python_version: '3.12'
+          - name: python-3.13
+            extra_args: '--data python_version=3.13'
+            python_version: '3.13'
 
     services:
       postgres:
@@ -65,7 +71,7 @@ jobs:
         uses: astral-sh/setup-uv@v10.0.1
 
       - name: Set up Python
-        run: uv python install 3.14
+        run: uv python install 3.12 3.13 3.14
 
       - name: Install copier
         run: uv tool install copier
@@ -103,7 +109,12 @@ jobs:
 
       - name: Install rendered project deps
         working-directory: ${{ github.workspace }}/../rendered-${{ matrix.name }}
-        run: uv sync --all-extras --dev
+        run: |
+          if [ -n "${{ matrix.python_version }}" ]; then
+            uv sync --all-extras --dev --python ${{ matrix.python_version }}
+          else
+            uv sync --all-extras --dev
+          fi
 
       - name: Build frontend assets
         if: matrix.name == 'with-vite' || matrix.name == 'with-justfile'
@@ -196,6 +207,9 @@ jobs:
             extra_args: '--data project_type=reusable_app --data use_shinobi=false'
           - name: app-justfile
             extra_args: '--data project_type=reusable_app --data task_runner=justfile'
+          - name: app-python-3.12
+            extra_args: '--data project_type=reusable_app --data python_version=3.12'
+            python_version: '3.12'
 
     steps:
       - uses: actions/checkout@v7.0.1
@@ -204,7 +218,7 @@ jobs:
         uses: astral-sh/setup-uv@v10.0.1
 
       - name: Set up Python
-        run: uv python install 3.14
+        run: uv python install 3.12 3.13 3.14
 
       - name: Install copier
         run: uv tool install copier
@@ -220,7 +234,12 @@ jobs:
 
       - name: Install rendered app deps
         working-directory: ${{ github.workspace }}/../rendered-${{ matrix.name }}
-        run: uv sync --all-extras --dev
+        run: |
+          if [ -n "${{ matrix.python_version }}" ]; then
+            uv sync --all-extras --dev --python ${{ matrix.python_version }}
+          else
+            uv sync --all-extras --dev
+          fi
 
       - name: Pytest
         working-directory: ${{ github.workspace }}/../rendered-${{ matrix.name }}
