@@ -39,8 +39,6 @@ services:
       redis:
         condition: service_started
 {% endif %}
-      mailpit:
-        condition: service_started
     ports:
       - "8000:8000"
 {% if use_redis %}
