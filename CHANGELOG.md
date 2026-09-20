@@ -4,6 +4,9 @@ All notable changes to this project are documented in this file.
 
 ## Next Release
 
+- Replace the README's placeholder Copier source with this repository's actual
+  GitHub path, document `--vcs-ref=HEAD` for the latest template revision, and
+  add a release-tag example for reproducible project creation
 - Make `django_version` selectable between `5.2` (LTS, default) and `6.1` —
   parameterizes the hardcoded `django>=5.2,<5.3` dependency pin and
   `Framework :: Django :: 5.2` classifier in `pyproject.toml`, and the "Django

@@ -13,9 +13,17 @@ per-feature docs and skills) for working with Claude Code or Codex.
 
 ```bash
 pip install copier
-copier copy gh:YOUR_ORG/YOUR_TEMPLATE_REPO my-new-project
+# Create from the latest template revision.
+copier copy --vcs-ref=HEAD gh:lanshark/django-copier my-new-project
 # or, from a local checkout of this repo:
-copier copy /path/to/this/repo my-new-project
+copier copy /path/to/django-copier my-new-project
+```
+
+After a release tag is available, use it to create a project from a known
+template version:
+
+```bash
+copier copy --vcs-ref=<release-tag> gh:lanshark/django-copier my-new-project
 ```
 
 You'll be prompted for:
