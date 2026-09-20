@@ -5,18 +5,25 @@ All notable changes to this project are documented in this file.
 ## Next Release
 
 - Add a `pre-commit-autoupdate.yml` GitHub Actions workflow (this repo's own
-  `.github/workflows/`, not part of the generated template) that runs
-  `pre-commit autoupdate --config template/.pre-commit-config.yaml` nightly
-  and opens a PR via `peter-evans/create-pull-request` if any hook revs
-  changed — modeled on cookiecutter-django's
-  `.github/workflows/pre-commit-autoupdate.yml`. Gated to
-  `github.repository_owner == 'lanshark'` so a fork doesn't get scheduled
-  auto-PRs against itself; also runnable manually via `workflow_dispatch`.
-  Opens a normal PR for review rather than auto-merging. Drops the `labels:
-  update` input the cookiecutter-django original uses — neither this repo nor
-  a fresh repo has an `update` label, and GitHub's API 404s when you apply a
-  label that doesn't exist, which would have failed the PR-creation step on
-  its first real run. Closes #33
+  `.github/workflows/`, not part of the generated template) that runs nightly
+  and opens a PR via `peter-evans/create-pull-request` if anything changed —
+  modeled on cookiecutter-django's `.github/workflows/pre-commit-autoupdate.yml`.
+  Gated to `github.repository_owner == 'lanshark'` so a fork doesn't get
+  scheduled auto-PRs against itself; also runnable manually via
+  `workflow_dispatch`. Opens a normal PR for review rather than auto-merging.
+  Drops the `labels: update` input the cookiecutter-django original uses —
+  neither this repo nor a fresh repo has an `update` label, and GitHub's API
+  404s when you apply a label that doesn't exist, which would have failed the
+  PR-creation step on its first real run. Two things get bumped in the same
+  run: `pre-commit autoupdate --config template/.pre-commit-config.yaml`
+  (the template's pre-commit hook revs), and a new
+  `.github/scripts/update_action_pins.py` that scans `.github/workflows/`
+  and `template/.github/workflows/` for `uses: owner/repo@ref` lines and
+  rewrites each to that repo's highest semver tag. A dedicated script (not
+  `pre-commit autoupdate` or Dependabot) was needed because Copier's
+  conditionally-named template workflow files (e.g. `{% if ... %}build.yml{%
+  endif %}`) don't end in `.yml`, so extension-based discovery misses them;
+  the script instead discovers files by directory. Closes #33
 - Update pinned pre-commit hook versions in the generated project's
   `.pre-commit-config.yaml` — `astral-sh/ruff-pre-commit` `v0.16.3` →
   `v0.16.8`, `RobertCraigie/pyright-python` `v1.1.411` → `v1.1.414`.

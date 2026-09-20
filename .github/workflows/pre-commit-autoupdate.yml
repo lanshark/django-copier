@@ -1,6 +1,7 @@
-# Run pre-commit autoupdate nightly against the template's
-# .pre-commit-config.yaml and open a PR if anything changed.
-name: Pre-commit auto-update
+# Nightly: bump the template's pre-commit hook revs and every pinned
+# GitHub Actions version in .github/workflows/ and
+# template/.github/workflows/, then open a PR if anything changed.
+name: Dependency auto-update
 
 on:
   schedule:
@@ -28,11 +29,18 @@ jobs:
       - name: Autoupdate template's pre-commit config
         run: uv tool run pre-commit autoupdate --config template/.pre-commit-config.yaml
 
+      - name: Update pinned GitHub Actions versions
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python3 .github/scripts/update_action_pins.py
+
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v8.1.1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          branch: update/pre-commit-autoupdate
-          title: Auto-update pre-commit hooks
-          commit-message: Auto-update pre-commit hooks
-          body: Update versions of tools in the template's pre-commit config to latest version
+          branch: update/dependency-autoupdate
+          title: Auto-update pre-commit hooks and GitHub Actions
+          commit-message: Auto-update pre-commit hooks and GitHub Actions
+          body: >-
+            Update the template's pre-commit hook revs and pinned GitHub
+            Actions versions to their latest releases.
