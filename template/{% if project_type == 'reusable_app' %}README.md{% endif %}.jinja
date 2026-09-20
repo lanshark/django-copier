@@ -2,7 +2,7 @@
 # {{ project_name }}
 
 A reusable Django app{% if use_shinobi %} with a django-shinobi (Django Ninja) API{% endif %} —
-Python {{ python_version }}, Django 5.2 LTS. Install it into any Django project.
+Python {{ python_version }}, Django {{ django_version }}{% if django_version == '5.2' %} LTS{% endif %}. Install it into any Django project.
 
 ## Install
 

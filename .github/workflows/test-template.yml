@@ -52,6 +52,8 @@ jobs:
           - name: postgres-17
             extra_args: '--data postgres_version=17'
             postgres_version: '17'
+          - name: django-6.1
+            extra_args: '--data django_version=6.1'
 
     services:
       postgres:
@@ -216,6 +218,8 @@ jobs:
           - name: app-python-3.12
             extra_args: '--data project_type=reusable_app --data python_version=3.12'
             python_version: '3.12'
+          - name: app-django-6.1
+            extra_args: '--data project_type=reusable_app --data django_version=6.1'
 
     steps:
       - uses: actions/checkout@v7.0.1
