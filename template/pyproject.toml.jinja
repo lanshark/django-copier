@@ -53,6 +53,10 @@ dependencies = [
     "whitenoise",
 {% if email_provider == 'ses' %}
     "django-anymail[amazon-ses]",
+{% elif email_provider == 'postmark' %}
+    "django-anymail[postmark]",
+{% elif email_provider == 'mailgun' %}
+    "django-anymail[mailgun]",
 {% elif email_provider == 'sendgrid' %}
     "django-anymail[sendgrid]",
 {% else %}

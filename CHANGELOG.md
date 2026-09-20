@@ -4,6 +4,9 @@ All notable changes to this project are documented in this file.
 
 ## Next Release
 
+- Install the matching `django-anymail` extras for full-project Postmark and
+  Mailgun renders so generated production email backends have their provider
+  dependencies out of the box
 - Require full-project production renders to set `DJANGO_DEFAULT_FROM_EMAIL`, so
   generated `config.settings.prod` does not fall back to Django's
   `webmaster@localhost` sender
