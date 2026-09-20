@@ -23,7 +23,7 @@ services:
     # Web UI at http://localhost:8025 shows everything sent.
     image: axllent/mailpit:v1.31
     ports:
-      - "8025:8025"
+      - "127.0.0.1:8025:8025"
   web:
     build:
       context: .
