@@ -8,8 +8,8 @@ All notable changes to this project are documented in this file.
  production-settings check so those jobs validate provider config with an
  explicit sender address
 - Install the matching `django-anymail` extras for full-project Postmark and
- Mailgun renders, while guarding reusable-app renders from touching the
- full-project-only `email_provider` question, so generated production email
+ Mailgun renders, while keeping reusable-app renders free of the full-project-
+ only `django-anymail` dependency selection, so generated production email
  backends have their provider dependencies out of the box
 - Clarify the full-project generated README's non-Docker dev instructions so local
  `uv run ... runserver` users know to run `docker compose up mailpit`, which publishes

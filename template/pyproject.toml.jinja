@@ -51,16 +51,14 @@ dependencies = [
     "gunicorn",
 {% endif %}
     "whitenoise",
-{% if email_provider|default('') == 'ses' %}
-    "django-anymail[amazon-ses]",
-{% elif email_provider|default('') == 'postmark' %}
-    "django-anymail[postmark]",
-{% elif email_provider|default('') == 'mailgun' %}
-    "django-anymail[mailgun]",
-{% elif email_provider|default('') == 'sendgrid' %}
-    "django-anymail[sendgrid]",
-{% else %}
-    "django-anymail",
+{% set anymail_dependency = {
+    "ses": "django-anymail[amazon-ses]",
+    "postmark": "django-anymail[postmark]",
+    "mailgun": "django-anymail[mailgun]",
+    "sendgrid": "django-anymail[sendgrid]",
+}.get(email_provider|default("")) %}
+{% if anymail_dependency %}
+    "{{ anymail_dependency }}",
 {% endif %}
 {% if use_vite %}
     "django-vite",
