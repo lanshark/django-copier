@@ -4,6 +4,13 @@ All notable changes to this project are documented in this file.
 
 ## Next Release
 
+- Make `postgres_version` selectable among `16`, `17`, and `18` (default `18`,
+  full_project only) — parameterizes the hardcoded `postgres:17` image in
+  `docker-compose.yml` and `ci.yml`, plus the Postgres mentions in the generated
+  README and `docs/architecture.md`. New CI matrix entries `postgres-16`/
+  `postgres-17` (18 covered by `defaults`) run the template's own `postgres`
+  service container at the selected version, not just the rendered project's
+  compose/CI config. Closes #13
 - Make `python_version` selectable among `3.12`, `3.13`, and `3.14` (default
   `3.14`) — every template file already parameterized off this question
   (`pyproject.toml`'s `requires-python`/ruff/pyright config, the Dockerfile base

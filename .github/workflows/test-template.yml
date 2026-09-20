@@ -46,10 +46,16 @@ jobs:
           - name: python-3.13
             extra_args: '--data python_version=3.13'
             python_version: '3.13'
+          - name: postgres-16
+            extra_args: '--data postgres_version=16'
+            postgres_version: '16'
+          - name: postgres-17
+            extra_args: '--data postgres_version=17'
+            postgres_version: '17'
 
     services:
       postgres:
-        image: postgres:17
+        image: postgres:${{ matrix.postgres_version || '18' }}
         env:
           POSTGRES_DB: app
           POSTGRES_USER: postgres
