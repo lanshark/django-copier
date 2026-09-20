@@ -4,6 +4,12 @@ All notable changes to this project are documented in this file.
 
 ## Next Release
 
+- Update pinned pre-commit hook versions in the generated project's
+  `.pre-commit-config.yaml` — `astral-sh/ruff-pre-commit` `v0.16.3` →
+  `v0.16.8`, `RobertCraigie/pyright-python` `v1.1.411` → `v1.1.414`.
+  `pre-commit/pre-commit-hooks` was already at its latest release (`v6.0.0`).
+  Verified by rendering a project and running `pre-commit run --all-files`
+  against the bumped revs
 - Update pinned GitHub Actions versions across this repo's own
   `test-template.yml` and the four workflow templates it generates
   (`build.yml`, both `ci.yml` variants, `release.yml`) — `astral-sh/setup-uv`
