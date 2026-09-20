@@ -51,6 +51,7 @@ dependencies = [
     "gunicorn",
 {% endif %}
     "whitenoise",
+{% if project_type == 'full_project' %}
 {% set anymail_dependency = {
     "ses": "django-anymail[amazon-ses]",
     "postmark": "django-anymail[postmark]",
@@ -59,6 +60,7 @@ dependencies = [
 }.get(email_provider|default("")) %}
 {% if anymail_dependency %}
     "{{ anymail_dependency }}",
+{% endif %}
 {% endif %}
 {% if use_vite %}
     "django-vite",
