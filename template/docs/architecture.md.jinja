@@ -26,6 +26,10 @@ capture the reasoning in a feature-scoped ADR.
 - The Django admin site (no HTTP API layer in this project).
 {% endif %}
 - Background work via `django-tasks`{% if use_redis %}, running on the RQ/Redis backend with a dedicated worker{% else %} (synchronous in-process backend){% endif %}.
+{% if use_vite %}
+- A Pico.css + Vite frontend build pipeline (django-vite), with a starter page under
+  `apps/{{ initial_app_name }}/`.
+{% endif %}
 - Tooling: uv, ruff, pyright, pytest, and Docker Compose.
 {% else %}
 {{ project_name }} is a reusable Django app built on:
@@ -55,6 +59,11 @@ capture the reasoning in a feature-scoped ADR.
 ├── pyproject.toml
 ├── docker-compose.yml
 ├── docker/                  # Dockerfile + entrypoint
+{% if use_vite %}
+├── package.json             # Vite + Pico.css frontend tooling
+├── vite.config.js
+├── frontend/                # Vite entry point (main.js)
+{% endif %}
 ├── config/
 │   ├── settings/            # base / dev / prod / test
 │   ├── urls.py
@@ -69,6 +78,11 @@ capture the reasoning in a feature-scoped ADR.
 │       ├── api.py           # django-shinobi routes
 │       ├── auth.py          # JWT bearer auth
 │       ├── schemas.py
+{% endif %}
+{% if use_vite %}
+│       ├── views.py         # starter page view
+│       ├── urls.py
+│       ├── templates/{{ initial_app_name }}/  # base.html (django-vite tags) + index.html
 {% endif %}
 │       └── tests/
 ├── scripts/

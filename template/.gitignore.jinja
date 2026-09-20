@@ -12,3 +12,7 @@ htmlcov/
 {% if project_type == "reusable_app" %}
 dist/
 {% endif %}
+{% if use_vite %}
+node_modules/
+static/dist/
+{% endif %}

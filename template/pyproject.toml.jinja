@@ -51,6 +51,9 @@ dependencies = [
     "gunicorn",
 {% endif %}
     "whitenoise",
+{% if use_vite %}
+    "django-vite",
+{% endif %}
 {% endif %}
 ]
 

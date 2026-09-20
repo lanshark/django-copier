@@ -1,5 +1,9 @@
 from django.contrib import admin
+{% if use_vite %}
+from django.urls import include, path
+{% else %}
 from django.urls import path
+{% endif %}
 {% if use_shinobi %}
 
 from apps.{{ initial_app_name }}.api import api
@@ -9,5 +13,8 @@ urlpatterns = [
     path("admin/", admin.site.urls),
 {% if use_shinobi %}
     path("api/v1/", api.urls),
+{% endif %}
+{% if use_vite %}
+    path("", include("apps.{{ initial_app_name }}.urls")),
 {% endif %}
 ]
