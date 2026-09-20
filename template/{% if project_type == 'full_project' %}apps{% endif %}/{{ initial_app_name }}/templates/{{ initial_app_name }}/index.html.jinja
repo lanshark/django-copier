@@ -15,7 +15,10 @@
 {% raw %}<nav>
   {% if user.is_authenticated %}
   <p>Logged in user: {{ user.{% endraw %}{{ user_identifier }}{% raw %} }}</p>
-  <a href="{% url 'account_logout' %}">Logout</a>
+  <form method="post" action="{% url 'account_logout' %}">
+    {% csrf_token %}
+    <button type="submit">Logout</button>
+  </form>
   {% else %}
   <a href="{% url 'account_login' %}">Login</a>
   {% endif %}
