@@ -29,9 +29,9 @@ services:
     build:
       context: .
       dockerfile: docker/Dockerfile
-    env_file: .env
-    environment:
-      DJANGO_EMAIL_HOST: mailpit
+    env_file:
+      - .env
+      - docker/mailpit.env
     depends_on:
       db:
         condition: service_healthy
@@ -52,9 +52,9 @@ services:
     # --job-class is redundant with the RQ.JOB_CLASS setting in base.py, but kept
     # explicit here since it's easy to lose track of when copy-pasting this command.
     command: ["python", "manage.py", "rqworker", "default", "--job-class", "django_tasks_rq.backend.Job"]
-    env_file: .env
-    environment:
-      DJANGO_EMAIL_HOST: mailpit
+    env_file:
+      - .env
+      - docker/mailpit.env
     depends_on:
       db:
         condition: service_healthy
