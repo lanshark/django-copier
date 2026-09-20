@@ -4,26 +4,21 @@ All notable changes to this project are documented in this file.
 
 ## Next Release
 
-- Add a `pre-commit-autoupdate.yml` GitHub Actions workflow (this repo's own
-  `.github/workflows/`, not part of the generated template) that runs nightly
-  and opens a PR via `peter-evans/create-pull-request` if anything changed —
-  modeled on cookiecutter-django's `.github/workflows/pre-commit-autoupdate.yml`.
-  Gated to `github.repository_owner == 'lanshark'` so a fork doesn't get
-  scheduled auto-PRs against itself; also runnable manually via
-  `workflow_dispatch`. Opens a normal PR for review rather than auto-merging.
-  Drops the `labels: update` input the cookiecutter-django original uses —
-  neither this repo nor a fresh repo has an `update` label, and GitHub's API
-  404s when you apply a label that doesn't exist, which would have failed the
-  PR-creation step on its first real run. Two things get bumped in the same
-  run: `pre-commit autoupdate --config template/.pre-commit-config.yaml`
-  (the template's pre-commit hook revs), and a new
-  `.github/scripts/update_action_pins.py` that scans `.github/workflows/`
-  and `template/.github/workflows/` for `uses: owner/repo@ref` lines and
-  rewrites each to that repo's highest semver tag. A dedicated script (not
-  `pre-commit autoupdate` or Dependabot) was needed because Copier's
-  conditionally-named template workflow files (e.g. `{% if ... %}build.yml{%
-  endif %}`) don't end in `.yml`, so extension-based discovery misses them;
-  the script instead discovers files by directory. Closes #33
+- Add a `pre-commit-autoupdate.yml` GitHub Actions workflow to the generated
+  full_project template (`template/.github/workflows/{% if project_type ==
+  'full_project' %}pre-commit-autoupdate.yml{% endif %}`) — the same nightly
+  `pre-commit autoupdate` + `peter-evans/create-pull-request` mechanism this
+  repo's own `.github/workflows/pre-commit-autoupdate.yml` uses, adapted for
+  a generated project: no `--config` flag needed (the project's own
+  `.pre-commit-config.yaml` is at its repo root), and no
+  `github.repository_owner` guard (that's specific to gating forks of this
+  template repo, not applicable to someone's own generated project). Not a
+  `.jinja` file — its body needs no Copier variable substitution, and staying
+  non-Jinja avoids GitHub Actions' `${{ }}` expressions colliding with
+  Jinja's own `{{ }}` delimiters (same reasoning as the existing `build.yml`).
+  reusable_app is not covered. No dedicated CI step needed — the generated
+  project's own `pre-commit run --all-files` (`check-yaml`) already validates
+  this file's syntax
 - Update pinned pre-commit hook versions in the generated project's
   `.pre-commit-config.yaml` — `astral-sh/ruff-pre-commit` `v0.16.3` →
   `v0.16.8`, `RobertCraigie/pyright-python` `v1.1.411` → `v1.1.414`.
