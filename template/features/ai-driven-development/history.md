@@ -136,8 +136,8 @@ Verification:
   so they load automatically for the AI coding agent.
 - Reusable templates live in `features/_template/`.
 - New features are scaffolded with `make new-feature name=<slug>` (`just new-feature
-  name=<slug>` if this project uses a Justfile), which copies the template and creates
-  both skill symlinks.
+  <slug>` if this project uses a Justfile), which copies the template and creates both
+  skill symlinks.
 
 ## Consolidated Verification Notes
 
