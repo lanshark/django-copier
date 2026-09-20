@@ -92,9 +92,10 @@ port (`127.0.0.1:1025`) and web UI (`http://localhost:8025`) on localhost, so no
 mail is ever sent. `config/settings/test.py` uses Django's `locmem` backend instead,
 so tests and CI don't need a running SMTP server.
 
-`config/settings/prod.py` (only loaded when `DJANGO_SETTINGS_MODULE=config.settings.
-prod`) overrides `EMAIL_BACKEND` to send through [django-anymail](https://anymail.dev/)
-via the `email_provider` chosen at generation time:
+`config/settings/prod.py` (only loaded when
+`DJANGO_SETTINGS_MODULE=config.settings.prod`) overrides `EMAIL_BACKEND` to send
+through [django-anymail](https://anymail.dev/) via the `email_provider` chosen at
+generation time:
 
 - **Amazon SES** — no `ANYMAIL` setting required; boto3 reads AWS credentials/region
   via its standard chain (env vars, an IAM role, or `~/.aws/credentials`).

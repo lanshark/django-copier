@@ -12,12 +12,7 @@ All notable changes to this project are documented in this file.
 - Set a dummy `DJANGO_DEFAULT_FROM_EMAIL` in the template CI's `email-*`
  production-settings check so those jobs validate provider config with an
  explicit sender address
-- Install the matching `django-anymail` extras for full-project Postmark and
- Mailgun renders, while keeping reusable-app renders free of the full-project-
- only `django-anymail` dependency selection, default missing or empty
- production `email_provider` values to SES, fail fast on unsupported provider
- values, and install `boto3` for Amazon SES renders, so generated production
- email backends have their provider dependencies out of the box
+- Fix `pyproject.toml.jinja` referencing `django-anymail[postmark]`/`django-anymail[mailgun]` — extras that don't exist in the package (verified against its PyPI metadata; only `amazon-ses`, `postal`, `resend`, `sendgrid`, and `uts46` are real) — back to plain `django-anymail` for those two providers, drop the now-redundant standalone `boto3` dependency (already pulled in by the `amazon-ses` extra), and remove the `email_provider` "unsupported provider" guards added across `pyproject.toml.jinja`/`prod.py.jinja`/`architecture.md.jinja`, which were unreachable dead code since copier's own `choices:` validation already rejects an invalid `email_provider` before any template renders; also fix a README code span split across a line wrap (rendered as `config.settings. prod` with a stray space)
 - Clarify the full-project generated README's non-Docker dev instructions so local
  `uv run ... runserver` users know to run `docker compose up mailpit`, which publishes
   Mailpit's SMTP listener on `localhost:1025` and its web UI on `localhost:8025`
