@@ -27,21 +27,10 @@ capture the reasoning in a feature-scoped ADR.
 {% else %}
 - The Django admin site (no HTTP API layer in this project).
 {% endif %}
-{% set normalized_email_provider = email_provider|default("ses", true) %}
-{% set email_provider_names = {
-    "ses": "Amazon SES",
-    "postmark": "Postmark",
-    "mailgun": "Mailgun",
-    "sendgrid": "SendGrid",
-} %}
 - Background work via `django-tasks`{% if use_redis %}, running on the RQ/Redis backend with a dedicated worker{% else %} (synchronous in-process backend){% endif %}.
 - Email via SMTP, caught in dev by a `mailpit` service (web UI at `localhost:8025`)
   and captured in-memory during tests (`locmem` backend); production sends via
-{% if normalized_email_provider in email_provider_names %}
-  {{ email_provider_names[normalized_email_provider] }}
-{% else %}
-  {{ [].index("Unsupported email_provider: " ~ normalized_email_provider) }}
-{% endif %}
+  {{ {"ses": "Amazon SES", "postmark": "Postmark", "mailgun": "Mailgun", "sendgrid": "SendGrid"}[email_provider] }}
   through `django-anymail`.
 {% if use_vite %}
 - A Pico.css + Vite frontend build pipeline (django-vite), with a starter page under
