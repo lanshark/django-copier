@@ -4,6 +4,9 @@ All notable changes to this project are documented in this file.
 
 ## Next Release
 
+- Add `mailpit` to the generated full-project `web` and Redis `worker`
+  `depends_on` blocks so Docker local email delivery does not race the SMTP
+  container startup
 - Set a dummy `DJANGO_DEFAULT_FROM_EMAIL` in the template CI's `email-*`
  production-settings check so those jobs validate provider config with an
  explicit sender address
