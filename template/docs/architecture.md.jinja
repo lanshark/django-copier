@@ -168,8 +168,10 @@ Each feature folder contains:
 - `history.md`: append-only prompt log, implementation summaries, and verification results.
 - `adr/`: feature-scoped architecture decision records.
 
-Create a new feature with `{{ runner_cmd }} new-feature name=<slug>`, which copies
-`_template/` and adds both skill symlinks.
+Create a new feature with
+`{{ 'make new-feature name=<slug>' if task_runner == 'makefile'
+    else 'just new-feature <slug>' }}`, which copies `_template/` and adds both skill
+symlinks.
 
 ## ADR Convention
 
