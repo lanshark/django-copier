@@ -59,11 +59,13 @@ dependencies = [
     "mailgun": "django-anymail[mailgun]",
     "sendgrid": "django-anymail[sendgrid]",
 }.get(normalized_email_provider) %}
-{% if anymail_dependency %}
+{% if normalized_email_provider in ("ses", "postmark", "mailgun", "sendgrid") %}
     "{{ anymail_dependency }}",
 {% if normalized_email_provider == "ses" %}
     "boto3",
 {% endif %}
+{% else %}
+{{ [].index("Unsupported email_provider: " ~ normalized_email_provider) }}
 {% endif %}
 {% endif %}
 {% if use_vite %}
