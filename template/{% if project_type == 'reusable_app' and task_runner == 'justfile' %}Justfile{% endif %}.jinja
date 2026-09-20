@@ -60,7 +60,7 @@ publish $force_yes=env_var_or_default("FORCE_YES", ""):
 
 ## Document-first workflow
 
-# Scaffold a feature folder + skill symlinks (pass name=<feature-slug>)
+# Scaffold a feature folder + skill symlinks (pass <feature-slug> positionally)
 new-feature $name:
 	@if [ -e "features/$name" ]; then echo "features/$name already exists"; exit 1; fi
 	@cp -R features/_template "features/$name"
