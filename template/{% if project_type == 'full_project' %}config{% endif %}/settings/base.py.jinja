@@ -98,39 +98,19 @@ STATICFILES_DIRS = [BASE_DIR / "static" / "dist"]
 {% endif %}
 
 # --- Media (user-uploaded files) ---
+# Defaults to local filesystem storage for dev/test; prod.py overrides "default"
+# to S3/Azure Blob Storage when storage_backend is set, same as EMAIL_BACKEND
+# above.
 MEDIA_URL = "media/"
-{% if storage_backend == 'local' %}
 MEDIA_ROOT = config("DJANGO_MEDIA_ROOT", default=str(BASE_DIR / "media"))
-{% endif %}
 
-STORAGES = {
+STORAGES: dict[str, dict[str, object]] = {
     "staticfiles": {
         "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
     },
-{% if storage_backend == 's3' %}
-    # AWS credentials are read via boto3's standard chain (AWS_ACCESS_KEY_ID /
-    # AWS_SECRET_ACCESS_KEY / AWS_SESSION_TOKEN env vars, an IAM role, or
-    # ~/.aws/credentials) — no explicit credential setting is required here.
-    "default": {
-        "BACKEND": "storages.backends.s3.S3Storage",
-        "OPTIONS": {
-            "bucket_name": config("AWS_STORAGE_BUCKET_NAME"),
-        },
-    },
-{% elif storage_backend == 'azure' %}
-    "default": {
-        "BACKEND": "storages.backends.azure_storage.AzureStorage",
-        "OPTIONS": {
-            "account_name": config("AZURE_ACCOUNT_NAME"),
-            "account_key": config("AZURE_ACCOUNT_KEY"),
-            "azure_container": config("AZURE_CONTAINER"),
-        },
-    },
-{% else %}
     "default": {
         "BACKEND": "django.core.files.storage.FileSystemStorage",
     },
-{% endif %}
 }
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"

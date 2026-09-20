@@ -38,3 +38,27 @@ ANYMAIL = {
     "SENDGRID_API_KEY": config("ANYMAIL_SENDGRID_API_KEY"),
 }
 {% endif %}
+{% if storage_backend == 's3' %}
+
+# --- Media storage (django-storages: Amazon S3) ---
+# AWS credentials are read via boto3's standard chain (AWS_ACCESS_KEY_ID /
+# AWS_SECRET_ACCESS_KEY / AWS_SESSION_TOKEN env vars, an IAM role, or
+# ~/.aws/credentials) — no explicit credential setting is required here.
+STORAGES["default"] = {  # noqa: F405
+    "BACKEND": "storages.backends.s3.S3Storage",
+    "OPTIONS": {
+        "bucket_name": config("AWS_STORAGE_BUCKET_NAME"),
+    },
+}
+{% elif storage_backend == 'azure' %}
+
+# --- Media storage (django-storages: Azure Blob Storage) ---
+STORAGES["default"] = {  # noqa: F405
+    "BACKEND": "storages.backends.azure_storage.AzureStorage",
+    "OPTIONS": {
+        "account_name": config("AZURE_ACCOUNT_NAME"),
+        "account_key": config("AZURE_ACCOUNT_KEY"),
+        "azure_container": config("AZURE_CONTAINER"),
+    },
+}
+{% endif %}
