@@ -1,3 +1,4 @@
+{% set runner_cmd = 'make' if task_runner == 'makefile' else 'just' %}
 # {{ project_name }}
 
 A reusable Django app{% if use_shinobi %} with a django-shinobi (Django Ninja) API{% endif %} —
@@ -41,22 +42,22 @@ python manage.py migrate
 ```bash
 uv sync --all-extras --dev
 uv run pre-commit install
-make test        # pytest against the bundled tests/ settings (sqlite)
-make lint        # ruff
-make typecheck   # pyright
+{{ runner_cmd }} test        # pytest against the bundled tests/ settings (sqlite)
+{{ runner_cmd }} lint        # ruff
+{{ runner_cmd }} typecheck   # pyright
 ```
 
 The bundled `example/` project installs this app so you can try it end to end:
 
 ```bash
-make runserver   # migrates + runs the example project
+{{ runner_cmd }} runserver   # migrates + runs the example project
 ```
 
 ## Packaging
 
 ```bash
-make build       # build sdist + wheel into dist/
-make publish     # build + upload to PyPI (uv publish)
+{{ runner_cmd }} build       # build sdist + wheel into dist/
+{{ runner_cmd }} publish     # build + upload to PyPI (uv publish)
 ```
 
 ## License
