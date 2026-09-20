@@ -1,6 +1,5 @@
 import pytest
 
-
 pytestmark = pytest.mark.django_db
 
 
@@ -23,5 +22,5 @@ def test_index_shows_logged_in_user(client, django_user_model):
     response = client.get("/")
     content = response.content.decode()
     assert "Logged in user:" in content
-    assert 'href="/accounts/logout/"' in content
+    assert 'action="/accounts/logout/"' in content
 {% endif %}
