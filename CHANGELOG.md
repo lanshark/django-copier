@@ -4,6 +4,15 @@ All notable changes to this project are documented in this file.
 
 ## Next Release
 
+- Make `python_version` selectable among `3.12`, `3.13`, and `3.14` (default
+  `3.14`) — every template file already parameterized off this question
+  (`pyproject.toml`'s `requires-python`/ruff/pyright config, the Dockerfile base
+  image, both `ci.yml` variants), so this only widens `copier.yml`'s `choices`.
+  New CI matrix entries `python-3.12`/`python-3.13` (full_project) and
+  `app-python-3.12` (reusable_app) actually pin `uv sync --python` to the
+  selected version rather than letting it silently resolve to whatever's already
+  installed, so CI verifies the project really runs under the selected
+  interpreter, not just that `requires-python`'s lower bound is satisfied
 - Fix the `use_allauth` comment/doc wording (`config/settings/base.py`,
   `docs/architecture.md`) that referenced "the JWT API auth above" even when
   `use_shinobi=false`, when there's no JWT section to refer to — condition that
