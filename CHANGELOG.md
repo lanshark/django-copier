@@ -4,6 +4,20 @@ All notable changes to this project are documented in this file.
 
 ## Next Release
 
+- Add a `storage_backend` question (full_project only, default `local`) wiring
+  `django-storages` for user-uploaded media, alongside the existing static-file
+  handling — choices are `local` (Django's built-in `FileSystemStorage`, no
+  extra infra, the same package-free default full_project has always had),
+  `s3` (`django-storages[s3]`, reading `AWS_STORAGE_BUCKET_NAME`; AWS
+  credentials go through boto3's standard chain, mirroring how the SES email
+  backend already handles them), and `azure` (`django-storages[azure]`,
+  reading `AZURE_ACCOUNT_NAME`/`AZURE_ACCOUNT_KEY`/`AZURE_CONTAINER`). The
+  choice applies uniformly via `config/settings/base.py`'s `STORAGES["default"]`
+  — dev/test inherit whatever was selected, same as every other base.py
+  setting; `local` is the sensible default for a freshly generated project,
+  `s3`/`azure` are what a production deployment typically wants. New CI matrix
+  entries `storage-s3`/`storage-azure` (`local` covered by `defaults`), and the
+  existing "Check prod settings" step now also validates these. Closes #11
 - Replace the README's placeholder Copier source with this repository's actual
   GitHub path, document `--vcs-ref=HEAD` for the latest template revision, and
   add a release-tag example for reproducible project creation

@@ -34,6 +34,10 @@ jobs:
             extra_args: '--data email_provider=mailgun'
           - name: email-sendgrid
             extra_args: '--data email_provider=sendgrid'
+          - name: storage-s3
+            extra_args: '--data storage_backend=s3'
+          - name: storage-azure
+            extra_args: '--data storage_backend=azure'
           - name: custom-username
             extra_args: '--data user_identifier=username'
           - name: with-allauth
@@ -188,8 +192,8 @@ jobs:
             uv run pyright
           fi
 
-      - name: Check prod settings (email_provider)
-        if: startsWith(matrix.name, 'email-')
+      - name: Check prod settings (email_provider, storage_backend)
+        if: startsWith(matrix.name, 'email-') || startsWith(matrix.name, 'storage-')
         working-directory: ${{ github.workspace }}/../rendered-${{ matrix.name }}
         env:
           DJANGO_SETTINGS_MODULE: config.settings.prod
@@ -201,6 +205,10 @@ jobs:
           ANYMAIL_MAILGUN_API_KEY: dummy
           ANYMAIL_MAILGUN_SENDER_DOMAIN: mail.example.com
           ANYMAIL_SENDGRID_API_KEY: dummy
+          AWS_STORAGE_BUCKET_NAME: dummy-bucket
+          AZURE_ACCOUNT_NAME: dummy
+          AZURE_ACCOUNT_KEY: dummy
+          AZURE_CONTAINER: dummy-container
         run: uv run python manage.py check
 
   render-and-test-app:
