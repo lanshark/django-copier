@@ -95,8 +95,8 @@ Every generated project ships a workflow for developing with an AI coding agent
 
 Each feature folder is discoverable as a skill through `.agents/skills/<slug>` and
 `.claude/skills/<slug>` symlinks, and `make new-feature name=<slug>` (or `just
-new-feature name=<slug>`, depending on `task_runner`) scaffolds a new feature with
-both symlinks in place.
+new-feature <slug>`, depending on `task_runner`) scaffolds a new feature with both
+symlinks in place.
 
 ## Structure of this repo
 
