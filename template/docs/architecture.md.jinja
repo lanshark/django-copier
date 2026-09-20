@@ -40,6 +40,8 @@ capture the reasoning in a feature-scoped ADR.
   and captured in-memory during tests (`locmem` backend); production sends via
   {{ {"ses": "Amazon SES", "postmark": "Postmark", "mailgun": "Mailgun", "sendgrid": "SendGrid"}[email_provider] }}
   through `django-anymail`.
+- Media file storage:
+  {{ {"local": "local filesystem (Django's built-in `FileSystemStorage`, no extra infra needed)", "s3": "Amazon S3 via `django-storages`", "azure": "Azure Blob Storage via `django-storages`"}[storage_backend] }}.
 {% if use_vite %}
 - A Pico.css + Vite frontend build pipeline (django-vite) for the home page.
 {% endif %}

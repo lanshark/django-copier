@@ -59,6 +59,11 @@ dependencies = [
 {% else %}
     "django-anymail",
 {% endif %}
+{% if storage_backend == 's3' %}
+    "django-storages[s3]",
+{% elif storage_backend == 'azure' %}
+    "django-storages[azure]",
+{% endif %}
 {% if use_vite %}
     "django-vite",
 {% endif %}

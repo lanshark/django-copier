@@ -139,6 +139,19 @@ use_shinobi:
     example health/token/me API? (No = no API layer, admin site only)
   default: true
 
+storage_backend:
+  type: str
+  help: >-
+    File storage backend for user-uploaded media (django-storages). Local
+    filesystem storage needs no extra infra and is the default; S3 and Azure
+    Blob Storage are typical choices for production deployments.
+  default: local
+  choices:
+    'Local filesystem': local
+    'Amazon S3': s3
+    'Azure Blob Storage': azure
+  when: "{{ project_type == 'full_project' }}"
+
 task_runner:
   type: str
   help: Task runner for common dev commands (build/test/lint/etc.)
