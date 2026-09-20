@@ -44,6 +44,22 @@ initial_app_name:
   help: Name of the first Django app to scaffold
   default: core
   when: "{{ project_type == 'full_project' }}"
+  validator: >-
+    {% if project_type == 'full_project' and initial_app_name == 'accounts' %}
+    'accounts' is reserved for the generated custom user model app — pick a
+    different name for your first app.
+    {% endif %}
+
+user_identifier:
+  type: str
+  help: >-
+    Custom user model (apps/accounts) identified by email address or a
+    standard username?
+  default: email
+  choices:
+    'Email address': email
+    'Username': username
+  when: "{{ project_type == 'full_project' }}"
 
 author_name:
   type: str

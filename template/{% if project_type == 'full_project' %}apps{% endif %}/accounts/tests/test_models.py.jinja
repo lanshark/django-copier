@@ -1,0 +1,50 @@
+import pytest
+
+from ..models import User
+
+pytestmark = pytest.mark.django_db
+
+{% if user_identifier == 'email' %}
+
+def test_create_user_requires_email():
+    with pytest.raises(ValueError):
+        User.objects.create_user(email="", password="s3cret-pw")
+
+
+def test_create_user_sets_usable_password():
+    user = User.objects.create_user(email="person@example.com", password="s3cret-pw")
+    assert user.check_password("s3cret-pw")
+    assert not user.is_staff
+    assert not user.is_superuser
+
+
+def test_create_superuser_sets_staff_and_superuser_flags():
+    user = User.objects.create_superuser(email="admin@example.com", password="s3cret-pw")
+    assert user.is_staff
+    assert user.is_superuser
+
+
+def test_str_returns_email():
+    user = User.objects.create_user(email="person@example.com", password="s3cret-pw")
+    assert str(user) == "person@example.com"
+{% else %}
+
+def test_create_user_sets_usable_password():
+    user = User.objects.create_user(username="person", password="s3cret-pw")
+    assert user.check_password("s3cret-pw")
+    assert not user.is_staff
+    assert not user.is_superuser
+
+
+def test_create_superuser_sets_staff_and_superuser_flags():
+    user = User.objects.create_superuser(
+        username="admin", email="admin@example.com", password="s3cret-pw"
+    )
+    assert user.is_staff
+    assert user.is_superuser
+
+
+def test_str_returns_username():
+    user = User.objects.create_user(username="person", password="s3cret-pw")
+    assert str(user) == "person"
+{% endif %}

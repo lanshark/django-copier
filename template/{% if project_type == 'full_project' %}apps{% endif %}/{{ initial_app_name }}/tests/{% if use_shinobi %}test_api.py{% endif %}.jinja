@@ -1,3 +1,4 @@
+{% set identifier_value = 'scott@example.com' if user_identifier == 'email' else 'scott' %}
 import pytest
 from model_bakery import baker
 
@@ -11,13 +12,13 @@ def test_health(client):
 
 
 def test_token_and_me(client):
-    user = baker.make("auth.User", username="scott")
+    user = baker.make("accounts.User", {{ user_identifier }}="{{ identifier_value }}")
     user.set_password("s3cret-pw")
     user.save()
 
     resp = client.post(
         "/api/v1/auth/token",
-        data={"username": "scott", "password": "s3cret-pw"},
+        data={"{{ user_identifier }}": "{{ identifier_value }}", "password": "s3cret-pw"},
         content_type="application/json",
     )
     assert resp.status_code == 200
@@ -28,4 +29,4 @@ def test_token_and_me(client):
         headers={"Authorization": f"Bearer {access}"},
     )
     assert me_resp.status_code == 200
-    assert me_resp.json()["username"] == "scott"
+    assert me_resp.json()["{{ user_identifier }}"] == "{{ identifier_value }}"
