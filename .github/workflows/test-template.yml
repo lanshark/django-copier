@@ -24,6 +24,8 @@ jobs:
             extra_args: '--data use_shinobi=false'
           - name: with-vite
             extra_args: '--data use_vite=true'
+          - name: with-justfile
+            extra_args: '--data task_runner=justfile --data use_vite=true'
 
     services:
       postgres:
@@ -55,10 +57,14 @@ jobs:
         run: uv tool install copier
 
       - name: Set up Node
-        if: matrix.name == 'with-vite'
+        if: matrix.name == 'with-vite' || matrix.name == 'with-justfile'
         uses: actions/setup-node@v4
         with:
           node-version: '22'
+
+      - name: Install just
+        if: matrix.name == 'with-justfile'
+        uses: extractions/setup-just@v3
 
       - name: Render template (${{ matrix.name }})
         run: >
@@ -86,32 +92,62 @@ jobs:
         run: uv sync --all-extras --dev
 
       - name: Build frontend assets
-        if: matrix.name == 'with-vite'
+        if: matrix.name == 'with-vite' || matrix.name == 'with-justfile'
         working-directory: ${{ github.workspace }}/../rendered-${{ matrix.name }}
         run: |
-          npm install
-          npm run build
+          if [ "${{ matrix.name }}" = "with-justfile" ]; then
+            just frontend-install
+            just frontend-build
+          else
+            npm install
+            npm run build
+          fi
 
       - name: Migrate
         working-directory: ${{ github.workspace }}/../rendered-${{ matrix.name }}
-        run: uv run python manage.py migrate --noinput
+        run: |
+          if [ "${{ matrix.name }}" = "with-justfile" ]; then
+            LOCAL=1 just migrate
+          else
+            uv run python manage.py migrate --noinput
+          fi
 
       - name: Collect static files
-        if: matrix.name == 'with-vite'
+        if: matrix.name == 'with-vite' || matrix.name == 'with-justfile'
         working-directory: ${{ github.workspace }}/../rendered-${{ matrix.name }}
-        run: uv run python manage.py collectstatic --noinput
+        run: |
+          if [ "${{ matrix.name }}" = "with-justfile" ]; then
+            LOCAL=1 just collectstatic
+          else
+            uv run python manage.py collectstatic --noinput
+          fi
 
       - name: Pytest
         working-directory: ${{ github.workspace }}/../rendered-${{ matrix.name }}
-        run: uv run pytest
+        run: |
+          if [ "${{ matrix.name }}" = "with-justfile" ]; then
+            just test
+          else
+            uv run pytest
+          fi
 
       - name: Ruff
         working-directory: ${{ github.workspace }}/../rendered-${{ matrix.name }}
-        run: uv run ruff check .
+        run: |
+          if [ "${{ matrix.name }}" = "with-justfile" ]; then
+            just lint
+          else
+            uv run ruff check .
+          fi
 
       - name: Pyright
         working-directory: ${{ github.workspace }}/../rendered-${{ matrix.name }}
-        run: uv run pyright
+        run: |
+          if [ "${{ matrix.name }}" = "with-justfile" ]; then
+            just typecheck
+          else
+            uv run pyright
+          fi
 
   render-and-test-app:
     runs-on: ubuntu-latest
@@ -123,6 +159,8 @@ jobs:
             extra_args: '--data project_type=reusable_app'
           - name: app-no-shinobi
             extra_args: '--data project_type=reusable_app --data use_shinobi=false'
+          - name: app-justfile
+            extra_args: '--data project_type=reusable_app --data task_runner=justfile'
 
     steps:
       - uses: actions/checkout@v7.0.1
@@ -136,6 +174,10 @@ jobs:
       - name: Install copier
         run: uv tool install copier
 
+      - name: Install just
+        if: matrix.name == 'app-justfile'
+        uses: extractions/setup-just@v3
+
       - name: Render template (${{ matrix.name }})
         run: >
           uv tool run copier copy --defaults --force ${{ matrix.extra_args }}
@@ -147,16 +189,36 @@ jobs:
 
       - name: Pytest
         working-directory: ${{ github.workspace }}/../rendered-${{ matrix.name }}
-        run: uv run pytest
+        run: |
+          if [ "${{ matrix.name }}" = "app-justfile" ]; then
+            just test
+          else
+            uv run pytest
+          fi
 
       - name: Ruff
         working-directory: ${{ github.workspace }}/../rendered-${{ matrix.name }}
-        run: uv run ruff check .
+        run: |
+          if [ "${{ matrix.name }}" = "app-justfile" ]; then
+            just lint
+          else
+            uv run ruff check .
+          fi
 
       - name: Pyright
         working-directory: ${{ github.workspace }}/../rendered-${{ matrix.name }}
-        run: uv run pyright
+        run: |
+          if [ "${{ matrix.name }}" = "app-justfile" ]; then
+            just typecheck
+          else
+            uv run pyright
+          fi
 
       - name: Build distributions
         working-directory: ${{ github.workspace }}/../rendered-${{ matrix.name }}
-        run: uv build
+        run: |
+          if [ "${{ matrix.name }}" = "app-justfile" ]; then
+            just build
+          else
+            uv build
+          fi

@@ -127,10 +127,13 @@ the pytest suite, `ruff check`, and `pyright` all pass clean in each case.
   non-empty)
 - `use_vite=true` (Pico.css + Vite build pipeline, django-vite, starter page rendered
   and `collectstatic` run against a `npm run build` manifest)
+- `task_runner=justfile` + `use_vite=true` (`migrate`, `collectstatic`, `test`, `lint`,
+  `typecheck`, and the frontend recipes all run through `just` rather than directly)
 
 `reusable_app`:
 
 - Default answers, and `use_shinobi=false` — both also verified to `uv build` cleanly
+- `task_runner=justfile` (`test`, `lint`, `typecheck`, and `build` run through `just`)
 
 ## Known limitations
 
