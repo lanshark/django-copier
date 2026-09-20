@@ -1,0 +1,77 @@
+# Justfile for {{ project_name }}
+# Thin wrappers around uv for developing and packaging this reusable Django app.
+# Run `just` or `just help` to list available commands.
+#
+# Recipe args are positional rather than KEY=value (e.g. `just test tests/test_models.py`);
+# env var overrides still work (e.g. `FORCE_YES=1 just publish`).
+
+set shell := ["bash", "-uc"]
+
+default: help
+
+## Setup, tests & quality
+
+# Install dependencies and pre-commit hooks
+install:
+	@echo "Syncing dependencies.."
+	@uv sync --all-extras --dev
+	@uv run pre-commit install
+
+# Run the test suite (optionally pass a path, e.g. `just test tests/test_models.py`)
+test $test_path=env_var_or_default("TEST_PATH", ""):
+	@echo "Running tests.."
+	@uv run pytest $test_path
+
+# Lint with ruff
+lint:
+	@uv run ruff check .
+
+# Auto-fix lint issues and format with ruff
+format:
+	@uv run ruff check --fix .
+	@uv run ruff format .
+
+# Type-check with pyright
+typecheck:
+	@uv run pyright
+
+## Django
+
+# Create migrations for this app (uses tests settings)
+makemigrations:
+	@uv run python -m django makemigrations {{ package_name }} --settings=tests.settings
+
+# Run the bundled example project
+runserver:
+	@cd example && uv run python manage.py migrate && uv run python manage.py runserver
+
+## Packaging
+
+# Build sdist + wheel into dist/
+build:
+	@echo "Building distributions.."
+	@uv build
+
+# Publish to PyPI with uv (needs credentials / trusted publishing)
+publish $force_yes=env_var_or_default("FORCE_YES", ""):
+	@if [ -z "$force_yes" ]; then read -p "Publish {{ project_slug }} to PyPI? [y/N] " -n 1 -r; echo ""; [[ $REPLY =~ ^[Yy]$ ]] || { echo "Aborted."; exit 1; }; fi
+	@uv build
+	@uv publish
+
+## Document-first workflow
+
+# Scaffold a feature folder + skill symlinks (pass <feature-slug> positionally)
+new-feature $name:
+	@if [ -e "features/$name" ]; then echo "features/$name already exists"; exit 1; fi
+	@cp -R features/_template "features/$name"
+	@mkdir -p .agents/skills .claude/skills
+	@ln -sfn "../../features/$name" ".agents/skills/$name"
+	@ln -sfn "../../features/$name" ".claude/skills/$name"
+	@echo "Created features/$name with .agents/skills and .claude/skills symlinks"
+	@echo "Next: fill in features/$name/feature.md and record the prompt in history.md"
+
+## Help
+
+# Show this help
+help:
+	@just --list --unsorted

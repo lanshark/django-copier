@@ -91,6 +91,14 @@ use_shinobi:
     example health/token/me API? (No = no API layer, admin site only)
   default: true
 
+task_runner:
+  type: str
+  help: Task runner for common dev commands (build/test/lint/etc.)
+  default: makefile
+  choices:
+    'Makefile (make)': makefile
+    'Justfile (just)': justfile
+
 open_source_license:
   type: str
   help: License for the project

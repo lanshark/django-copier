@@ -135,8 +135,9 @@ Verification:
 - The document-first workflow instructions live in `AGENTS.md` (imported by `CLAUDE.md`),
   so they load automatically for the AI coding agent.
 - Reusable templates live in `features/_template/`.
-- New features are scaffolded with `make new-feature name=<slug>`, which copies the
-  template and creates both skill symlinks.
+- New features are scaffolded with `make new-feature name=<slug>` (`just new-feature
+  <slug>` if this project uses a Justfile), which copies the template and creates both
+  skill symlinks.
 
 ## Consolidated Verification Notes
 
