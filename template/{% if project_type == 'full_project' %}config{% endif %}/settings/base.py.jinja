@@ -89,12 +89,13 @@ STORAGES = {
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # --- Email ---
-# Defaults target the mailpit service in docker-compose.yml (dev SMTP catcher, web
-# UI at http://localhost:8025). Override via env for a real SMTP relay in prod.
+# Defaults target host-local Mailpit for non-Docker runs; docker-compose overrides
+# the host to the mailpit service name. Override via env for a real SMTP relay in
+# prod.
 EMAIL_BACKEND = config(
     "DJANGO_EMAIL_BACKEND", default="django.core.mail.backends.smtp.EmailBackend"
 )
-EMAIL_HOST = config("DJANGO_EMAIL_HOST", default="mailpit")
+EMAIL_HOST = config("DJANGO_EMAIL_HOST", default="localhost")
 EMAIL_PORT = config("DJANGO_EMAIL_PORT", default=1025, cast=int)
 EMAIL_USE_TLS = config("DJANGO_EMAIL_USE_TLS", default=False, cast=bool)
 EMAIL_HOST_USER = config("DJANGO_EMAIL_HOST_USER", default="")
