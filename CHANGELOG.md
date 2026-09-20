@@ -4,6 +4,21 @@ All notable changes to this project are documented in this file.
 
 ## Next Release
 
+- Add a `pre-commit-autoupdate.yml` GitHub Actions workflow to the generated
+  full_project template (`template/.github/workflows/{% if project_type ==
+  'full_project' %}pre-commit-autoupdate.yml{% endif %}`) — the same nightly
+  `pre-commit autoupdate` + `peter-evans/create-pull-request` mechanism this
+  repo's own `.github/workflows/pre-commit-autoupdate.yml` uses, adapted for
+  a generated project: no `--config` flag needed (the project's own
+  `.pre-commit-config.yaml` is at its repo root), and no
+  `github.repository_owner` guard (that's specific to gating forks of this
+  template repo, not applicable to someone's own generated project). Not a
+  `.jinja` file — its body needs no Copier variable substitution, and staying
+  non-Jinja avoids GitHub Actions' `${{ }}` expressions colliding with
+  Jinja's own `{{ }}` delimiters (same reasoning as the existing `build.yml`).
+  reusable_app is not covered. No dedicated CI step needed — the generated
+  project's own `pre-commit run --all-files` (`check-yaml`) already validates
+  this file's syntax
 - Update pinned pre-commit hook versions in the generated project's
   `.pre-commit-config.yaml` — `astral-sh/ruff-pre-commit` `v0.16.3` →
   `v0.16.8`, `RobertCraigie/pyright-python` `v1.1.411` → `v1.1.414`.
