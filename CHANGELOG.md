@@ -4,6 +4,10 @@ All notable changes to this project are documented in this file.
 
 ## Next Release
 
+- Fix `from django.urls import reverse` being imported unconditionally in
+  `apps/<initial_app_name>/tests/test_views.py` — it's only used by the
+  allauth-specific tests, so every non-allauth render failed `ruff check` with an
+  unused-import (`F401`) error. Made the import conditional on `use_allauth`
 - Add generated allauth view tests that exercise the real `/accounts/login/`,
   `/accounts/signup/`, and POST `/accounts/logout/` flows for both supported user
   identifier variants, so CI validates the allauth URL wiring and variant-specific

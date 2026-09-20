@@ -1,5 +1,7 @@
 import pytest
+{% if use_allauth %}
 from django.urls import reverse
+{% endif %}
 
 pytestmark = pytest.mark.django_db
 
