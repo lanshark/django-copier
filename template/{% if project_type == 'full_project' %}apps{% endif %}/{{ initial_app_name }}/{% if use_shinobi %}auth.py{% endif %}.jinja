@@ -20,15 +20,11 @@ def _make_token(user, lifetime: timedelta, token_type: str) -> str:
 
 
 def make_access_token(user) -> str:
-    return _make_token(
-        user, timedelta(minutes=settings.JWT_ACCESS_TOKEN_LIFETIME_MIN), "access"
-    )
+    return _make_token(user, timedelta(minutes=settings.JWT_ACCESS_TOKEN_LIFETIME_MIN), "access")
 
 
 def make_refresh_token(user) -> str:
-    return _make_token(
-        user, timedelta(days=settings.JWT_REFRESH_TOKEN_LIFETIME_DAYS), "refresh"
-    )
+    return _make_token(user, timedelta(days=settings.JWT_REFRESH_TOKEN_LIFETIME_DAYS), "refresh")
 
 
 class JWTAuth(HttpBearer):

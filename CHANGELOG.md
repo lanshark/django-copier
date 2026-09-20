@@ -4,6 +4,7 @@ All notable changes to this project are documented in this file.
 
 ## Next Release
 
+- Add a `Ruff format` step to `test-template.yml` (both jobs) so CI validates that rendered projects are actually formatted, not just lint-clean — `ruff check` and `ruff format --check` catch different things, and only the former was checked before. Fixes two pre-existing formatting issues this surfaced: collapsed two over-wrapped calls in `apps/<initial_app_name>/auth.py`, and a missing blank line after the module docstring in the reusable_app's `example/manage.py`. Every *generated* project's own CI already covers this via `pre-commit run --all-files` (which includes the `ruff-format` hook); this only closes the gap in the template's own validation of its committed source files
 - Add a `user_identifier` question (full_project only: `Email address` default or
   `Username`) that generates a custom `apps/accounts` user model
   (`AUTH_USER_MODEL = "accounts.User"`) from the start, since swapping the user
