@@ -11,5 +11,5 @@ class TokenPairOut(Schema):
 
 
 class TokenObtainIn(Schema):
-    username: str
+    {{ user_identifier }}: str
     password: str

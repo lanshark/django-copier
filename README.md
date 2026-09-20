@@ -26,7 +26,7 @@ You'll be prompted for:
 | `project_slug` | Package/image-safe slug, auto-derived from `project_name` |
 | `project_type` | `full_project` (runnable site) or `reusable_app` (pip-installable Django app) |
 | `package_name` | *(reusable_app only)* Python import package name, auto-derived from `project_slug` |
-| `initial_app_name` | *(full_project only)* Name of the first Django app (`apps/<name>/`) |
+| `initial_app_name` | *(full_project only)* Name of the first Django app (`apps/<name>/`); can't be `accounts` (reserved for the custom user model) |
 | `author_name` / `author_email` | Populates `pyproject.toml` authors |
 | `python_version` | `3.14` |
 | `use_redis` | *(full_project only)* `true` → django-tasks on RQ/Redis with a `worker` compose service; `false` → synchronous `ImmediateBackend`, no Redis needed |
@@ -35,6 +35,7 @@ You'll be prompted for:
 | `use_vite` | *(full_project only)* `true` → Pico.css + Vite frontend build pipeline (django-vite, HMR dev server, starter page); `false` → no frontend tooling |
 | `task_runner` | `Makefile` (default) or `Justfile` — which tool wraps the dev commands (`up`/`migrate`/`test`/`lint`/`new-feature`/etc.) |
 | `email_provider` | *(full_project only)* `Amazon SES` (default), `Postmark`, `Mailgun`, or `SendGrid` — production email backend via django-anymail (local dev defaults to localhost SMTP, with Docker wiring Mailpit automatically) |
+| `user_identifier` | *(full_project only)* `Email address` (default) or `Username` — how the custom user model (`apps/accounts`) identifies users |
 | `open_source_license` | `MIT`, `BSD-3-Clause`, `Apache-2.0`, `GNU GPLv3`, `GNU AGPLv3`, `Proprietary`, or `None` |
 | `copyright_holder` / `copyright_year` | *(shown for licenses needing a copyright notice)* Populates the rendered `LICENSE` |
 
@@ -51,10 +52,11 @@ local modifications where possible.
 ## Project types
 
 - **`full_project`** (default) — a runnable Django site: `apps/<initial_app_name>/`,
-  Docker/Docker Compose (including a `mailpit` dev SMTP catcher), a Makefile or
-  Justfile (`task_runner`) wrapping `docker compose`/`manage.py`, and CI that
-  migrates, tests, lints, and type-checks against a real Postgres (and Redis, if
-  `use_redis=true`).
+  a custom user model (`apps/accounts`, identified by email or username per
+  `user_identifier`), Docker/Docker Compose (including a `mailpit` dev SMTP
+  catcher), a Makefile or Justfile (`task_runner`) wrapping `docker
+  compose`/`manage.py`, and CI that migrates, tests, lints, and type-checks
+  against a real Postgres (and Redis, if `use_redis=true`).
 - **`reusable_app`** — a pip-installable Django app: a hatchling `src/<package_name>/`
   package (models/admin/migrations/`py.typed`, an optional shinobi `Router`,
   `templates/`+`static/`), `pytest-django` tests on sqlite, a runnable `example/`
@@ -62,6 +64,27 @@ local modifications where possible.
   install-oriented README, and a Postgres-free CI plus a PyPI `release.yml`. The
   project-only questions (`initial_app_name`, `use_redis`, `use_async`) are hidden for
   this type.
+
+## Custom user model
+
+Every `full_project` generated project ships its own `apps/accounts` app and sets
+`AUTH_USER_MODEL = "accounts.User"` from the start — swapping the user model later
+is notoriously painful in Django, so every generated project gets a real one, even
+when its fields end up identical to Django's default.
+
+`user_identifier` controls how it's identified:
+
+- **`email` (default)** — `username` is removed entirely; `email` is unique and is
+  `USERNAME_FIELD`. `apps/accounts/forms.py` supplies admin create/change forms
+  (Django's defaults reference `username`, which doesn't exist on this model).
+- **`username`** — same fields as Django's default `AbstractUser`; no extra forms
+  needed since the defaults already fit.
+
+Both variants ship a real, generated (not hand-guessed) `migrations/0001_initial.py`
+— `manage.py makemigrations --check` confirms it matches exactly. When
+`use_shinobi=true`, the JWT token/`/me` endpoints and their request/response
+schemas use whichever field `user_identifier` selected (e.g. `POST /api/v1/auth/token`
+takes `email`+`password` rather than `username`+`password` for the email variant).
 
 ## Frontend (Pico.css + Vite)
 
@@ -144,9 +167,14 @@ the pytest suite, `ruff check`, and `pyright` all pass clean in each case.
 
 `full_project`:
 
-- Default answers (`use_redis=true`, `use_async=false`); the smoke test suite
-  includes an email test confirming `config/settings/test.py`'s `locmem` backend
-  captures mail instead of needing a live `mailpit` SMTP server in CI
+- Default answers (`use_redis=true`, `use_async=false`, `user_identifier=email`);
+  the smoke test suite includes an email test confirming `config/settings/test.py`'s
+  `locmem` backend captures mail instead of needing a live `mailpit` SMTP server in
+  CI, and `apps/accounts` tests confirming the custom user manager
+- `user_identifier=username` (custom user model with Django's default `AbstractUser`
+  fields instead of the email-only variant; both variants' checked-in
+  `migrations/0001_initial.py` are confirmed to exactly match
+  `manage.py makemigrations --check`)
 - `use_redis=false` (synchronous task backend, no Redis/worker service generated)
 - Custom `initial_app_name` + `use_async=true` (app directory renamed correctly, all
   internal imports follow, Dockerfile CMD switches to uvicorn)

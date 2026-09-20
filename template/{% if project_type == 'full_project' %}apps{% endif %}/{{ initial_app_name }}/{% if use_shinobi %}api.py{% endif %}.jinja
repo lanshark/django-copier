@@ -15,7 +15,11 @@ def health(request):
 
 @api.post("/auth/token", response=TokenPairOut, auth=None)
 def obtain_token(request, payload: TokenObtainIn):
-    user = authenticate(request, username=payload.username, password=payload.password)
+{% if user_identifier == 'email' %}
+    # ModelBackend's `authenticate()` kwarg is always named `username`, regardless
+    # of AUTH_USER_MODEL.USERNAME_FIELD — it's mapped internally, so this is correct.
+{% endif %}
+    user = authenticate(request, username=payload.{{ user_identifier }}, password=payload.password)
     if user is None:
         return api.create_response(request, {"detail": "Invalid credentials"}, status=401)
     return {
@@ -26,7 +30,7 @@ def obtain_token(request, payload: TokenObtainIn):
 
 @api.get("/me", auth=JWTAuth())
 def me(request):
-    return {"id": request.user.pk, "username": request.user.username}
+    return {"id": request.user.pk, "{{ user_identifier }}": request.user.{{ user_identifier }}}
 
 
 @api.post("/example-task", auth=JWTAuth())

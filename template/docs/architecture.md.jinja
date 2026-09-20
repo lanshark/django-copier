@@ -22,6 +22,8 @@ capture the reasoning in a feature-scoped ADR.
 {{ project_name }} is a Django project built on:
 
 - Python {{ python_version }}, Django 5.2 LTS, PostgreSQL.
+- A custom user model (`apps/accounts`), identified by
+  {{ 'email address' if user_identifier == 'email' else 'username' }} (`AUTH_USER_MODEL`).
 {% if use_shinobi %}
 - A django-shinobi (Django Ninja) API layer with JWT auth under `apps/{{ initial_app_name }}/`.
 {% else %}
@@ -76,6 +78,14 @@ capture the reasoning in a feature-scoped ADR.
 │   ├── wsgi.py
 │   └── asgi.py
 ├── apps/
+│   ├── accounts/            # custom user model (AUTH_USER_MODEL)
+│   │   ├── models.py        # User, identified by {{ user_identifier }}
+│   │   ├── managers.py
+│   │   ├── admin.py
+{% if user_identifier == 'email' %}
+│   │   ├── forms.py         # admin create/change forms (email has no username field)
+{% endif %}
+│   │   └── migrations/
 │   └── {{ initial_app_name }}/
 │       ├── AGENTS.md        # module-specific invariants
 │       ├── models.py

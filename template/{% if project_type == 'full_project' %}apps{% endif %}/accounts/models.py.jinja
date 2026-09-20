@@ -1,0 +1,38 @@
+from typing import ClassVar
+
+from django.contrib.auth.models import AbstractUser
+{% if user_identifier == 'email' %}
+from django.db import models
+{% endif %}
+
+from .managers import UserManager
+
+
+class User(AbstractUser):
+{% if user_identifier == 'email' %}
+    """Custom user model identified by email address instead of username."""
+
+    # django-stubs types AbstractUser.username as a required CharField; there's no
+    # stub-clean way to express "this field is removed", so this needs the ignore.
+    username = None  # type: ignore[assignment]
+    email = models.EmailField(unique=True)
+
+    USERNAME_FIELD = "email"
+    REQUIRED_FIELDS = []
+
+    objects: ClassVar[UserManager] = UserManager()
+
+    def __str__(self) -> str:
+        return self.email
+{% else %}
+    """Custom user model (identified by username, same fields as AbstractUser).
+
+    Kept as its own swappable model — rather than the Django default — so this
+    project isn't locked out of future user-model changes.
+    """
+
+    objects: ClassVar[UserManager] = UserManager()
+
+    def __str__(self) -> str:
+        return self.username
+{% endif %}

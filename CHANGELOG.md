@@ -4,6 +4,20 @@ All notable changes to this project are documented in this file.
 
 ## Next Release
 
+- Add a `user_identifier` question (full_project only: `Email address` default or
+  `Username`) that generates a custom `apps/accounts` user model
+  (`AUTH_USER_MODEL = "accounts.User"`) from the start, since swapping the user
+  model later is notoriously painful in Django. Email variant removes `username`
+  entirely and makes `email` the `USERNAME_FIELD`, with its own admin
+  create/change forms (Django's defaults reference `username`); username variant
+  keeps `AbstractUser`'s fields as-is. Both ship a real, generated (not
+  hand-guessed) `migrations/0001_initial.py`, verified against
+  `manage.py makemigrations --check`. When `use_shinobi=true`, the JWT
+  token/`/me` endpoints and schemas track whichever field was chosen.
+  `initial_app_name` can no longer be `accounts` (a copier `validator:` rejects
+  the collision). Also fixes `apps/<initial_app_name>/tests/test_smoke.py`,
+  which previously hardcoded `username=` and would have broken for the email
+  variant
 - Add `mailpit` to the generated full-project `web` and Redis `worker`
   `depends_on` blocks, and pass `DJANGO_EMAIL_HOST=mailpit` through a
   compose-only env file, with a `readyz` healthcheck gating those

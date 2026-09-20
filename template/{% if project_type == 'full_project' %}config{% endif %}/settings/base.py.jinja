@@ -26,8 +26,11 @@ INSTALLED_APPS = [
 {% if use_vite %}
     "django_vite",
 {% endif %}
+    "apps.accounts",
     "apps.{{ initial_app_name }}",
 ]
+
+AUTH_USER_MODEL = "accounts.User"
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
