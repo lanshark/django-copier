@@ -33,6 +33,7 @@ You'll be prompted for:
 | `use_async` | *(full_project only)* `true` → serve via uvicorn/ASGI; `false` → gunicorn/WSGI |
 | `use_shinobi` | `true` → include a django-shinobi (Django Ninja) API layer with JWT auth and an example health/token/me API; `false` → no API layer |
 | `use_vite` | *(full_project only)* `true` → Pico.css + Vite frontend build pipeline (django-vite, HMR dev server, starter page); `false` → no frontend tooling |
+| `task_runner` | `Makefile` (default) or `Justfile` — which tool wraps the dev commands (`up`/`migrate`/`test`/`lint`/`new-feature`/etc.) |
 | `open_source_license` | `MIT`, `BSD-3-Clause`, `Apache-2.0`, `GNU GPLv3`, `GNU AGPLv3`, `Proprietary`, or `None` |
 | `copyright_holder` / `copyright_year` | *(shown for licenses needing a copyright notice)* Populates the rendered `LICENSE` |
 
@@ -49,15 +50,16 @@ local modifications where possible.
 ## Project types
 
 - **`full_project`** (default) — a runnable Django site: `apps/<initial_app_name>/`,
-  Docker/Docker Compose, a Makefile wrapping `docker compose`/`manage.py`, and CI that
-  migrates, tests, lints, and type-checks against a real Postgres (and Redis, if
-  `use_redis=true`).
+  Docker/Docker Compose, a Makefile or Justfile (`task_runner`) wrapping `docker
+  compose`/`manage.py`, and CI that migrates, tests, lints, and type-checks against a
+  real Postgres (and Redis, if `use_redis=true`).
 - **`reusable_app`** — a pip-installable Django app: a hatchling `src/<package_name>/`
   package (models/admin/migrations/`py.typed`, an optional shinobi `Router`,
   `templates/`+`static/`), `pytest-django` tests on sqlite, a runnable `example/`
-  project, a uv-based Makefile (build/publish), an install-oriented README, and a
-  Postgres-free CI plus a PyPI `release.yml`. The project-only questions
-  (`initial_app_name`, `use_redis`, `use_async`) are hidden for this type.
+  project, a uv-based Makefile or Justfile (`task_runner`, build/publish), an
+  install-oriented README, and a Postgres-free CI plus a PyPI `release.yml`. The
+  project-only questions (`initial_app_name`, `use_redis`, `use_async`) are hidden for
+  this type.
 
 ## Frontend (Pico.css + Vite)
 
@@ -74,7 +76,8 @@ When `use_vite=true`, the generated project ships a minimal frontend build pipel
   `static/dist/` into the runtime image, where whitenoise serves it.
 - For local dev, copy `docker-compose.override.yml.example` to
   `docker-compose.override.yml`: it adds a `vite` service running the Vite dev server
-  with HMR on `localhost:5173`. `make frontend-install` / `make frontend-build` run the
+  with HMR on `localhost:5173`. `make frontend-install` / `make frontend-build` (or
+  `just frontend-install` / `just frontend-build`, depending on `task_runner`) run the
   equivalent commands against your local Node install.
 
 ## Document-first AI development scaffold
@@ -91,8 +94,9 @@ Every generated project ships a workflow for developing with an AI coding agent
   state), `history.md` (append-only prompt log), `SKILL.md`, and `adr/`
 
 Each feature folder is discoverable as a skill through `.agents/skills/<slug>` and
-`.claude/skills/<slug>` symlinks, and `make new-feature name=<slug>` scaffolds a new
-feature with both symlinks in place.
+`.claude/skills/<slug>` symlinks, and `make new-feature name=<slug>` (or `just
+new-feature name=<slug>`, depending on `task_runner`) scaffolds a new feature with
+both symlinks in place.
 
 ## Structure of this repo
 

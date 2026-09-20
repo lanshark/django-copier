@@ -40,8 +40,9 @@ agents through symlinks that both point at the feature folder:
   `/`-invokable skill.
 
 The filename must be `SKILL.md` (uppercase); both standards require it. When creating a
-new feature, run `make new-feature name=<slug>` (or copy `features/_template/` and add
-the two symlinks) so both agents discover it.
+new feature, run `make new-feature name=<slug>` (`just new-feature name=<slug>` if this
+project uses a Justfile, or copy `features/_template/` and add the two symlinks) so
+both agents discover it.
 
 ## Consequences
 

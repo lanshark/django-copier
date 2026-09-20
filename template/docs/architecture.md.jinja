@@ -1,3 +1,5 @@
+{% set runner_cmd = 'make' if task_runner == 'makefile' else 'just' %}
+{% set runner_file = 'Makefile' if task_runner == 'makefile' else 'Justfile' %}
 # Architecture
 
 ## Status
@@ -54,7 +56,7 @@ capture the reasoning in a feature-scoped ADR.
 │   ├── vision.md             # product vision
 │   ├── architecture.md       # this document
 │   └── adr/                  # project-wide architecture decision records
-├── Makefile                 # docker compose + manage.py task wrappers
+├── {{ runner_file }}                 # docker compose + manage.py task wrappers
 ├── manage.py
 ├── pyproject.toml
 ├── docker-compose.yml
@@ -89,7 +91,7 @@ capture the reasoning in a feature-scoped ADR.
 ├── .agents/skills/          # Codex skill symlinks -> features/<slug>
 ├── .claude/skills/          # Claude Code skill symlinks -> features/<slug>
 └── features/                # document-first workflow (this scaffold)
-    ├── _template/           # copy (or `make new-feature`) to start a feature
+    ├── _template/           # copy (or `{{ runner_cmd }} new-feature`) to start a feature
     │   ├── feature.md        # current normative state
     │   ├── SKILL.md          # feature-specific agent guidance
     │   ├── history.md        # append-only prompt/impl/verification log
@@ -105,7 +107,7 @@ capture the reasoning in a feature-scoped ADR.
 │   ├── vision.md             # product vision
 │   ├── architecture.md       # this document
 │   └── adr/                  # project-wide architecture decision records
-├── Makefile                 # uv dev + packaging task wrappers
+├── {{ runner_file }}                 # uv dev + packaging task wrappers
 ├── pyproject.toml           # hatchling build; deps; tool config
 ├── src/
 │   └── {{ package_name }}/
@@ -124,7 +126,7 @@ capture the reasoning in a feature-scoped ADR.
 ├── .agents/skills/          # Codex skill symlinks -> features/<slug>
 ├── .claude/skills/          # Claude Code skill symlinks -> features/<slug>
 └── features/                # document-first workflow (this scaffold)
-    ├── _template/           # copy (or `make new-feature`) to start a feature
+    ├── _template/           # copy (or `{{ runner_cmd }} new-feature`) to start a feature
     │   ├── feature.md        # current normative state
     │   ├── SKILL.md          # feature-specific agent guidance
     │   ├── history.md        # append-only prompt/impl/verification log
@@ -141,7 +143,7 @@ capture the reasoning in a feature-scoped ADR.
 4. Update requirements, acceptance criteria, and open questions.
 5. Add or update ADRs for architectural choices.
 6. Implement only what the documents specify.
-7. Validate with focused tests or checks (`make test`, `make lint`, `make typecheck`).
+7. Validate with focused tests or checks (`{{ runner_cmd }} test`, `{{ runner_cmd }} lint`, `{{ runner_cmd }} typecheck`).
 8. Record implementation and verification notes in the feature document.
 
 ## Conventions
@@ -150,10 +152,10 @@ capture the reasoning in a feature-scoped ADR.
 - Lint with ruff and type-check with pyright; both must stay clean.
 - Test with pytest (`pytest-django`); keep tests close to the app they cover.
 {% if project_type == 'full_project' %}
-- Run the project through the `Makefile` targets (`make up`, `make migrate`, `make test`, …).
+- Run the project through the `{{ runner_file }}` targets (`{{ runner_cmd }} up`, `{{ runner_cmd }} migrate`, `{{ runner_cmd }} test`, …).
 - Configuration is read from the environment via `python-decouple`; never commit secrets.
 {% else %}
-- Run tasks through the `Makefile` targets (`make test`, `make lint`, `make build`, …).
+- Run tasks through the `{{ runner_file }}` targets (`{{ runner_cmd }} test`, `{{ runner_cmd }} lint`, `{{ runner_cmd }} build`, …).
 - Ship migrations with the package; keep the public import surface stable and typed (`py.typed`).
 {% endif %}
 
@@ -166,8 +168,8 @@ Each feature folder contains:
 - `history.md`: append-only prompt log, implementation summaries, and verification results.
 - `adr/`: feature-scoped architecture decision records.
 
-Create a new feature with `make new-feature name=<slug>`, which copies `_template/`
-and adds both skill symlinks.
+Create a new feature with `{{ runner_cmd }} new-feature name=<slug>`, which copies
+`_template/` and adds both skill symlinks.
 
 ## ADR Convention
 

@@ -10,8 +10,8 @@ behavior. Read `docs/vision.md`, `docs/architecture.md`, and the relevant
 For every prompt that changes code or shipped behavior:
 
 1. Identify the relevant feature folder in `features/`. If none exists, create one with
-   `make new-feature name=<slug>` (copies `features/_template/` and adds the skill
-   symlinks).
+   `{{ 'make' if task_runner == 'makefile' else 'just' }} new-feature name=<slug>`
+   (copies `features/_template/` and adds the skill symlinks).
 2. Record the prompt in that feature's append-only `history.md` before editing code.
 3. Update the feature's `feature.md` (requirements, acceptance criteria, constraints).
 4. Update the feature's `SKILL.md` when its development guidance changes.
