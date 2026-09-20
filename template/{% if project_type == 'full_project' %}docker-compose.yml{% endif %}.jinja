@@ -22,6 +22,11 @@ services:
     # Dev-only SMTP catcher: web/worker send mail to it instead of a real relay.
     # Web UI at http://localhost:8025 shows everything sent.
     image: axllent/mailpit:v1.31
+    healthcheck:
+      test: ["/mailpit", "readyz"]
+      interval: 15s
+      start_period: 10s
+      start_interval: 1s
     ports:
       - "127.0.0.1:8025:8025"
       - "127.0.0.1:1025:1025"
@@ -36,7 +41,7 @@ services:
       db:
         condition: service_healthy
       mailpit:
-        condition: service_started
+        condition: service_healthy
 {% if use_redis %}
       redis:
         condition: service_started
@@ -59,7 +64,7 @@ services:
       db:
         condition: service_healthy
       mailpit:
-        condition: service_started
+        condition: service_healthy
       redis:
         condition: service_started
 {% endif %}

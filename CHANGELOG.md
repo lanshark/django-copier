@@ -6,7 +6,8 @@ All notable changes to this project are documented in this file.
 
 - Add `mailpit` to the generated full-project `web` and Redis `worker`
   `depends_on` blocks, and pass `DJANGO_EMAIL_HOST=mailpit` through a
-  compose-only env file, so Docker local email delivery does not race the SMTP
+  compose-only env file, with a `readyz` healthcheck gating those
+  dependencies, so Docker local email delivery does not race the SMTP
   container startup or clobber sibling service environment mappings
 - Set a dummy `DJANGO_DEFAULT_FROM_EMAIL` in the template CI's `email-*`
  production-settings check so those jobs validate provider config with an
