@@ -100,6 +100,14 @@ use_vite:
   default: false
   when: "{{ project_type == 'full_project' }}"
 
+use_allauth:
+  type: bool
+  help: >-
+    Add django-allauth for session-based login/signup/logout (separate from
+    the JWT API auth)? Core account functionality only, no social providers.
+  default: false
+  when: "{{ project_type == 'full_project' }}"
+
 use_shinobi:
   type: bool
   help: >-

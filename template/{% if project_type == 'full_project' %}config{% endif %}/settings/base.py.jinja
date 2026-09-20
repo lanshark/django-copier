@@ -26,11 +26,20 @@ INSTALLED_APPS = [
 {% if use_vite %}
     "django_vite",
 {% endif %}
+{% if use_allauth %}
+    "allauth",
+    "allauth.account",
+{% endif %}
     "apps.accounts",
     "apps.{{ initial_app_name }}",
 ]
 
 AUTH_USER_MODEL = "accounts.User"
+{% if use_allauth %}
+AUTHENTICATION_BACKENDS = [
+    "allauth.account.auth_backends.AuthenticationBackend",
+]
+{% endif %}
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -41,6 +50,9 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+{% if use_allauth %}
+    "allauth.account.middleware.AccountMiddleware",
+{% endif %}
 ]
 
 ROOT_URLCONF = "config.urls"
@@ -159,4 +171,16 @@ TASKS = {
 JWT_SIGNING_KEY = config("JWT_SIGNING_KEY")
 JWT_ACCESS_TOKEN_LIFETIME_MIN = config("JWT_ACCESS_TOKEN_LIFETIME_MIN", default=15, cast=int)
 JWT_REFRESH_TOKEN_LIFETIME_DAYS = config("JWT_REFRESH_TOKEN_LIFETIME_DAYS", default=7, cast=int)
+{% endif %}
+{% if use_allauth %}
+
+# --- django-allauth (session-based login, separate from the JWT API auth above) ---
+LOGIN_REDIRECT_URL = "/"
+{% if user_identifier == 'email' %}
+# No username field on the custom user model (see apps/accounts) — tell allauth so
+# its forms don't try to look one up.
+ACCOUNT_USER_MODEL_USERNAME_FIELD = None
+ACCOUNT_LOGIN_METHODS = {"email"}
+ACCOUNT_SIGNUP_FIELDS = ["email*", "password1*", "password2*"]
+{% endif %}
 {% endif %}

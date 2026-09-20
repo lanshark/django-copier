@@ -36,6 +36,8 @@ jobs:
             extra_args: '--data email_provider=sendgrid'
           - name: custom-username
             extra_args: '--data user_identifier=username'
+          - name: with-allauth
+            extra_args: '--data use_allauth=true'
 
     services:
       postgres:

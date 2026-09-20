@@ -1,0 +1,26 @@
+{% raw %}{% extends "{% endraw %}{{ initial_app_name }}{% raw %}/base.html" %}
+
+{% block content %}
+<hgroup>
+  <h1>{% endraw %}{{ project_name }}{% raw %}</h1>
+{% endraw %}
+{% if use_vite %}
+  <p>Styled with Pico.css, bundled with Vite.</p>
+{% else %}
+  <p>A minimal starting point for your project.</p>
+{% endif %}
+{% raw %}</hgroup>
+{% endraw %}
+{% if use_allauth %}
+{% raw %}<nav>
+  {% if user.is_authenticated %}
+  <p>Logged in user: {{ user.{% endraw %}{{ user_identifier }}{% raw %} }}</p>
+  <a href="{% url 'account_logout' %}">Logout</a>
+  {% else %}
+  <a href="{% url 'account_login' %}">Login</a>
+  {% endif %}
+</nav>
+{% endraw %}
+{% endif %}
+{% raw %}{% endblock %}
+{% endraw %}
