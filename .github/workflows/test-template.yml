@@ -162,6 +162,7 @@ jobs:
         working-directory: ${{ github.workspace }}/../rendered-${{ matrix.name }}
         env:
           DJANGO_SETTINGS_MODULE: config.settings.prod
+          DJANGO_DEFAULT_FROM_EMAIL: no-reply@example.com
           AWS_ACCESS_KEY_ID: dummy
           AWS_SECRET_ACCESS_KEY: dummy
           AWS_DEFAULT_REGION: us-east-1

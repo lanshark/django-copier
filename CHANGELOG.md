@@ -4,6 +4,9 @@ All notable changes to this project are documented in this file.
 
 ## Next Release
 
+- Set a dummy `DJANGO_DEFAULT_FROM_EMAIL` in the template CI's `email-*`
+  production-settings check so those jobs keep validating provider config after
+  `config.settings.prod` started requiring the sender address
 - Install the matching `django-anymail` extras for full-project Postmark and
   Mailgun renders so generated production email backends have their provider
   dependencies out of the box
