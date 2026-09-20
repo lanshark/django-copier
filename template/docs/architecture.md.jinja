@@ -24,10 +24,16 @@ capture the reasoning in a feature-scoped ADR.
 - Python {{ python_version }}, Django 5.2 LTS, PostgreSQL.
 - A custom user model (`apps/accounts`), identified by
   {{ 'email address' if user_identifier == 'email' else 'username' }} (`AUTH_USER_MODEL`).
+- A home page at `apps/{{ initial_app_name }}/` (view, URL, `templates/`).
 {% if use_shinobi %}
 - A django-shinobi (Django Ninja) API layer with JWT auth under `apps/{{ initial_app_name }}/`.
 {% else %}
 - The Django admin site (no HTTP API layer in this project).
+{% endif %}
+{% if use_allauth %}
+- Session-based login/signup/logout via django-allauth (`/accounts/...`){% if use_shinobi %}, entirely
+  separate from the JWT API auth above — allauth handles browser sessions, the API
+  issues its own tokens{% endif %}.
 {% endif %}
 - Background work via `django-tasks`{% if use_redis %}, running on the RQ/Redis backend with a dedicated worker{% else %} (synchronous in-process backend){% endif %}.
 - Email via SMTP, caught in dev by a `mailpit` service (web UI at `localhost:8025`)
@@ -35,8 +41,7 @@ capture the reasoning in a feature-scoped ADR.
   {{ {"ses": "Amazon SES", "postmark": "Postmark", "mailgun": "Mailgun", "sendgrid": "SendGrid"}[email_provider] }}
   through `django-anymail`.
 {% if use_vite %}
-- A Pico.css + Vite frontend build pipeline (django-vite), with a starter page under
-  `apps/{{ initial_app_name }}/`.
+- A Pico.css + Vite frontend build pipeline (django-vite) for the home page.
 {% endif %}
 - Tooling: uv, ruff, pyright, pytest, and Docker Compose.
 {% else %}
@@ -95,11 +100,9 @@ capture the reasoning in a feature-scoped ADR.
 │       ├── auth.py          # JWT bearer auth
 │       ├── schemas.py
 {% endif %}
-{% if use_vite %}
-│       ├── views.py         # starter page view
+│       ├── views.py         # home page view
 │       ├── urls.py
-│       ├── templates/{{ initial_app_name }}/  # base.html (django-vite tags) + index.html
-{% endif %}
+│       ├── templates/{{ initial_app_name }}/  # base.html + index.html
 │       └── tests/
 ├── scripts/
 ├── .agents/skills/          # Codex skill symlinks -> features/<slug>

@@ -4,6 +4,19 @@ All notable changes to this project are documented in this file.
 
 ## Next Release
 
+- Fix the `use_allauth` comment/doc wording (`config/settings/base.py`,
+  `docs/architecture.md`) that referenced "the JWT API auth above" even when
+  `use_shinobi=false`, when there's no JWT section to refer to — condition that
+  clause on `use_shinobi` as well
+- Fix `from django.urls import reverse` being imported unconditionally in
+  `apps/<initial_app_name>/tests/test_views.py` — it's only used by the
+  allauth-specific tests, so every non-allauth render failed `ruff check` with an
+  unused-import (`F401`) error. Made the import conditional on `use_allauth`
+- Add generated allauth view tests that exercise the real `/accounts/login/`,
+  `/accounts/signup/`, and POST `/accounts/logout/` flows for both supported user
+  identifier variants, so CI validates the allauth URL wiring and variant-specific
+  account settings instead of only checking home-page markup after `force_login`
+- Add a `use_allauth` question (full_project only, default `false`) wiring django-allauth's core account app (login/signup/logout, no social providers) at `/accounts/...`, entirely separate from the JWT API auth — `AUTHENTICATION_BACKENDS` must include both `django.contrib.auth.backends.ModelBackend` and `allauth.account.auth_backends.AuthenticationBackend` to keep Django admin permissions and allauth account auth working together. For the email identifier, also sets `ACCOUNT_LOGIN_METHODS`, `ACCOUNT_SIGNUP_FIELDS`, and `ACCOUNT_USER_MODEL_USERNAME_FIELD = None` (without it, allauth's signup form crashes looking for a `username` field that doesn't exist — found by testing the actual signup flow, not just reading docs); the username identifier needs no extra `ACCOUNT_*` settings since allauth's own defaults already match. No `django.contrib.sites`/`SITE_ID` needed for core functionality. Restructures the home page (`apps/<initial_app_name>/{views,urls}.py`, `templates/`, its test) to always exist instead of only under `use_vite` — `use_vite` and `use_allauth` now independently layer their own markup (Vite's `<head>` tags; a login/logout link and, when signed in, "Logged in user: ...") onto the same always-present page. New CI matrix entry `with-allauth`
 - Add a `Ruff format` step to `test-template.yml` (both jobs) so CI validates that rendered projects are actually formatted, not just lint-clean — `ruff check` and `ruff format --check` catch different things, and only the former was checked before. Fixes two pre-existing formatting issues this surfaced: collapsed two over-wrapped calls in `apps/<initial_app_name>/auth.py`, and a missing blank line after the module docstring in the reusable_app's `example/manage.py`. Every *generated* project's own CI already covers this via `pre-commit run --all-files` (which includes the `ruff-format` hook); this only closes the gap in the template's own validation of its committed source files
 - Add a `user_identifier` question (full_project only: `Email address` default or
   `Username`) that generates a custom `apps/accounts` user model

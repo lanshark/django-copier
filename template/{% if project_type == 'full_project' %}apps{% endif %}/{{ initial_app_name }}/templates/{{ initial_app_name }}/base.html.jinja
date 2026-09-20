@@ -4,10 +4,14 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{% endraw %}{{ project_name }}{% raw %}</title>
-    {% load django_vite %}
+{% endraw %}
+{% if use_vite %}
+{% raw %}    {% load django_vite %}
     {% vite_hmr_client %}
     {% vite_asset 'frontend/main.js' %}
-  </head>
+{% endraw %}
+{% endif %}
+{% raw %}  </head>
   <body>
     <main class="container">
       {% block content %}{% endblock %}

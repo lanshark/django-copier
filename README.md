@@ -32,7 +32,8 @@ You'll be prompted for:
 | `use_redis` | *(full_project only)* `true` → django-tasks on RQ/Redis with a `worker` compose service; `false` → synchronous `ImmediateBackend`, no Redis needed |
 | `use_async` | *(full_project only)* `true` → serve via uvicorn/ASGI; `false` → gunicorn/WSGI |
 | `use_shinobi` | `true` → include a django-shinobi (Django Ninja) API layer with JWT auth and an example health/token/me API; `false` → no API layer |
-| `use_vite` | *(full_project only)* `true` → Pico.css + Vite frontend build pipeline (django-vite, HMR dev server, starter page); `false` → no frontend tooling |
+| `use_vite` | *(full_project only)* `true` → Pico.css + Vite frontend build pipeline (django-vite, HMR dev server) for the home page; `false` → no frontend tooling |
+| `use_allauth` | *(full_project only)* `true` → django-allauth for session-based login/signup/logout (separate from the JWT API auth), with a login/logout link on the home page; `false` → no allauth |
 | `task_runner` | `Makefile` (default) or `Justfile` — which tool wraps the dev commands (`up`/`migrate`/`test`/`lint`/`new-feature`/etc.) |
 | `email_provider` | *(full_project only)* `Amazon SES` (default), `Postmark`, `Mailgun`, or `SendGrid` — production email backend via django-anymail (local dev defaults to localhost SMTP, with Docker wiring Mailpit automatically) |
 | `user_identifier` | *(full_project only)* `Email address` (default) or `Username` — how the custom user model (`apps/accounts`) identifies users |
@@ -51,9 +52,10 @@ local modifications where possible.
 
 ## Project types
 
-- **`full_project`** (default) — a runnable Django site: `apps/<initial_app_name>/`,
-  a custom user model (`apps/accounts`, identified by email or username per
-  `user_identifier`), Docker/Docker Compose (including a `mailpit` dev SMTP
+- **`full_project`** (default) — a runnable Django site: `apps/<initial_app_name>/`
+  with a home page at `/`, a custom user model (`apps/accounts`, identified by
+  email or username per `user_identifier`), optional django-allauth login
+  (`use_allauth`), Docker/Docker Compose (including a `mailpit` dev SMTP
   catcher), a Makefile or Justfile (`task_runner`) wrapping `docker
   compose`/`manage.py`, and CI that migrates, tests, lints, and type-checks
   against a real Postgres (and Redis, if `use_redis=true`).
@@ -86,6 +88,39 @@ Both variants ship a real, generated (not hand-guessed) `migrations/0001_initial
 schemas use whichever field `user_identifier` selected (e.g. `POST /api/v1/auth/token`
 takes `email`+`password` rather than `username`+`password` for the email variant).
 
+## Home page
+
+Every `full_project` generated project ships a basic home page at `/`
+(`apps/<initial_app_name>/views.py`, `urls.py`, `templates/<initial_app_name>/`)
+— this doesn't depend on `use_vite` or `use_allauth`. Those two features layer
+their own markup onto the same page rather than requiring it: `use_vite` adds the
+Pico.css + Vite `<head>` tags, `use_allauth` adds a login/logout link and, when
+signed in, "Logged in user: ...".
+
+## Login (django-allauth)
+
+When `use_allauth=true`, the generated project adds
+[django-allauth](https://docs.allauth.org/)'s core account app — login, signup,
+logout, password reset — mounted at `/accounts/...`, entirely separate from the
+JWT API auth (`use_shinobi`): allauth manages browser sessions; the API issues its
+own tokens. Only the core `allauth`/`allauth.account` apps are installed, no
+social-login providers.
+
+It's wired to match whichever `user_identifier` the project uses:
+
+- **`email`** — `ACCOUNT_LOGIN_METHODS = {"email"}`, `ACCOUNT_SIGNUP_FIELDS` drops
+  `username`, and `ACCOUNT_USER_MODEL_USERNAME_FIELD = None` tells allauth's forms
+  not to look for a `username` field that doesn't exist on this model.
+- **`username`** — allauth's own defaults already match `apps/accounts`'s fields;
+  no extra `ACCOUNT_*` settings needed.
+
+The home page (`apps/<initial_app_name>/templates/<initial_app_name>/index.html`)
+shows a Login link when signed out, or "Logged in user: `<email or username>`"
+plus a Logout link when signed in. Verification emails (default:
+`ACCOUNT_EMAIL_VERIFICATION="optional"`, allauth's own default — left unchanged for
+"core" functionality) go through the same `mailpit`/`django-anymail` email setup
+as the rest of the project, so nothing extra needs configuring for them to work.
+
 ## Frontend (Pico.css + Vite)
 
 When `use_vite=true`, the generated project ships a minimal frontend build pipeline:
@@ -96,7 +131,6 @@ When `use_vite=true`, the generated project ships a minimal frontend build pipel
   `apps/<initial_app_name>/templates/<initial_app_name>/base.html` resolve the right
   asset in both dev and prod, controlled by `DJANGO_VITE_DEV_MODE` (defaults to
   `DJANGO_DEBUG`).
-- A starter page (`apps/<initial_app_name>/views.py` + `urls.py`) renders at `/`.
 - In prod, the Docker image builds the frontend in a `node:22-slim` stage and copies
   `static/dist/` into the runtime image, where whitenoise serves it.
 - For local dev, copy `docker-compose.override.yml.example` to
@@ -181,10 +215,13 @@ the pytest suite, `ruff check`, and `pyright` all pass clean in each case.
 - `open_source_license=Apache-2.0`
 - `use_shinobi=false` (no API layer; an always-present smoke test keeps the suite
   non-empty)
-- `use_vite=true` (Pico.css + Vite build pipeline, django-vite, starter page rendered
+- `use_vite=true` (Pico.css + Vite build pipeline, django-vite, home page rendered
   and `collectstatic` run against a `npm run build` manifest)
 - `task_runner=justfile` + `use_vite=true` (`migrate`, `collectstatic`, `test`, `lint`,
   `typecheck`, and the frontend recipes all run through `just` rather than directly)
+- `use_allauth=true` (login/signup/logout wired for the default email identifier;
+  the home page's login/logout link and "Logged in user" text are covered by a new
+  test)
 
 `reusable_app`:
 

@@ -1,0 +1,100 @@
+import pytest
+{% if use_allauth %}
+from django.urls import reverse
+{% endif %}
+
+pytestmark = pytest.mark.django_db
+
+
+def test_index_renders(client):
+    response = client.get("/")
+    assert response.status_code == 200
+{% if use_allauth %}
+
+
+def test_index_shows_login_link_when_anonymous(client):
+    response = client.get("/")
+    assert b'href="/accounts/login/"' in response.content
+
+
+def test_account_login_page_renders(client):
+    response = client.get(reverse("account_login"))
+    assert response.status_code == 200
+
+
+def test_account_signup_page_renders(client):
+    response = client.get(reverse("account_signup"))
+    assert response.status_code == 200
+
+
+def test_account_login_accepts_configured_identifier(client, django_user_model):
+    user_password = "pw12345-test"
+{% if user_identifier == 'email' %}
+    login_value = "person@example.com"
+    user = django_user_model.objects.create_user(email=login_value)
+{% else %}
+    login_value = "person"
+    user = django_user_model.objects.create_user(username=login_value)
+{% endif %}
+    user.set_password(user_password)
+    user.save()
+
+    response = client.post(
+        reverse("account_login"),
+        {"login": login_value, "password": user_password},
+    )
+
+    assert response.status_code == 302
+    assert client.session.get("_auth_user_id") == str(user.pk)
+
+
+def test_account_signup_creates_user_and_logs_in(client, django_user_model):
+    response = client.post(
+        reverse("account_signup"),
+{% if user_identifier == 'email' %}
+        {
+            "email": "new-person@example.com",
+            "password1": "s3cret-pw",
+            "password2": "s3cret-pw",
+        },
+{% else %}
+        {
+            "username": "new-person",
+            "email": "new-person@example.com",
+            "password1": "s3cret-pw",
+            "password2": "s3cret-pw",
+        },
+{% endif %}
+    )
+
+    assert response.status_code == 302
+{% if user_identifier == 'email' %}
+    user = django_user_model.objects.get(email="new-person@example.com")
+{% else %}
+    user = django_user_model.objects.get(username="new-person")
+{% endif %}
+    assert client.session.get("_auth_user_id") == str(user.pk)
+
+
+def test_account_logout_logs_user_out(client, django_user_model):
+    user = django_user_model.objects.create_user(
+        **{django_user_model.USERNAME_FIELD: "person@example.com"}
+    )
+    client.force_login(user)
+
+    response = client.post(reverse("account_logout"))
+
+    assert response.status_code == 302
+    assert client.session.get("_auth_user_id") is None
+
+
+def test_index_shows_logged_in_user(client, django_user_model):
+    user = django_user_model.objects.create_user(
+        **{django_user_model.USERNAME_FIELD: "person@example.com"}
+    )
+    client.force_login(user)
+    response = client.get("/")
+    content = response.content.decode()
+    assert "Logged in user:" in content
+    assert 'action="/accounts/logout/"' in content
+{% endif %}
