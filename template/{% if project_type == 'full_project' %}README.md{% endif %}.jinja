@@ -26,6 +26,11 @@ uv run python manage.py migrate
 uv run python manage.py runserver
 ```
 
+If you want local email capture on that path, run `docker compose up mailpit` in a
+second terminal. The generated settings default SMTP to `localhost:1025`, which the
+compose `mailpit` service publishes on the host, and its web UI is at
+`http://localhost:8025`.
+
 ## Tests
 
 ```bash

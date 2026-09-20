@@ -9,6 +9,7 @@ services:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
+      start_period: 5s
       interval: 5s
       timeout: 5s
       retries: 5
@@ -18,13 +19,31 @@ services:
     volumes:
       - redis_data:/data
 {% endif %}
+  mailpit:
+    # Dev-only SMTP catcher: web/worker send mail to it instead of a real relay.
+    # Web UI at http://localhost:8025 shows everything sent.
+    image: axllent/mailpit:v1.31
+    healthcheck:
+      test: ["/mailpit", "readyz"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+      start_interval: 1s
+    ports:
+      - "127.0.0.1:8025:8025"
+      - "127.0.0.1:1025:1025"
   web:
     build:
       context: .
       dockerfile: docker/Dockerfile
-    env_file: .env
+    env_file:
+      - .env
+      - docker/mailpit.env
     depends_on:
       db:
+        condition: service_healthy
+      mailpit:
         condition: service_healthy
 {% if use_redis %}
       redis:
@@ -33,6 +52,7 @@ services:
     ports:
       - "8000:8000"
 {% if use_redis %}
+  # Redis-backed worker service (only rendered when use_redis=true).
   worker:
     build:
       context: .
@@ -40,9 +60,13 @@ services:
     # --job-class is redundant with the RQ.JOB_CLASS setting in base.py, but kept
     # explicit here since it's easy to lose track of when copy-pasting this command.
     command: ["python", "manage.py", "rqworker", "default", "--job-class", "django_tasks_rq.backend.Job"]
-    env_file: .env
+    env_file:
+      - .env
+      - docker/mailpit.env
     depends_on:
       db:
+        condition: service_healthy
+      mailpit:
         condition: service_healthy
       redis:
         condition: service_started

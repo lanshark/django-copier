@@ -34,6 +34,7 @@ You'll be prompted for:
 | `use_shinobi` | `true` → include a django-shinobi (Django Ninja) API layer with JWT auth and an example health/token/me API; `false` → no API layer |
 | `use_vite` | *(full_project only)* `true` → Pico.css + Vite frontend build pipeline (django-vite, HMR dev server, starter page); `false` → no frontend tooling |
 | `task_runner` | `Makefile` (default) or `Justfile` — which tool wraps the dev commands (`up`/`migrate`/`test`/`lint`/`new-feature`/etc.) |
+| `email_provider` | *(full_project only)* `Amazon SES` (default), `Postmark`, `Mailgun`, or `SendGrid` — production email backend via django-anymail (local dev defaults to localhost SMTP, with Docker wiring Mailpit automatically) |
 | `open_source_license` | `MIT`, `BSD-3-Clause`, `Apache-2.0`, `GNU GPLv3`, `GNU AGPLv3`, `Proprietary`, or `None` |
 | `copyright_holder` / `copyright_year` | *(shown for licenses needing a copyright notice)* Populates the rendered `LICENSE` |
 
@@ -50,9 +51,10 @@ local modifications where possible.
 ## Project types
 
 - **`full_project`** (default) — a runnable Django site: `apps/<initial_app_name>/`,
-  Docker/Docker Compose, a Makefile or Justfile (`task_runner`) wrapping `docker
-  compose`/`manage.py`, and CI that migrates, tests, lints, and type-checks against a
-  real Postgres (and Redis, if `use_redis=true`).
+  Docker/Docker Compose (including a `mailpit` dev SMTP catcher), a Makefile or
+  Justfile (`task_runner`) wrapping `docker compose`/`manage.py`, and CI that
+  migrates, tests, lints, and type-checks against a real Postgres (and Redis, if
+  `use_redis=true`).
 - **`reusable_app`** — a pip-installable Django app: a hatchling `src/<package_name>/`
   package (models/admin/migrations/`py.typed`, an optional shinobi `Router`,
   `templates/`+`static/`), `pytest-django` tests on sqlite, a runnable `example/`
@@ -79,6 +81,29 @@ When `use_vite=true`, the generated project ships a minimal frontend build pipel
   with HMR on `localhost:5173`. `make frontend-install` / `make frontend-build` (or
   `just frontend-install` / `just frontend-build`, depending on `task_runner`) run the
   equivalent commands against your local Node install.
+
+## Email (Mailpit + django-anymail)
+
+Every `full_project` generated project sends email via SMTP. For non-Docker local
+runs, `config/settings/base.py` defaults `DJANGO_EMAIL_HOST`/`DJANGO_EMAIL_PORT` to
+`localhost:1025`. In Docker Compose, the generated `web`/`worker` services override
+`DJANGO_EMAIL_HOST` to `mailpit`, and the `mailpit` service publishes both its SMTP
+port (`127.0.0.1:1025`) and web UI (`http://localhost:8025`) on localhost, so no real
+mail is ever sent. `config/settings/test.py` uses Django's `locmem` backend instead,
+so tests and CI don't need a running SMTP server.
+
+`config/settings/prod.py` (only loaded when `DJANGO_SETTINGS_MODULE=config.settings.
+prod`) overrides `EMAIL_BACKEND` to send through [django-anymail](https://anymail.dev/)
+via the `email_provider` chosen at generation time:
+
+- **Amazon SES** — no `ANYMAIL` setting required; boto3 reads AWS credentials/region
+  via its standard chain (env vars, an IAM role, or `~/.aws/credentials`).
+- **Postmark** — requires `ANYMAIL_POSTMARK_SERVER_TOKEN`.
+- **Mailgun** — requires `ANYMAIL_MAILGUN_API_KEY` and `ANYMAIL_MAILGUN_SENDER_DOMAIN`.
+- **SendGrid** — requires `ANYMAIL_SENDGRID_API_KEY`.
+
+These are only read in prod (see `.env.example` for the full list); local dev and CI
+never need them.
 
 ## Document-first AI development scaffold
 
@@ -118,7 +143,9 @@ the pytest suite, `ruff check`, and `pyright` all pass clean in each case.
 
 `full_project`:
 
-- Default answers (`use_redis=true`, `use_async=false`)
+- Default answers (`use_redis=true`, `use_async=false`); the smoke test suite
+  includes an email test confirming `config/settings/test.py`'s `locmem` backend
+  captures mail instead of needing a live `mailpit` SMTP server in CI
 - `use_redis=false` (synchronous task backend, no Redis/worker service generated)
 - Custom `initial_app_name` + `use_async=true` (app directory renamed correctly, all
   internal imports follow, Dockerfile CMD switches to uvicorn)

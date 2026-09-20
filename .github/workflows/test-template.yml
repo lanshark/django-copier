@@ -26,6 +26,14 @@ jobs:
             extra_args: '--data use_vite=true'
           - name: with-justfile
             extra_args: '--data task_runner=justfile --data use_vite=true'
+          - name: email-ses
+            extra_args: '--data email_provider=ses'
+          - name: email-postmark
+            extra_args: '--data email_provider=postmark'
+          - name: email-mailgun
+            extra_args: '--data email_provider=mailgun'
+          - name: email-sendgrid
+            extra_args: '--data email_provider=sendgrid'
 
     services:
       postgres:
@@ -148,6 +156,21 @@ jobs:
           else
             uv run pyright
           fi
+
+      - name: Check prod settings (email_provider)
+        if: startsWith(matrix.name, 'email-')
+        working-directory: ${{ github.workspace }}/../rendered-${{ matrix.name }}
+        env:
+          DJANGO_SETTINGS_MODULE: config.settings.prod
+          DJANGO_DEFAULT_FROM_EMAIL: no-reply@example.com
+          AWS_ACCESS_KEY_ID: dummy
+          AWS_SECRET_ACCESS_KEY: dummy
+          AWS_DEFAULT_REGION: us-east-1
+          ANYMAIL_POSTMARK_SERVER_TOKEN: dummy
+          ANYMAIL_MAILGUN_API_KEY: dummy
+          ANYMAIL_MAILGUN_SENDER_DOMAIN: mail.example.com
+          ANYMAIL_SENDGRID_API_KEY: dummy
+        run: uv run python manage.py check
 
   render-and-test-app:
     runs-on: ubuntu-latest
