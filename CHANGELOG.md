@@ -4,6 +4,16 @@ All notable changes to this project are documented in this file.
 
 ## Next Release
 
+- Make `django_version` selectable between `5.2` (LTS, default) and `6.1` —
+  parameterizes the hardcoded `django>=5.2,<5.3` dependency pin and
+  `Framework :: Django :: 5.2` classifier in `pyproject.toml`, and the "Django
+  5.2 LTS" mentions in the generated README/`docs/architecture.md`. Per issue
+  #21, does NOT update the `django-tasks`/`django-tasks-rq` packages or touch
+  `EMAIL_HOST` handling — Django 6.0+ ships its own built-in `django.tasks`
+  framework that may overlap with the third-party packages this project uses,
+  and email settings haven't been re-verified against Django 6's adoption of
+  Python's modern email API. When `django_version == '6.1'`, the generated
+  `docs/architecture.md` documents both as known, unaddressed caveats. Closes #21
 - Make `postgres_version` selectable among `16`, `17`, and `18` (default `18`,
   full_project only) — parameterizes the hardcoded `postgres:17` image in
   `docker-compose.yml` and `ci.yml`, plus the Postgres mentions in the generated

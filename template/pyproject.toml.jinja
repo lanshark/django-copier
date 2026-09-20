@@ -8,6 +8,7 @@ authors = [
 ]
 {% endif %}
 requires-python = ">={{ python_version }}"
+{% set django_next_minor = {"5.2": "5.3", "6.1": "6.2"}[django_version] %}
 {% if open_source_license != "None" %}
 {% set license_spdx = {
     "MIT": "MIT",
@@ -23,13 +24,13 @@ license-files = ["LICENSE"]
 {% if project_type == 'reusable_app' %}
 classifiers = [
     "Framework :: Django",
-    "Framework :: Django :: 5.2",
+    "Framework :: Django :: {{ django_version }}",
     "Intended Audience :: Developers",
     "Programming Language :: Python :: 3",
 ]
 {% endif %}
 dependencies = [
-    "django>=5.2,<5.3",
+    "django>={{ django_version }},<{{ django_next_minor }}",
 {% if use_shinobi %}
     "django-shinobi",
 {% endif %}
