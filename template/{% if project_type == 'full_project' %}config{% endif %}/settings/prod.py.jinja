@@ -38,4 +38,6 @@ EMAIL_BACKEND = "anymail.backends.sendgrid.EmailBackend"
 ANYMAIL = {
     "SENDGRID_API_KEY": config("ANYMAIL_SENDGRID_API_KEY"),
 }
+{% else %}
+{{ [].index("Unsupported email_provider: " ~ normalized_email_provider) }}
 {% endif %}
