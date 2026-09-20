@@ -4,6 +4,9 @@ All notable changes to this project are documented in this file.
 
 ## Next Release
 
+- Require full-project production renders to set `DJANGO_DEFAULT_FROM_EMAIL`, so
+  generated `config.settings.prod` does not fall back to Django's
+  `webmaster@localhost` sender
 - Clarify the full-project generated README's non-Docker dev instructions so local
   `uv run ... runserver` users know to run `docker compose up mailpit`, which publishes
   Mailpit's SMTP listener on `localhost:1025` and its web UI on `localhost:8025`
