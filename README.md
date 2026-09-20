@@ -34,7 +34,7 @@ You'll be prompted for:
 | `use_shinobi` | `true` → include a django-shinobi (Django Ninja) API layer with JWT auth and an example health/token/me API; `false` → no API layer |
 | `use_vite` | *(full_project only)* `true` → Pico.css + Vite frontend build pipeline (django-vite, HMR dev server, starter page); `false` → no frontend tooling |
 | `task_runner` | `Makefile` (default) or `Justfile` — which tool wraps the dev commands (`up`/`migrate`/`test`/`lint`/`new-feature`/etc.) |
-| `email_provider` | *(full_project only)* `Amazon SES` (default), `Postmark`, `Mailgun`, or `SendGrid` — production email backend via django-anymail (local dev always uses mailpit) |
+| `email_provider` | *(full_project only)* `Amazon SES` (default), `Postmark`, `Mailgun`, or `SendGrid` — production email backend via django-anymail (local dev defaults to localhost SMTP, with Docker wiring Mailpit automatically) |
 | `open_source_license` | `MIT`, `BSD-3-Clause`, `Apache-2.0`, `GNU GPLv3`, `GNU AGPLv3`, `Proprietary`, or `None` |
 | `copyright_holder` / `copyright_year` | *(shown for licenses needing a copyright notice)* Populates the rendered `LICENSE` |
 
@@ -84,12 +84,13 @@ When `use_vite=true`, the generated project ships a minimal frontend build pipel
 
 ## Email (Mailpit + django-anymail)
 
-Every `full_project` generated project sends email via SMTP, caught in local dev by a
-`mailpit` service in `docker-compose.yml` — no real mail is ever sent. Open
-`http://localhost:8025` to view anything the app sends. `config/settings/base.py`
-points `DJANGO_EMAIL_HOST`/`DJANGO_EMAIL_PORT` at `mailpit:1025` by default;
-`config/settings/test.py` uses Django's `locmem` backend instead, so tests and CI
-don't need a running SMTP server.
+Every `full_project` generated project sends email via SMTP. For non-Docker local
+runs, `config/settings/base.py` defaults `DJANGO_EMAIL_HOST`/`DJANGO_EMAIL_PORT` to
+`localhost:1025`. In Docker Compose, the generated `web`/`worker` services override
+`DJANGO_EMAIL_HOST` to `mailpit`, and the `mailpit` service publishes both its SMTP
+port (`127.0.0.1:1025`) and web UI (`http://localhost:8025`) on localhost, so no real
+mail is ever sent. `config/settings/test.py` uses Django's `locmem` backend instead,
+so tests and CI don't need a running SMTP server.
 
 `config/settings/prod.py` (only loaded when `DJANGO_SETTINGS_MODULE=config.settings.
 prod`) overrides `EMAIL_BACKEND` to send through [django-anymail](https://anymail.dev/)
