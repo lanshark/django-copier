@@ -150,6 +150,12 @@ jobs:
             uv run ruff check .
           fi
 
+      - name: Ruff format
+        working-directory: ${{ github.workspace }}/../rendered-${{ matrix.name }}
+        # No make/just recipe wraps this specifically (lint only runs `ruff check`),
+        # so this always runs directly regardless of task_runner.
+        run: uv run ruff format --check .
+
       - name: Pyright
         working-directory: ${{ github.workspace }}/../rendered-${{ matrix.name }}
         run: |
@@ -229,6 +235,12 @@ jobs:
           else
             uv run ruff check .
           fi
+
+      - name: Ruff format
+        working-directory: ${{ github.workspace }}/../rendered-${{ matrix.name }}
+        # No make/just recipe wraps this specifically (lint only runs `ruff check`),
+        # so this always runs directly regardless of task_runner.
+        run: uv run ruff format --check .
 
       - name: Pyright
         working-directory: ${{ github.workspace }}/../rendered-${{ matrix.name }}

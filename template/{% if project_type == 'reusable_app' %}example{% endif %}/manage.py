@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 """Run the bundled example project that installs this app."""
+
 import os
 import sys
 
