@@ -13,9 +13,10 @@ All notable changes to this project are documented in this file.
  explicit sender address
 - Install the matching `django-anymail` extras for full-project Postmark and
  Mailgun renders, while keeping reusable-app renders free of the full-project-
- only `django-anymail` dependency selection, and install `boto3` for Amazon
- SES renders, so generated production email backends have their provider
- dependencies out of the box
+ only `django-anymail` dependency selection, default missing production
+ `email_provider` values to SES, and install `boto3` for Amazon SES renders,
+ so generated production email backends have their provider dependencies out
+ of the box
 - Clarify the full-project generated README's non-Docker dev instructions so local
  `uv run ... runserver` users know to run `docker compose up mailpit`, which publishes
   Mailpit's SMTP listener on `localhost:1025` and its web UI on `localhost:8025`
