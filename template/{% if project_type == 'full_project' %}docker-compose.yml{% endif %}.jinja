@@ -60,8 +60,6 @@ services:
         condition: service_healthy
       redis:
         condition: service_started
-      mailpit:
-        condition: service_started
 {% endif %}
 volumes:
   postgres_data:
