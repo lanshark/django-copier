@@ -4,6 +4,14 @@ All notable changes to this project are documented in this file.
 
 ## Next Release
 
+- Update pinned GitHub Actions versions across this repo's own
+  `test-template.yml` and the four workflow templates it generates
+  (`build.yml`, both `ci.yml` variants, `release.yml`) — `astral-sh/setup-uv`
+  `v10.0.1` → `v10.1.0`, `docker/build-push-action` `v7.3.0` → `v7.4.0`,
+  `actions/setup-node` `v4` → `v7.0.0`, and `extractions/setup-just` `v3` →
+  `v4.0.0` (the latter two were previously pinned to unpinned major tags;
+  now patch-pinned like the rest). `actions/checkout` and
+  `docker/login-action` were already current. Closes #30
 - Add a `storage_backend` question (full_project only, default `local`) wiring
   `django-storages` for user-uploaded media, alongside the existing static-file
   handling — choices are `local` (Django's built-in `FileSystemStorage`, no
