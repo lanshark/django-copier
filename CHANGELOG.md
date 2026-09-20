@@ -12,7 +12,11 @@ All notable changes to this project are documented in this file.
   `.github/workflows/pre-commit-autoupdate.yml`. Gated to
   `github.repository_owner == 'lanshark'` so a fork doesn't get scheduled
   auto-PRs against itself; also runnable manually via `workflow_dispatch`.
-  Opens a normal PR for review rather than auto-merging. Closes #33
+  Opens a normal PR for review rather than auto-merging. Drops the `labels:
+  update` input the cookiecutter-django original uses — neither this repo nor
+  a fresh repo has an `update` label, and GitHub's API 404s when you apply a
+  label that doesn't exist, which would have failed the PR-creation step on
+  its first real run. Closes #33
 - Update pinned GitHub Actions versions across this repo's own
   `test-template.yml` and the four workflow templates it generates
   (`build.yml`, both `ci.yml` variants, `release.yml`) — `astral-sh/setup-uv`

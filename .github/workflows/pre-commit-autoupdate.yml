@@ -36,4 +36,3 @@ jobs:
           title: Auto-update pre-commit hooks
           commit-message: Auto-update pre-commit hooks
           body: Update versions of tools in the template's pre-commit config to latest version
-          labels: update
