@@ -4,6 +4,8 @@ All notable changes to this project are documented in this file.
 
 ## Next Release
 
+## 2026-09-21: Release-2026.09.21.01
+
 - Correct the root pre-commit configuration's `detect-private-key` hook and
   pyright hook source, and rewrite the repository's contributing and security
   policies to describe the actual Copier-template workflow and supported
