@@ -1,0 +1,106 @@
+name: Question / Help
+description: Ask a question or get help with django-copier
+title: "[Question]: "
+labels: ["question", "help wanted"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Have a question about using django-copier? We're here to help!
+
+        **💡 Tip:** For general discussions, consider using [GitHub Discussions](https://github.com/lanshark/django-copier/discussions) instead.
+
+  - type: dropdown
+    id: question-category
+    attributes:
+      label: Question Category
+      description: What is your question about?
+      options:
+        - Template generation (using Copier)
+        - Project configuration (choosing options)
+        - Generated project structure
+        - Development setup (Docker, dependencies)
+        - API setup (Shinobi/GraphQL)
+        - Frontend integration (HTMX/alpine)
+        - Background tasks (tasks/django-rq)
+        - Deployment (caddy)
+        - Security configuration
+        - Testing
+        - Best practices
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: question
+    attributes:
+      label: Your Question
+      description: Ask your question clearly and provide as much context as possible.
+      placeholder: |
+        I'm trying to [do something] but I'm not sure how to [specific issue].
+
+        What I've tried:
+        - [Attempt 1]
+        - [Attempt 2]
+
+        Questions:
+        1. [Main question]
+        2. [Related question]
+    validations:
+      required: true
+
+  - type: dropdown
+    id: project-type
+    attributes:
+      label: Project Type
+      description: Which project type are you working with?
+      options:
+        - Reusable Django App
+        - Full Project
+        - Haven't generated yet
+        - Not applicable
+
+  - type: textarea
+    id: configuration
+    attributes:
+      label: Your Configuration
+      description: |
+        If applicable, share relevant parts of your configuration.
+        Remove sensitive information.
+      placeholder: |
+        ```yaml
+        project_type: full_project
+        use_shinobi: true
+        use_async: false
+        ```
+      render: yaml
+
+  - type: textarea
+    id: context
+    attributes:
+      label: What You've Tried
+      description: |
+        What have you tried so far? What resources have you checked?
+      placeholder: |
+        - Checked documentation at [link]
+        - Tried [approach 1] - result: [what happened]
+        - Searched for [terms] but couldn't find [what I need]
+
+  - type: textarea
+    id: expected-outcome
+    attributes:
+      label: Expected Outcome
+      description: What are you trying to achieve?
+      placeholder: I want to be able to...
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Pre-submission Checklist
+      options:
+        - label: I've checked the documentation
+          required: true
+        - label: I've searched existing issues and discussions
+          required: true
+        - label: This is a specific question (not a general discussion topic)
+          required: false
