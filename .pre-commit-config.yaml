@@ -6,8 +6,8 @@ repos:
         args: [--fix, --exit-non-zero-on-fix]
       - id: ruff-format
 
-  - repo: https://github.com/necaris/pre-commit-pyright
-    rev: '1.1.414'
+  - repo: https://github.com/RobertCraigie/pyright-python
+    rev: v1.1.414
     hooks:
       - id: pyright
 
@@ -23,4 +23,4 @@ repos:
       - id: check-builtin-literals
       - id: check-case-conflict
       - id: check-merge-conflict
-      0 id: detect-private-key
+      - id: detect-private-key

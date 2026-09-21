@@ -4,6 +4,10 @@ All notable changes to this project are documented in this file.
 
 ## Next Release
 
+- Correct the root pre-commit configuration's `detect-private-key` hook and
+  pyright hook source, and rewrite the repository's contributing and security
+  policies to describe the actual Copier-template workflow and supported
+  security-reporting scope
 - Add a `pre-commit-autoupdate.yml` GitHub Actions workflow to the generated
   full_project template (`template/.github/workflows/{% if project_type ==
   'full_project' %}pre-commit-autoupdate.yml{% endif %}`) — the same nightly

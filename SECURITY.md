@@ -2,63 +2,36 @@
 
 ## Supported Versions
 
-Use this section to tell people about which versions of your project are
-currently being supported with security updates.
-
-| Version | Supported          |
-| ------- | ------------------ |
-| 0.x     | :white_check_mark: |
+Security fixes are made on the current `main` branch. When release tags are
+published, the latest release is the supported released version.
 
 ## Reporting a Vulnerability
 
-**Please do not report security vulnerabilities through public GitHub issues.**
+Please do not report security vulnerabilities through public GitHub issues.
 
-Instead, please report them via email to:
-- **Email**: ssharkey@lanshark.com (monitored by maintainers)
-- **Subject**: django-copier Security Issue
-  
-Include the following information:
-- Description of the vulnerability
-- Steps to reproduce
-- Potential impact
-- Suggested fix (if any)
+Report them privately by email to [ssharkey@lanshark.com](mailto:ssharkey@lanshark.com)
+with the subject `django-copier security report`.
 
-### What to expect
+Include, where possible:
 
-- **Initial response**: Within 48 hours
-- **Status updates**: Every 72 hours until resolved
-- **Fix timeline**: Critical issues within 7 days, others within 30 days
-- **Credit**: Security researchers will be credited in release notes (unless you prefer to remain anonymous)
+- A description of the vulnerability and its impact.
+- Steps to reproduce it or a minimal proof of concept.
+- The affected template version, commit, or generated-project configuration.
+- Any suggested mitigation.
 
-## Security Best Practices
+Maintainers will acknowledge the report, investigate it, and coordinate a fix
+and disclosure with the reporter. Please allow time for a fix before sharing
+details publicly.
 
-django-copier generates projects with security best practices by default:
+## Scope
 
-- ✅ HSTS and secure cookies enabled in production (CSP headers with `security_profile=strict`)
-- ✅ `pip-audit` and `safety` shipped as dev dependencies for local dependency audits
-- ✅ Container images scanned with Trivy in CI
-- ✅ No secrets in repository (environment-based config)
+Reports are in scope when they concern this repository's template, its
+automation, or insecure defaults it generates. A generated application may also
+have security issues caused by its own code, deployment, dependencies, or
+configuration; report those to the maintainers of that application.
 
-For enhanced security, use `security_profile: strict` when generating your project.
+## Disclosure
 
-## Disclosure Policy
-
-When we receive a security report:
-
-1. We confirm the vulnerability and determine severity
-2. We develop and test a fix
-3. We release a patch version
-4. We publicly disclose the vulnerability 7 days after the patch release
-
-## Security Hall of Fame
-
-We recognize and thank security researchers who help keep Django Keel secure.
-
-*No security reports yet - be the first!*
-
----
-
-Thank you for helping keep django-copier and our community safe! 🛡️
-
-
-
+After a fix is available, maintainers will document the impact and remediation
+in the repository's changelog or release notes as appropriate. Reporters may be
+credited with their permission.
