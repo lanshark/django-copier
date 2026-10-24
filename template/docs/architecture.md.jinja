@@ -184,7 +184,8 @@ capture the reasoning in a feature-scoped ADR.
 ## Conventions
 
 - Python style, formatting, and code-change behavior are defined in `AGENTS.md`.
-- Lint with ruff and type-check with pyright; both must stay clean.
+- Lint with ruff, lint and format Django templates with djlint, and type-check
+  with pyright; all must stay clean.
 - Test with pytest (`pytest-django`); keep tests close to the app they cover.
 {% if project_type == 'full_project' %}
 - Run the project through the `{{ runner_file }}` targets (`{{ runner_cmd }} up`, `{{ runner_cmd }} migrate`, `{{ runner_cmd }} test`, …).

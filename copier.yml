@@ -3,197 +3,197 @@ _subdirectory: template
 # folders instead of dereferencing them into copies.
 _preserve_symlinks: true
 _envops:
-  trim_blocks: true
-  lstrip_blocks: true
-  keep_trailing_newline: true
+    trim_blocks: true
+    lstrip_blocks: true
+    keep_trailing_newline: true
 _exclude:
-  - 'copier.yml'
-  - '**/__pycache__'
-  - '**/*.pyc'
-  - '.venv'
-  # Raw license texts are pulled in via {% include %} by the LICENSE file;
-  # they must not be copied into the rendered project themselves.
-  - 'licenses'
+    - "copier.yml"
+    - "**/__pycache__"
+    - "**/*.pyc"
+    - ".venv"
+    # Raw license texts are pulled in via {% include %} by the LICENSE file;
+    # they must not be copied into the rendered project themselves.
+    - "licenses"
 
 project_name:
-  type: str
-  help: Human-readable project name
-  default: My Project
+    type: str
+    help: Human-readable project name
+    default: My Project
 
 project_slug:
-  type: str
-  help: Python-safe slug (used in pyproject.toml, Docker image names, etc.)
-  default: "{{ project_name.lower().replace(' ', '-').replace('_', '-') }}"
+    type: str
+    help: Python-safe slug (used in pyproject.toml, Docker image names, etc.)
+    default: "{{ project_name.lower().replace(' ', '-').replace('_', '-') }}"
 
 project_type:
-  type: str
-  help: What should this template produce?
-  default: full_project
-  choices:
-    "Full Django project (runnable site)": full_project
-    "Reusable Django app (pip-installable into another project)": reusable_app
+    type: str
+    help: What should this template produce?
+    default: full_project
+    choices:
+        "Full Django project (runnable site)": full_project
+        "Reusable Django app (pip-installable into another project)": reusable_app
 
 package_name:
-  type: str
-  help: Python import package name for the reusable app (snake_case)
-  default: "{{ project_slug.replace('-', '_') }}"
-  when: "{{ project_type == 'reusable_app' }}"
+    type: str
+    help: Python import package name for the reusable app (snake_case)
+    default: "{{ project_slug.replace('-', '_') }}"
+    when: "{{ project_type == 'reusable_app' }}"
 
 initial_app_name:
-  type: str
-  help: Name of the first Django app to scaffold
-  default: core
-  when: "{{ project_type == 'full_project' }}"
-  validator: >-
-    {% if project_type == 'full_project' and initial_app_name == 'accounts' %}
-    'accounts' is reserved for the generated custom user model app — pick a
-    different name for your first app.
-    {% endif %}
+    type: str
+    help: Name of the first Django app to scaffold
+    default: core
+    when: "{{ project_type == 'full_project' }}"
+    validator: >-
+        {% if project_type == 'full_project' and initial_app_name == 'accounts' %}
+        'accounts' is reserved for the generated custom user model app — pick a
+        different name for your first app.
+        {% endif %}
 
 user_identifier:
-  type: str
-  help: >-
-    Custom user model (apps/accounts) identified by email address or a
-    standard username?
-  default: email
-  choices:
-    'Email address': email
-    'Username': username
-  when: "{{ project_type == 'full_project' }}"
+    type: str
+    help: >-
+        Custom user model (apps/accounts) identified by email address or a
+        standard username?
+    default: email
+    choices:
+        "Email address": email
+        "Username": username
+    when: "{{ project_type == 'full_project' }}"
 
 author_name:
-  type: str
-  help: Your name (used in pyproject.toml authors)
-  default: ''
+    type: str
+    help: Your name (used in pyproject.toml authors)
+    default: ""
 
 author_email:
-  type: str
-  help: Your email (used in pyproject.toml authors)
-  default: ''
+    type: str
+    help: Your email (used in pyproject.toml authors)
+    default: ""
 
 python_version:
-  type: str
-  help: Python version to target
-  default: '3.14'
-  choices:
-    - '3.14'
-    - '3.13'
-    - '3.12'
+    type: str
+    help: Python version to target
+    default: "3.14"
+    choices:
+        - "3.14"
+        - "3.13"
+        - "3.12"
 
 postgres_version:
-  type: str
-  help: PostgreSQL version to target
-  default: '18'
-  choices:
-    - '18'
-    - '17'
-    - '16'
-  when: "{{ project_type == 'full_project' }}"
+    type: str
+    help: PostgreSQL version to target
+    default: "18"
+    choices:
+        - "18"
+        - "17"
+        - "16"
+    when: "{{ project_type == 'full_project' }}"
 
 django_version:
-  type: str
-  help: >-
-    Django version to target. 6.1 works but has known caveats not yet
-    addressed here (django-tasks/django-rq vs. Django's built-in tasks
-    framework; deprecated EMAIL_* settings) — see docs/architecture.md in the
-    generated project.
-  default: '5.2'
-  choices:
-    - '5.2'
-    - '6.1'
+    type: str
+    help: >-
+        Django version to target. 6.1 works but has known caveats not yet
+        addressed here (django-tasks/django-rq vs. Django's built-in tasks
+        framework; deprecated EMAIL_* settings) — see docs/architecture.md in the
+        generated project.
+    default: "5.2"
+    choices:
+        - "5.2"
+        - "6.1"
 
 use_redis:
-  type: bool
-  help: >-
-    Include Redis + django-tasks-rq for background tasks?
-    (No = synchronous ImmediateBackend, no extra infra needed)
-  default: true
-  when: "{{ project_type == 'full_project' }}"
+    type: bool
+    help: >-
+        Include Redis + django-tasks-rq for background tasks?
+        (No = synchronous ImmediateBackend, no extra infra needed)
+    default: true
+    when: "{{ project_type == 'full_project' }}"
 
 use_async:
-  type: bool
-  help: Serve via ASGI/uvicorn instead of WSGI/gunicorn?
-  default: false
-  when: "{{ project_type == 'full_project' }}"
+    type: bool
+    help: Serve via ASGI/uvicorn instead of WSGI/gunicorn?
+    default: false
+    when: "{{ project_type == 'full_project' }}"
 
 use_vite:
-  type: bool
-  help: >-
-    Add a Pico.css + Vite frontend build pipeline (django-vite, with an HMR
-    dev server)?
-  default: false
-  when: "{{ project_type == 'full_project' }}"
+    type: bool
+    help: >-
+        Add a Pico.css + Vite frontend build pipeline (django-vite, with an HMR
+        dev server)?
+    default: false
+    when: "{{ project_type == 'full_project' }}"
 
 use_allauth:
-  type: bool
-  help: >-
-    Add django-allauth for session-based login/signup/logout (separate from
-    the JWT API auth)? Core account functionality only, no social providers.
-  default: false
-  when: "{{ project_type == 'full_project' }}"
+    type: bool
+    help: >-
+        Add django-allauth for session-based login/signup/logout (separate from
+        the JWT API auth)? Core account functionality only, no social providers.
+    default: false
+    when: "{{ project_type == 'full_project' }}"
 
 use_shinobi:
-  type: bool
-  help: >-
-    Include a django-shinobi (Django Ninja) API layer with JWT auth and an
-    example health/token/me API? (No = no API layer, admin site only)
-  default: true
+    type: bool
+    help: >-
+        Include a django-shinobi (Django Ninja) API layer with JWT auth and an
+        example health/token/me API? (No = no API layer, admin site only)
+    default: true
 
 storage_backend:
-  type: str
-  help: >-
-    File storage backend for user-uploaded media (django-storages). Local
-    filesystem storage needs no extra infra and is the default; S3 and Azure
-    Blob Storage are typical choices for production deployments.
-  default: local
-  choices:
-    'Local filesystem': local
-    'Amazon S3': s3
-    'Azure Blob Storage': azure
-  when: "{{ project_type == 'full_project' }}"
+    type: str
+    help: >-
+        File storage backend for user-uploaded media (django-storages). Local
+        filesystem storage needs no extra infra and is the default; S3 and Azure
+        Blob Storage are typical choices for production deployments.
+    default: local
+    choices:
+        "Local filesystem": local
+        "Amazon S3": s3
+        "Azure Blob Storage": azure
+    when: "{{ project_type == 'full_project' }}"
 
 task_runner:
-  type: str
-  help: Task runner for common dev commands (build/test/lint/etc.)
-  default: makefile
-  choices:
-    'Makefile (make)': makefile
-    'Justfile (just)': justfile
+    type: str
+    help: Task runner for common dev commands (build/test/lint/etc.)
+    default: makefile
+    choices:
+        "Makefile (make)": makefile
+        "Justfile (just)": justfile
 
 email_provider:
-  type: str
-  help: >-
-    Production email provider (sent via django-anymail; local dev always uses
-    mailpit regardless of this choice)
-  default: ses
-  choices:
-    'Amazon SES': ses
-    'Postmark': postmark
-    'Mailgun': mailgun
-    'SendGrid': sendgrid
-  when: "{{ project_type == 'full_project' }}"
+    type: str
+    help: >-
+        Production email provider (sent via django-anymail; local dev always uses
+        mailpit regardless of this choice)
+    default: ses
+    choices:
+        "Amazon SES": ses
+        "Postmark": postmark
+        "Mailgun": mailgun
+        "SendGrid": sendgrid
+    when: "{{ project_type == 'full_project' }}"
 
 open_source_license:
-  type: str
-  help: License for the project
-  default: 'MIT'
-  choices:
-    'MIT': 'MIT'
-    'BSD 3-Clause': 'BSD-3-Clause'
-    'Apache License 2.0': 'Apache-2.0'
-    'GNU GPL v3': 'GNU GPLv3'
-    'GNU AGPL v3': 'GNU AGPLv3'
-    'Proprietary (all rights reserved)': 'Proprietary'
-    'None': 'None'
+    type: str
+    help: License for the project
+    default: "MIT"
+    choices:
+        "MIT": "MIT"
+        "BSD 3-Clause": "BSD-3-Clause"
+        "Apache License 2.0": "Apache-2.0"
+        "GNU GPL v3": "GNU GPLv3"
+        "GNU AGPL v3": "GNU AGPLv3"
+        "Proprietary (all rights reserved)": "Proprietary"
+        "None": "None"
 
 copyright_holder:
-  type: str
-  help: Name to appear in the copyright notice
-  default: '{{ author_name if author_name else project_name }}'
-  when: "{{ open_source_license not in ['None', 'Apache-2.0', 'GNU GPLv3', 'GNU AGPLv3'] }}"
+    type: str
+    help: Name to appear in the copyright notice
+    default: "{{ author_name if author_name else project_name }}"
+    when: "{{ open_source_license not in ['None', 'Apache-2.0', 'GNU GPLv3', 'GNU AGPLv3'] }}"
 
 copyright_year:
-  type: str
-  help: Year to appear in the copyright notice
-  default: '2026'
-  when: "{{ open_source_license not in ['None', 'Apache-2.0', 'GNU GPLv3', 'GNU AGPLv3'] }}"
+    type: str
+    help: Year to appear in the copyright notice
+    default: "2026"
+    when: "{{ open_source_license not in ['None', 'Apache-2.0', 'GNU GPLv3', 'GNU AGPLv3'] }}"

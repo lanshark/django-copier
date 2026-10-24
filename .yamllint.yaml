@@ -1,0 +1,15 @@
+# yamllint configuration.
+# Enforces quote style (double quotes, single only where the string itself
+# contains a double quote) and 4-space indentation (sequences indented under
+# their parent key; keys inside a list item align 2 after the dash). Syntax
+# errors are always reported. Enable more rules here if wanted.
+rules:
+    quoted-strings:
+        quote-type: double
+        required: false
+        check-keys: true
+        allow-quoted-quotes: true
+    indentation:
+        spaces: 4
+        indent-sequences: true
+        check-multi-line-strings: false

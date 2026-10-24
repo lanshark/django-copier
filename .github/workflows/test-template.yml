@@ -1,302 +1,318 @@
 name: Test Template
 
 on:
-  pull_request:
-  push:
-    branches: [main]
+    pull_request:
+    push:
+        branches: [main]
 
 jobs:
-  render-and-test:
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - name: defaults
-            extra_args: ''
-          - name: no-redis
-            extra_args: '--data use_redis=false'
-          - name: custom-app-async
-            extra_args: '--data initial_app_name=widgets --data use_async=true'
-          - name: apache-license
-            extra_args: '--data open_source_license=Apache-2.0'
-          - name: no-shinobi
-            extra_args: '--data use_shinobi=false'
-          - name: with-vite
-            extra_args: '--data use_vite=true'
-          - name: with-justfile
-            extra_args: '--data task_runner=justfile --data use_vite=true'
-          - name: email-ses
-            extra_args: '--data email_provider=ses'
-          - name: email-postmark
-            extra_args: '--data email_provider=postmark'
-          - name: email-mailgun
-            extra_args: '--data email_provider=mailgun'
-          - name: email-sendgrid
-            extra_args: '--data email_provider=sendgrid'
-          - name: storage-s3
-            extra_args: '--data storage_backend=s3'
-          - name: storage-azure
-            extra_args: '--data storage_backend=azure'
-          - name: custom-username
-            extra_args: '--data user_identifier=username'
-          - name: with-allauth
-            extra_args: '--data use_allauth=true'
-          - name: with-allauth-username
-            extra_args: '--data use_allauth=true --data user_identifier=username'
-          - name: python-3.12
-            extra_args: '--data python_version=3.12'
-            python_version: '3.12'
-          - name: python-3.13
-            extra_args: '--data python_version=3.13'
-            python_version: '3.13'
-          - name: postgres-16
-            extra_args: '--data postgres_version=16'
-            postgres_version: '16'
-          - name: postgres-17
-            extra_args: '--data postgres_version=17'
-            postgres_version: '17'
-          - name: django-6.1
-            extra_args: '--data django_version=6.1'
+    render-and-test:
+        runs-on: ubuntu-latest
+        strategy:
+            fail-fast: false
+            matrix:
+                include:
+                    - name: defaults
+                      extra_args: ""
+                    - name: no-redis
+                      extra_args: "--data use_redis=false"
+                    - name: custom-app-async
+                      extra_args: "--data initial_app_name=widgets --data use_async=true"
+                    - name: apache-license
+                      extra_args: "--data open_source_license=Apache-2.0"
+                    - name: no-shinobi
+                      extra_args: "--data use_shinobi=false"
+                    - name: with-vite
+                      extra_args: "--data use_vite=true"
+                    - name: with-justfile
+                      extra_args: "--data task_runner=justfile --data use_vite=true"
+                    - name: email-ses
+                      extra_args: "--data email_provider=ses"
+                    - name: email-postmark
+                      extra_args: "--data email_provider=postmark"
+                    - name: email-mailgun
+                      extra_args: "--data email_provider=mailgun"
+                    - name: email-sendgrid
+                      extra_args: "--data email_provider=sendgrid"
+                    - name: storage-s3
+                      extra_args: "--data storage_backend=s3"
+                    - name: storage-azure
+                      extra_args: "--data storage_backend=azure"
+                    - name: custom-username
+                      extra_args: "--data user_identifier=username"
+                    - name: with-allauth
+                      extra_args: "--data use_allauth=true"
+                    - name: with-allauth-username
+                      extra_args: "--data use_allauth=true --data user_identifier=username"
+                    - name: python-3.12
+                      extra_args: "--data python_version=3.12"
+                      python_version: "3.12"
+                    - name: python-3.13
+                      extra_args: "--data python_version=3.13"
+                      python_version: "3.13"
+                    - name: postgres-16
+                      extra_args: "--data postgres_version=16"
+                      postgres_version: "16"
+                    - name: postgres-17
+                      extra_args: "--data postgres_version=17"
+                      postgres_version: "17"
+                    - name: django-6.1
+                      extra_args: "--data django_version=6.1"
 
-    services:
-      postgres:
-        image: postgres:${{ matrix.postgres_version || '18' }}
-        env:
-          POSTGRES_DB: app
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-        ports: ['5432:5432']
-        options: >-
-          --health-cmd "pg_isready -U postgres"
-          --health-interval 5s
-          --health-timeout 5s
-          --health-retries 5
-      redis:
-        image: redis:7-alpine
-        ports: ['6379:6379']
+        services:
+            postgres:
+                image: postgres:${{ matrix.postgres_version || '18' }}
+                env:
+                    POSTGRES_DB: app
+                    POSTGRES_USER: postgres
+                    POSTGRES_PASSWORD: postgres
+                ports: ["5432:5432"]
+                options: >-
+                    --health-cmd "pg_isready -U postgres"
+                    --health-interval 5s
+                    --health-timeout 5s
+                    --health-retries 5
+            redis:
+                image: redis:7-alpine
+                ports: ["6379:6379"]
 
-    steps:
-      - uses: actions/checkout@v7.0.1
+        steps:
+            - uses: actions/checkout@v7.0.1
 
-      - name: Install uv
-        uses: astral-sh/setup-uv@v10.3.0
+            - name: Install uv
+              uses: astral-sh/setup-uv@v10.1.0
 
-      - name: Set up Python
-        run: uv python install 3.12 3.13 3.14
+            - name: Set up Python
+              run: uv python install 3.12 3.13 3.14
 
-      - name: Install copier
-        run: uv tool install copier
+            - name: Install copier
+              run: uv tool install copier
 
-      - name: Set up Node
-        if: matrix.name == 'with-vite' || matrix.name == 'with-justfile'
-        uses: actions/setup-node@v7.1.0
-        with:
-          node-version: '22'
+            - name: Set up Node
+              if: matrix.name == 'with-vite' || matrix.name == 'with-justfile'
+              uses: actions/setup-node@v7.0.0
+              with:
+                  node-version: "22"
 
-      - name: Install just
-        if: matrix.name == 'with-justfile'
-        uses: extractions/setup-just@v4.0.0
+            - name: Install just
+              if: matrix.name == 'with-justfile'
+              uses: extractions/setup-just@v4.0.0
 
-      - name: Render template (${{ matrix.name }})
-        run: >
-          uv tool run copier copy --defaults --force ${{ matrix.extra_args }}
-          "${{ github.workspace }}" "${{ github.workspace }}/../rendered-${{ matrix.name }}"
+            - name: Render template (${{ matrix.name }})
+              run: >
+                  uv tool run copier copy --defaults --force ${{ matrix.extra_args }}
+                  "${{ github.workspace }}" "${{ github.workspace }}/../rendered-${{ matrix.name }}"
 
-      - name: Write .env for rendered project
-        working-directory: ${{ github.workspace }}/../rendered-${{ matrix.name }}
-        run: |
-          cat > .env <<EOF
-          DJANGO_SETTINGS_MODULE=config.settings.dev
-          DJANGO_SECRET_KEY=ci-secret-key
-          DJANGO_DEBUG=True
-          DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1
-          DATABASE_URL=postgres://postgres:postgres@localhost:5432/app
-          REDIS_URL=redis://localhost:6379/0
-          JWT_SIGNING_KEY=ci-jwt-key
-          JWT_ACCESS_TOKEN_LIFETIME_MIN=15
-          JWT_REFRESH_TOKEN_LIFETIME_DAYS=7
-          DJANGO_VITE_DEV_MODE=False
-          EOF
+            - name: Write .env for rendered project
+              working-directory: ${{ github.workspace }}/../rendered-${{ matrix.name }}
+              run: |
+                  cat > .env <<EOF
+                  DJANGO_SETTINGS_MODULE=config.settings.dev
+                  DJANGO_SECRET_KEY=ci-secret-key
+                  DJANGO_DEBUG=True
+                  DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1
+                  DATABASE_URL=postgres://postgres:postgres@localhost:5432/app
+                  REDIS_URL=redis://localhost:6379/0
+                  JWT_SIGNING_KEY=ci-jwt-key
+                  JWT_ACCESS_TOKEN_LIFETIME_MIN=15
+                  JWT_REFRESH_TOKEN_LIFETIME_DAYS=7
+                  DJANGO_VITE_DEV_MODE=False
+                  EOF
 
-      - name: Install rendered project deps
-        working-directory: ${{ github.workspace }}/../rendered-${{ matrix.name }}
-        run: |
-          if [ -n "${{ matrix.python_version }}" ]; then
-            uv sync --all-extras --dev --python ${{ matrix.python_version }}
-          else
-            uv sync --all-extras --dev
-          fi
+            - name: Install rendered project deps
+              working-directory: ${{ github.workspace }}/../rendered-${{ matrix.name }}
+              run: |
+                  if [ -n "${{ matrix.python_version }}" ]; then
+                    uv sync --all-extras --dev --python ${{ matrix.python_version }}
+                  else
+                    uv sync --all-extras --dev
+                  fi
 
-      - name: Build frontend assets
-        if: matrix.name == 'with-vite' || matrix.name == 'with-justfile'
-        working-directory: ${{ github.workspace }}/../rendered-${{ matrix.name }}
-        run: |
-          if [ "${{ matrix.name }}" = "with-justfile" ]; then
-            just frontend-install
-            just frontend-build
-          else
-            npm install
-            npm run build
-          fi
+            - name: Build frontend assets
+              if: matrix.name == 'with-vite' || matrix.name == 'with-justfile'
+              working-directory: ${{ github.workspace }}/../rendered-${{ matrix.name }}
+              run: |
+                  if [ "${{ matrix.name }}" = "with-justfile" ]; then
+                    just frontend-install
+                    just frontend-build
+                  else
+                    npm install
+                    npm run build
+                  fi
 
-      - name: Migrate
-        working-directory: ${{ github.workspace }}/../rendered-${{ matrix.name }}
-        run: |
-          if [ "${{ matrix.name }}" = "with-justfile" ]; then
-            LOCAL=1 just migrate
-          else
-            uv run python manage.py migrate --noinput
-          fi
+            - name: Migrate
+              working-directory: ${{ github.workspace }}/../rendered-${{ matrix.name }}
+              run: |
+                  if [ "${{ matrix.name }}" = "with-justfile" ]; then
+                    LOCAL=1 just migrate
+                  else
+                    uv run python manage.py migrate --noinput
+                  fi
 
-      - name: Collect static files
-        if: matrix.name == 'with-vite' || matrix.name == 'with-justfile'
-        working-directory: ${{ github.workspace }}/../rendered-${{ matrix.name }}
-        run: |
-          if [ "${{ matrix.name }}" = "with-justfile" ]; then
-            LOCAL=1 just collectstatic
-          else
-            uv run python manage.py collectstatic --noinput
-          fi
+            - name: Collect static files
+              if: matrix.name == 'with-vite' || matrix.name == 'with-justfile'
+              working-directory: ${{ github.workspace }}/../rendered-${{ matrix.name }}
+              run: |
+                  if [ "${{ matrix.name }}" = "with-justfile" ]; then
+                    LOCAL=1 just collectstatic
+                  else
+                    uv run python manage.py collectstatic --noinput
+                  fi
 
-      - name: Pytest
-        working-directory: ${{ github.workspace }}/../rendered-${{ matrix.name }}
-        run: |
-          if [ "${{ matrix.name }}" = "with-justfile" ]; then
-            just test
-          else
-            uv run pytest
-          fi
+            - name: Pytest
+              working-directory: ${{ github.workspace }}/../rendered-${{ matrix.name }}
+              run: |
+                  if [ "${{ matrix.name }}" = "with-justfile" ]; then
+                    just test
+                  else
+                    uv run pytest
+                  fi
 
-      - name: Ruff
-        working-directory: ${{ github.workspace }}/../rendered-${{ matrix.name }}
-        run: |
-          if [ "${{ matrix.name }}" = "with-justfile" ]; then
-            just lint
-          else
-            uv run ruff check .
-          fi
+            - name: Ruff
+              working-directory: ${{ github.workspace }}/../rendered-${{ matrix.name }}
+              run: |
+                  if [ "${{ matrix.name }}" = "with-justfile" ]; then
+                    just lint
+                  else
+                    uv run ruff check .
+                  fi
 
-      - name: Ruff format
-        working-directory: ${{ github.workspace }}/../rendered-${{ matrix.name }}
-        # No make/just recipe wraps this specifically (lint only runs `ruff check`),
-        # so this always runs directly regardless of task_runner.
-        run: uv run ruff format --check .
+            - name: Ruff format
+              working-directory: ${{ github.workspace }}/../rendered-${{ matrix.name }}
+              # No make/just recipe wraps this specifically (lint only runs `ruff check`),
+              # so this always runs directly regardless of task_runner.
+              run: uv run ruff format --check .
 
-      - name: Pyright
-        working-directory: ${{ github.workspace }}/../rendered-${{ matrix.name }}
-        run: |
-          if [ "${{ matrix.name }}" = "with-justfile" ]; then
-            just typecheck
-          else
-            uv run pyright
-          fi
+            - name: djLint
+              working-directory: ${{ github.workspace }}/../rendered-${{ matrix.name }}
+              # `make lint` / `just lint` also run `djlint --lint`; the format check
+              # runs directly since no recipe wraps a check-only reformat.
+              run: |
+                  uv run djlint . --lint
+                  uv run djlint . --check
 
-      - name: Check prod settings (email_provider, storage_backend)
-        if: startsWith(matrix.name, 'email-') || startsWith(matrix.name, 'storage-')
-        working-directory: ${{ github.workspace }}/../rendered-${{ matrix.name }}
-        env:
-          DJANGO_SETTINGS_MODULE: config.settings.prod
-          DJANGO_DEFAULT_FROM_EMAIL: no-reply@example.com
-          AWS_ACCESS_KEY_ID: dummy
-          AWS_SECRET_ACCESS_KEY: dummy
-          AWS_DEFAULT_REGION: us-east-1
-          ANYMAIL_POSTMARK_SERVER_TOKEN: dummy
-          ANYMAIL_MAILGUN_API_KEY: dummy
-          ANYMAIL_MAILGUN_SENDER_DOMAIN: mail.example.com
-          ANYMAIL_SENDGRID_API_KEY: dummy
-          AWS_STORAGE_BUCKET_NAME: dummy-bucket
-          AZURE_ACCOUNT_NAME: dummy
-          AZURE_ACCOUNT_KEY: dummy
-          AZURE_CONTAINER: dummy-container
-        run: uv run python manage.py check
+            - name: Pyright
+              working-directory: ${{ github.workspace }}/../rendered-${{ matrix.name }}
+              run: |
+                  if [ "${{ matrix.name }}" = "with-justfile" ]; then
+                    just typecheck
+                  else
+                    uv run pyright
+                  fi
 
-  render-and-test-app:
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - name: app-defaults
-            extra_args: '--data project_type=reusable_app'
-          - name: app-no-shinobi
-            extra_args: '--data project_type=reusable_app --data use_shinobi=false'
-          - name: app-justfile
-            extra_args: '--data project_type=reusable_app --data task_runner=justfile'
-          - name: app-python-3.12
-            extra_args: '--data project_type=reusable_app --data python_version=3.12'
-            python_version: '3.12'
-          - name: app-django-6.1
-            extra_args: '--data project_type=reusable_app --data django_version=6.1'
+            - name: Check prod settings (email_provider, storage_backend)
+              if: startsWith(matrix.name, 'email-') || startsWith(matrix.name, 'storage-')
+              working-directory: ${{ github.workspace }}/../rendered-${{ matrix.name }}
+              env:
+                  DJANGO_SETTINGS_MODULE: config.settings.prod
+                  DJANGO_DEFAULT_FROM_EMAIL: no-reply@example.com
+                  AWS_ACCESS_KEY_ID: dummy
+                  AWS_SECRET_ACCESS_KEY: dummy
+                  AWS_DEFAULT_REGION: us-east-1
+                  ANYMAIL_POSTMARK_SERVER_TOKEN: dummy
+                  ANYMAIL_MAILGUN_API_KEY: dummy
+                  ANYMAIL_MAILGUN_SENDER_DOMAIN: mail.example.com
+                  ANYMAIL_SENDGRID_API_KEY: dummy
+                  AWS_STORAGE_BUCKET_NAME: dummy-bucket
+                  AZURE_ACCOUNT_NAME: dummy
+                  AZURE_ACCOUNT_KEY: dummy
+                  AZURE_CONTAINER: dummy-container
+              run: uv run python manage.py check
 
-    steps:
-      - uses: actions/checkout@v7.0.1
+    render-and-test-app:
+        runs-on: ubuntu-latest
+        strategy:
+            fail-fast: false
+            matrix:
+                include:
+                    - name: app-defaults
+                      extra_args: "--data project_type=reusable_app"
+                    - name: app-no-shinobi
+                      extra_args: "--data project_type=reusable_app --data use_shinobi=false"
+                    - name: app-justfile
+                      extra_args: "--data project_type=reusable_app --data task_runner=justfile"
+                    - name: app-python-3.12
+                      extra_args: "--data project_type=reusable_app --data python_version=3.12"
+                      python_version: "3.12"
+                    - name: app-django-6.1
+                      extra_args: "--data project_type=reusable_app --data django_version=6.1"
 
-      - name: Install uv
-        uses: astral-sh/setup-uv@v10.3.0
+        steps:
+            - uses: actions/checkout@v7.0.1
 
-      - name: Set up Python
-        run: uv python install 3.12 3.13 3.14
+            - name: Install uv
+              uses: astral-sh/setup-uv@v10.1.0
 
-      - name: Install copier
-        run: uv tool install copier
+            - name: Set up Python
+              run: uv python install 3.12 3.13 3.14
 
-      - name: Install just
-        if: matrix.name == 'app-justfile'
-        uses: extractions/setup-just@v4.0.0
+            - name: Install copier
+              run: uv tool install copier
 
-      - name: Render template (${{ matrix.name }})
-        run: >
-          uv tool run copier copy --defaults --force ${{ matrix.extra_args }}
-          "${{ github.workspace }}" "${{ github.workspace }}/../rendered-${{ matrix.name }}"
+            - name: Install just
+              if: matrix.name == 'app-justfile'
+              uses: extractions/setup-just@v4.0.0
 
-      - name: Install rendered app deps
-        working-directory: ${{ github.workspace }}/../rendered-${{ matrix.name }}
-        run: |
-          if [ -n "${{ matrix.python_version }}" ]; then
-            uv sync --all-extras --dev --python ${{ matrix.python_version }}
-          else
-            uv sync --all-extras --dev
-          fi
+            - name: Render template (${{ matrix.name }})
+              run: >
+                  uv tool run copier copy --defaults --force ${{ matrix.extra_args }}
+                  "${{ github.workspace }}" "${{ github.workspace }}/../rendered-${{ matrix.name }}"
 
-      - name: Pytest
-        working-directory: ${{ github.workspace }}/../rendered-${{ matrix.name }}
-        run: |
-          if [ "${{ matrix.name }}" = "app-justfile" ]; then
-            just test
-          else
-            uv run pytest
-          fi
+            - name: Install rendered app deps
+              working-directory: ${{ github.workspace }}/../rendered-${{ matrix.name }}
+              run: |
+                  if [ -n "${{ matrix.python_version }}" ]; then
+                    uv sync --all-extras --dev --python ${{ matrix.python_version }}
+                  else
+                    uv sync --all-extras --dev
+                  fi
 
-      - name: Ruff
-        working-directory: ${{ github.workspace }}/../rendered-${{ matrix.name }}
-        run: |
-          if [ "${{ matrix.name }}" = "app-justfile" ]; then
-            just lint
-          else
-            uv run ruff check .
-          fi
+            - name: Pytest
+              working-directory: ${{ github.workspace }}/../rendered-${{ matrix.name }}
+              run: |
+                  if [ "${{ matrix.name }}" = "app-justfile" ]; then
+                    just test
+                  else
+                    uv run pytest
+                  fi
 
-      - name: Ruff format
-        working-directory: ${{ github.workspace }}/../rendered-${{ matrix.name }}
-        # No make/just recipe wraps this specifically (lint only runs `ruff check`),
-        # so this always runs directly regardless of task_runner.
-        run: uv run ruff format --check .
+            - name: Ruff
+              working-directory: ${{ github.workspace }}/../rendered-${{ matrix.name }}
+              run: |
+                  if [ "${{ matrix.name }}" = "app-justfile" ]; then
+                    just lint
+                  else
+                    uv run ruff check .
+                  fi
 
-      - name: Pyright
-        working-directory: ${{ github.workspace }}/../rendered-${{ matrix.name }}
-        run: |
-          if [ "${{ matrix.name }}" = "app-justfile" ]; then
-            just typecheck
-          else
-            uv run pyright
-          fi
+            - name: Ruff format
+              working-directory: ${{ github.workspace }}/../rendered-${{ matrix.name }}
+              # No make/just recipe wraps this specifically (lint only runs `ruff check`),
+              # so this always runs directly regardless of task_runner.
+              run: uv run ruff format --check .
 
-      - name: Build distributions
-        working-directory: ${{ github.workspace }}/../rendered-${{ matrix.name }}
-        run: |
-          if [ "${{ matrix.name }}" = "app-justfile" ]; then
-            just build
-          else
-            uv build
-          fi
+            - name: djLint
+              working-directory: ${{ github.workspace }}/../rendered-${{ matrix.name }}
+              # `make lint` / `just lint` also run `djlint --lint`; the format check
+              # runs directly since no recipe wraps a check-only reformat.
+              run: |
+                  uv run djlint . --lint
+                  uv run djlint . --check
+
+            - name: Pyright
+              working-directory: ${{ github.workspace }}/../rendered-${{ matrix.name }}
+              run: |
+                  if [ "${{ matrix.name }}" = "app-justfile" ]; then
+                    just typecheck
+                  else
+                    uv run pyright
+                  fi
+
+            - name: Build distributions
+              working-directory: ${{ github.workspace }}/../rendered-${{ matrix.name }}
+              run: |
+                  if [ "${{ matrix.name }}" = "app-justfile" ]; then
+                    just build
+                  else
+                    uv build
+                  fi
