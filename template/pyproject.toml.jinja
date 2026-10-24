@@ -84,6 +84,7 @@ dev = [
 {% endif %}
     "pre-commit",
     "ruff>=0.16.3",
+    "djlint",
     "pyright",
     "django-stubs",
 ]
@@ -113,6 +114,10 @@ extend-exclude = ["migrations", "typings"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "DJ"]
+
+[tool.djlint]
+profile = "django"
+indent = 4
 
 [tool.pyright]
 {% if project_type == 'reusable_app' %}

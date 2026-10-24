@@ -1,4 +1,10 @@
 repos:
+  - repo: https://github.com/djlint/djLint
+    rev: v1.47.0
+    hooks:
+      - id: djlint-reformat-django
+      - id: djlint-django
+
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
     hooks:

@@ -183,6 +183,14 @@ jobs:
         # so this always runs directly regardless of task_runner.
         run: uv run ruff format --check .
 
+      - name: djLint
+        working-directory: ${{ github.workspace }}/../rendered-${{ matrix.name }}
+        # `make lint` / `just lint` also run `djlint --lint`; the format check
+        # runs directly since no recipe wraps a check-only reformat.
+        run: |
+          uv run djlint . --lint
+          uv run djlint . --check
+
       - name: Pyright
         working-directory: ${{ github.workspace }}/../rendered-${{ matrix.name }}
         run: |
@@ -282,6 +290,14 @@ jobs:
         # No make/just recipe wraps this specifically (lint only runs `ruff check`),
         # so this always runs directly regardless of task_runner.
         run: uv run ruff format --check .
+
+      - name: djLint
+        working-directory: ${{ github.workspace }}/../rendered-${{ matrix.name }}
+        # `make lint` / `just lint` also run `djlint --lint`; the format check
+        # runs directly since no recipe wraps a check-only reformat.
+        run: |
+          uv run djlint . --lint
+          uv run djlint . --check
 
       - name: Pyright
         working-directory: ${{ github.workspace }}/../rendered-${{ matrix.name }}

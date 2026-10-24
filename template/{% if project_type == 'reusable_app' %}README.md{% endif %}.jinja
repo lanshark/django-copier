@@ -43,7 +43,7 @@ python manage.py migrate
 uv sync --all-extras --dev
 uv run pre-commit install
 {{ runner_cmd }} test        # pytest against the bundled tests/ settings (sqlite)
-{{ runner_cmd }} lint        # ruff
+{{ runner_cmd }} lint        # ruff + djlint
 {{ runner_cmd }} typecheck   # pyright
 ```
 

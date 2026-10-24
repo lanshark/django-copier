@@ -4,6 +4,26 @@ All notable changes to this project are documented in this file.
 
 ## Next Release
 
+- Add djLint (`djlint/djLint` `v1.47.0`, `django` profile) to pre-commit in
+  both this repo and the generated project, running `djlint-reformat-django`
+  (formatter) and `djlint-django` (linter). The generated project gets
+  `djlint` as a dev dependency and a `[tool.djlint]` section in
+  `pyproject.toml` (`profile = "django"`, `indent = 4`); `make`/`just` `lint`
+  now also runs `djlint . --lint` and `format` runs `djlint . --reformat`, for
+  both project types. Generated HTML templates (`base.html`, `index.html`,
+  reusable_app's `example.html`) are reformatted to djLint's 4-space output,
+  and `base.html` gains a `<meta name="description">` to satisfy rule H030, so
+  a freshly rendered project passes on its first commit. The root
+  `.editorconfig` now uses 4-space indents for HTML (djLint honors
+  `.editorconfig`, which previously forced 2 spaces). `test-template.yml` adds
+  a djLint lint + format-check step to both matrix jobs. The nightly
+  `pre-commit autoupdate` workflow keeps the djLint rev current. Verified by
+  rendering five variants (defaults, vite+allauth, allauth+username+justfile,
+  reusable_app with Makefile and Justfile) and running `pre-commit run
+  --all-files`, `lint`, and `format` clean in each
+- Rename the generated project's CI `pre-commit` step (both `ci.yml` variants)
+  to `Run pre-commit (ruff + pyright + djlint)` now that djLint runs there
+
 ## 2026-09-21: Release-2026.09.21.01
 
 - Correct the root pre-commit configuration's `detect-private-key` hook and

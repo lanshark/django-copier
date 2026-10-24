@@ -133,14 +133,16 @@ test $test_path=env_var_or_default("TEST_PATH", ""):
 	@echo "Running tests.."
 	@uv run pytest $test_path
 
-# Lint with ruff
+# Lint with ruff and djlint
 lint:
 	@uv run ruff check .
+	@uv run djlint . --lint
 
-# Auto-fix lint issues and format with ruff
+# Auto-fix lint issues and format with ruff and djlint
 format:
 	@uv run ruff check --fix .
 	@uv run ruff format .
+	@uv run djlint . --reformat
 
 # Type-check with pyright
 typecheck:
