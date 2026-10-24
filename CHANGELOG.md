@@ -23,6 +23,24 @@ All notable changes to this project are documented in this file.
   --all-files`, `lint`, and `format` clean in each
 - Rename the generated project's CI `pre-commit` step (both `ci.yml` variants)
   to `Run pre-commit (ruff + pyright + djlint)` now that djLint runs there
+- Standardize YAML on double quotes (single quotes only where the string
+  contains a double quote) for both this repo and generated projects: add the
+  rule to `AGENTS.md` (which the generated project's `AGENTS.md` includes), add
+  a `yamllint` (`v1.38.0`) pre-commit hook with a `.yamllint.yaml` that
+  enables only the `quoted-strings` rule (`quote-type: double`,
+  `check-keys: true`, `allow-quoted-quotes: true`), and convert `copier.yml`'s
+  single-quoted keys and values to double quotes (parsed content unchanged).
+  `.yml.jinja` sources aren't valid YAML until rendered, so yamllint checks
+  them in the generated project. Verified across four rendered variants with
+  `pre-commit run --all-files`
+- Re-indent all YAML (this repo, `copier.yml`, and every YAML template the
+  generated project receives) to 4 spaces, with keys inside a list item
+  aligned 2 after the dash, and enforce it with yamllint's `indentation` rule
+  (`spaces: 4`, `indent-sequences: true`). Block-scalar contents (`run: |`
+  scripts, `>-` help text) keep their internal relative indentation. Parsed
+  content is unchanged for every repo YAML file and for every YAML file
+  rendered across six template variants; `pre-commit run --all-files` passes
+  in the repo and in rendered projects
 
 ## 2026-09-21: Release-2026.09.21.01
 

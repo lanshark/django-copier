@@ -46,3 +46,7 @@ To ensure all assistant-generated code and suggestions are consistent with our p
 current config.
 - Use docstrings in Google style.
 - Do not suppress linter warnings unless absolutely necessary.
+- In YAML files, use double quotes for strings, unless single quotes are required
+(e.g. the string itself contains a double quote), and indent with 4 spaces:
+sequences are indented under their parent key, and keys inside a list item
+align 2 spaces after the dash. `yamllint` enforces both.
