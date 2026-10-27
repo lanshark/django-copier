@@ -1,6 +1,6 @@
 repos:
     - repo: https://github.com/djlint/djLint
-      rev: v1.47.0
+      rev: v1.47.1
       hooks:
           - id: djlint-reformat-django
           - id: djlint-django
@@ -16,7 +16,7 @@ repos:
           - id: debug-statements
 
     - repo: https://github.com/astral-sh/ruff-pre-commit
-      rev: v0.16.8
+      rev: v0.17.3
       hooks:
           - id: ruff
             args: [--fix]
