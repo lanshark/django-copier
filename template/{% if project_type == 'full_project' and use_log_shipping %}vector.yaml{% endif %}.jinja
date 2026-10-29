@@ -24,7 +24,11 @@ transforms:
             if err == null && is_object(parsed) { . = merge!(., parsed) }
             .service = .label."com.docker.compose.service"
             .project = .label."com.docker.compose.project"
-            .host = get_hostname!()
+            # get_hostname!() alone would return this Vector container's own
+            # hostname (its container ID), not the Docker host's - useless
+            # for telling hosts apart in a multi-host setup. HOST_HOSTNAME
+            # lets the operator pass the real one in explicitly.
+            .host = get_env_var("HOST_HOSTNAME") ?? get_hostname!()
             .env = get_env_var("DEPLOY_ENV") ?? "prod"
 {% if use_caddy %}
 

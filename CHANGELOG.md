@@ -29,7 +29,21 @@ All notable changes to this project are documented in this file.
   `with-log-shipping-caddy` (exercises the Caddy-aware transform), validated
   via `vector validate --no-environment` (skips the live Docker-socket and
   endpoint health checks; no real VictoriaLogs instance or docker.sock mount
-  in CI)
+  in CI). GitHub Copilot's PR review caught three further correctness
+  issues in `vector.yaml`'s VRL, all fixed on the same PR before merge: the
+  `parse` transform's `merge!(., parsed)` now only runs when the parsed
+  JSON is actually an object (`is_object(parsed)`) — a log line that's
+  valid-but-non-object JSON (e.g. a bare `42` or `["x"]`) would otherwise
+  abort the transform and forward the event untagged; `.level =
+  upcase(...)` moved out of the `use_caddy`-only block so level
+  normalization (structlog's lowercase `info`/`error` etc.) applies whether
+  or not Caddy is enabled, instead of silently breaking the documented
+  `level:ERROR` query for the plain `use_log_shipping=true` case; and
+  `.host` now reads an optional `HOST_HOSTNAME` env var before falling back
+  to `get_hostname!()`, since that function returns the Vector *container's*
+  hostname (its container ID) — not the Docker host's — making it useless
+  for telling hosts apart in the multi-host setup this feature exists for,
+  and liable to change on every container recreation
 
 - Add a `use_caddy` question (full_project only, default `false`) and, when
   true, a `domain_name` question, wiring Caddy as a reverse proxy with
