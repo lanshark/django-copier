@@ -92,17 +92,37 @@ All notable changes to this project are documented in this file.
   VictoriaLogs shipping and BugSink error tracking are next). New
   `Caddyfile` (JSON logs on stdout, `log_append request_id
   {http.request.uuid}` so proxy and app logs correlate via the same
-  `request_id` field `config/logging.py` already uses) and `caddy` service
-  in `docker-compose.yml`; `web` stops publishing `8000:8000` directly when
-  `use_caddy` (`docker-compose.override.yml.example` republishes it for
-  local dev instead, since Caddy's automatic HTTPS needs a real public
-  domain and inbound 80/443 that don't exist on a dev machine — it just
-  retries ACME harmlessly in the background there). `prod.py` sets
+  `request_id` field `config/logging.py` already uses). `prod.py` sets
   `SECURE_PROXY_SSL_HEADER` (without it, `SECURE_SSL_REDIRECT` would
   redirect-loop, since Caddy talks to gunicorn/uvicorn over plain HTTP
   internally) and `CSRF_TRUSTED_ORIGINS`. `.env.example`'s
   `DJANGO_ALLOWED_HOSTS` includes `domain_name` when set. New CI matrix
-  entry `with-caddy`, validated via `caddy validate` (no real ACME in CI)
+  entry `with-caddy`, validated via `caddy validate` (no real ACME in CI).
+  **Updated after the initial design**: Caddy moved into its own standalone
+  `docker-compose.caddy.yml`, started independently of `docker-compose.yml`
+  (`docker network create caddy_net` once per host, then `docker compose -f
+  docker-compose.caddy.yml up -d`) rather than as a `caddy` service embedded
+  in the project's own compose file. This lets one Caddy instance front
+  multiple projects generated from this template on the same host, sharing
+  the external `caddy_net` network — the same "one shared instance per
+  host" shape Vector already uses for VictoriaLogs shipping, documented
+  with the same caveat (only start `docker-compose.caddy.yml` from *one*
+  project if you deploy more than one on a host). `web` gets a fixed
+  `container_name: {{ project_slug }}-web` and joins `caddy_net` (plus
+  `default`, explicitly — Compose doesn't auto-attach a service to the
+  implicit default network once any other top-level network is declared);
+  the Caddyfile's `reverse_proxy` target changed to match, since the bare
+  name `web` would collide with every other project's `web` service on a
+  shared network. `web` still stops publishing `8000:8000` directly when
+  `use_caddy` (`docker-compose.override.yml.example` republishes it for
+  local dev instead, since Caddy's automatic HTTPS needs a real public
+  domain and inbound 80/443 that don't exist on a dev machine — it just
+  retries ACME harmlessly in the background there). New CI step validates
+  both compose files via `docker compose config` (a gap that existed from
+  the start — no matrix entry had ever actually resolved the generated
+  project's own compose files; this is also where the missing explicit
+  `default` network declaration was caught, via `docker compose config`
+  actually failing before the fix)
 
 - Add structured JSON logging to the generated full_project, via `structlog`
   (new unconditional dependency — no copier toggle, since it has no downside

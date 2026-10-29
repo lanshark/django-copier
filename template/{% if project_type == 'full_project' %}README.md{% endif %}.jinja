@@ -18,9 +18,19 @@ The admin site is at `http://localhost:8000/admin/`.
 {% endif %}
 {% if use_caddy %}
 In production, Caddy fronts `{{ domain_name }}` and handles HTTPS automatically
-(Let's Encrypt) — see `Caddyfile`. Locally, `docker-compose.override.yml`
-publishes the app's port directly instead, since Caddy's automatic HTTPS needs
-a real public domain and inbound 80/443.
+(Let's Encrypt) — see `Caddyfile`. It runs standalone, independent of
+`docker compose up` above:
+
+```bash
+docker network create caddy_net   # once per host
+docker compose -f docker-compose.caddy.yml up -d
+```
+
+See `docs/architecture.md` if you're running more than one project from this
+template on the same host — only one of them should start
+`docker-compose.caddy.yml`. Locally, `docker-compose.override.yml` publishes
+the app's port directly instead, since Caddy's automatic HTTPS needs a real
+public domain and inbound 80/443.
 {% endif %}
 
 ## Local (non-Docker) dev
