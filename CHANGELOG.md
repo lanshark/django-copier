@@ -4,6 +4,27 @@ All notable changes to this project are documented in this file.
 
 ## Next Release
 
+- Add a standalone `docker-compose.victorialogs.yml`, generated whenever
+  `use_log_shipping` is set (reusing that toggle rather than adding a new
+  one — most projects will never start it, but it needs no extra question
+  to exist). This is the centralized log store Vector ships to, not
+  previously generated at all; meant to be started on exactly one
+  dedicated log host for a whole fleet (`docker compose -f
+  docker-compose.victorialogs.yml up -d`), with the same distinct
+  Compose-project-name treatment as the other standalone stacks so
+  `--remove-orphans` elsewhere can't remove it. Binds to `127.0.0.1` only
+  by default, since VictoriaLogs has no authentication of its own —
+  reaching it from other hosts needs a reverse proxy with TLS and auth in
+  front (Caddy, the same way `docker-compose.caddy.yml` fronts this
+  project's own `web`), documented rather than automated, since that's a
+  real security decision for whoever operates the log host to make. New
+  CI step validates it via `docker compose config`. Verified beyond that,
+  live: started the real container, confirmed `/health` and the `vmui` UI
+  respond, and round-tripped a log line through the Elasticsearch-protocol
+  `_bulk` ingest endpoint and the LogsQL query API — the same wire format
+  Vector's sink uses — to confirm actual interoperability, not just that
+  the compose file parses
+
 - Add a `DOCKER_SOCK` env var override for `docker-compose.vector.yml`'s
   socket mount, and document that Vector runs under Podman. Verified
   directly, not just inferred: started Podman's rootless API socket
