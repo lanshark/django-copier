@@ -46,6 +46,20 @@ services:
             - caddy_config:/config
         depends_on:
             - web
+{% if use_log_shipping %}
+    vector:
+        image: timberio/vector:0.60.0-alpine
+        restart: unless-stopped
+        volumes:
+            - /var/run/docker.sock:/var/run/docker.sock:ro
+            - ./vector.yaml:/etc/vector/vector.yaml:ro
+            - vector_data:/var/lib/vector
+        environment:
+            # Required for vector.yaml's ${VICTORIALOGS_*} references to resolve -
+            # Vector disables env var interpolation by default now.
+            VECTOR_DANGEROUSLY_ALLOW_ENV_VAR_INTERPOLATION: "true"
+        env_file:
+            - .env
 {% endif %}
     web:
         build:
@@ -63,7 +77,17 @@ services:
             redis:
                 condition: service_started
 {% endif %}
-{% if not use_caddy %}
+{% if use_caddy %}
+        # A fixed, project-unique name so the standalone Caddy compose
+        # project (docker-compose.caddy.yml) can reach this container by
+        # name over the shared caddy_net network - "web" alone would
+        # collide with every other project generated from this template
+        # that also joins caddy_net. Must match the Caddyfile's upstream.
+        container_name: {{ project_slug }}-web
+        networks:
+            - default
+            - caddy_net
+{% else %}
         ports:
             - "8000:8000"
 {% endif %}
@@ -92,7 +116,19 @@ volumes:
 {% if use_caddy %}
     caddy_data:
     caddy_config:
+{% if use_log_shipping %}
+    vector_data:
 {% endif %}
 {% if use_redis %}
     redis_data:
+{% endif %}
+{% if use_caddy %}
+
+# caddy_net is created and owned by docker-compose.caddy.yml (or by `docker
+# network create caddy_net` directly, if Caddy is managed outside this
+# project entirely) - declared here as external so `web` can join it.
+networks:
+    default: {}
+    caddy_net:
+        external: true
 {% endif %}

@@ -129,6 +129,15 @@ jobs:
                   DJANGO_VITE_DEV_MODE=False
                   EOF
 
+            - name: Validate docker-compose.yml
+              working-directory: ${{ github.workspace }}/../rendered-${{ matrix.name }}
+              run: docker compose config > /dev/null
+
+            - name: Validate docker-compose.caddy.yml
+              if: endsWith(matrix.name, 'caddy')
+              working-directory: ${{ github.workspace }}/../rendered-${{ matrix.name }}
+              run: docker compose -f docker-compose.caddy.yml config > /dev/null
+
             - name: Install rendered project deps
               working-directory: ${{ github.workspace }}/../rendered-${{ matrix.name }}
               run: |

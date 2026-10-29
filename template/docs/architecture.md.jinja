@@ -59,6 +59,19 @@ capture the reasoning in a feature-scoped ADR.
   `SECURE_SSL_REDIRECT` would redirect-loop. Not meant to provide real TLS in
   local dev (no public DNS/inbound ports there); `docker-compose.override.yml`
   publishes `web`'s port directly instead.
+  Caddy lives in its own `docker-compose.caddy.yml`, started independently
+  of `docker-compose.yml` — `docker network create caddy_net` once per host,
+  then `docker compose -f docker-compose.caddy.yml up -d` any time. This
+  lets one Caddy instance front multiple projects on the same host sharing
+  `caddy_net`, the same way one Vector instance can serve multiple projects
+  (see below) — if you deploy more than one project from this template on a
+  single host, only start `docker-compose.caddy.yml` from *one* of them;
+  the others just need `use_caddy=true` for the `web`-side wiring
+  (`container_name`, joining `caddy_net`) and their own site added to
+  whichever Caddy instance is already running. `web`'s container name is
+  fixed (`{{ project_slug }}-web`, matching the Caddyfile's `reverse_proxy`
+  target) rather than the bare service name `web`, since that would collide
+  with every other project's `web` service on the same shared network.
 {% endif %}
 {% if use_log_shipping %}
 - Vector ships every container's logs to a centralized VictoriaLogs instance
@@ -141,6 +154,7 @@ capture the reasoning in a feature-scoped ADR.
 ├── docker-compose.yml
 ├── docker/                  # Dockerfile + entrypoint
 {% if use_caddy %}
+├── docker-compose.caddy.yml  # standalone Caddy, started independently (see above)
 ├── Caddyfile                # reverse proxy + automatic HTTPS for {{ domain_name }}
 {% endif %}
 {% if use_log_shipping %}

@@ -8,6 +8,8 @@ Django{% if use_shinobi %} + django-shinobi{% endif %} starter: Python {{ python
 ```bash
 cp .env.example .env
 cp docker-compose.override.yml.example docker-compose.override.yml
+{% if use_caddy %}docker network create caddy_net   # once per host
+{% endif %}
 docker compose up --build
 ```
 
@@ -18,9 +20,40 @@ The admin site is at `http://localhost:8000/admin/`.
 {% endif %}
 {% if use_caddy %}
 In production, Caddy fronts `{{ domain_name }}` and handles HTTPS automatically
-(Let's Encrypt) — see `Caddyfile`. Locally, `docker-compose.override.yml`
-publishes the app's port directly instead, since Caddy's automatic HTTPS needs
-a real public domain and inbound 80/443.
+(Let's Encrypt) — see `Caddyfile`. It runs standalone, independent of
+`docker compose up` above:
+
+When upgrading an existing Caddy-enabled project from a template version where
+Caddy ran in the application Compose project, remove the old proxy before
+starting the standalone stack so its ports are free. From the project
+directory, run `docker compose down --remove-orphans` (this stops the
+application services too; do not add `-v`, which would delete volumes). The
+old Caddy volumes are retained. Find their names with `docker volume ls`;
+they are usually `<old-project>_caddy_data` and
+`<old-project>_caddy_config`. Copy their contents to the standalone stack's
+volumes to preserve certificates and ACME account data:
+
+```bash
+docker volume create caddy_caddy_data
+docker run --rm -v OLD_CADDY_DATA:/from -v caddy_caddy_data:/to alpine \
+  sh -c 'cp -a /from/. /to/'
+docker volume create caddy_caddy_config
+docker run --rm -v OLD_CADDY_CONFIG:/from -v caddy_caddy_config:/to alpine \
+  sh -c 'cp -a /from/. /to/'
+```
+
+Replace `OLD_CADDY_DATA` and `OLD_CADDY_CONFIG` with the old volume names you
+found above. Then start the standalone stack:
+
+```bash
+docker compose -f docker-compose.caddy.yml up -d
+```
+
+See `docs/architecture.md` if you're running more than one project from this
+template on the same host — only one of them should start
+`docker-compose.caddy.yml`. Locally, `docker-compose.override.yml` publishes
+the app's port directly instead, since Caddy's automatic HTTPS needs a real
+public domain and inbound 80/443.
 {% endif %}
 
 ## Local (non-Docker) dev
