@@ -33,6 +33,20 @@ services:
         ports:
             - "127.0.0.1:8025:8025"
             - "127.0.0.1:1025:1025"
+{% if use_caddy %}
+    caddy:
+        image: caddy:2-alpine
+        restart: unless-stopped
+        ports:
+            - "80:80"
+            - "443:443"
+        volumes:
+            - ./Caddyfile:/etc/caddy/Caddyfile:ro
+            - caddy_data:/data
+            - caddy_config:/config
+        depends_on:
+            - web
+{% endif %}
     web:
         build:
             context: .
@@ -49,8 +63,10 @@ services:
             redis:
                 condition: service_started
 {% endif %}
+{% if not use_caddy %}
         ports:
             - "8000:8000"
+{% endif %}
 {% if use_redis %}
     # Redis-backed worker service (only rendered when use_redis=true).
     worker:
@@ -73,6 +89,10 @@ services:
 {% endif %}
 volumes:
     postgres_data:
+{% if use_caddy %}
+    caddy_data:
+    caddy_config:
+{% endif %}
 {% if use_redis %}
     redis_data:
 {% endif %}

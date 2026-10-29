@@ -38,6 +38,8 @@ jobs:
                       extra_args: "--data storage_backend=s3"
                     - name: storage-azure
                       extra_args: "--data storage_backend=azure"
+                    - name: with-caddy
+                      extra_args: "--data use_caddy=true --data domain_name=example.com"
                     - name: custom-username
                       extra_args: "--data user_identifier=username"
                     - name: with-allauth
@@ -200,8 +202,15 @@ jobs:
                     uv run pyright
                   fi
 
-            - name: Check prod settings (email_provider, storage_backend)
-              if: startsWith(matrix.name, 'email-') || startsWith(matrix.name, 'storage-')
+            - name: Validate Caddyfile
+              if: matrix.name == 'with-caddy'
+              working-directory: ${{ github.workspace }}/../rendered-${{ matrix.name }}
+              run: >
+                  docker run --rm -v "$(pwd)/Caddyfile:/etc/caddy/Caddyfile:ro"
+                  caddy:2-alpine caddy validate --config /etc/caddy/Caddyfile
+
+            - name: Check prod settings (email_provider, storage_backend, use_caddy)
+              if: startsWith(matrix.name, 'email-') || startsWith(matrix.name, 'storage-') || matrix.name == 'with-caddy'
               working-directory: ${{ github.workspace }}/../rendered-${{ matrix.name }}
               env:
                   DJANGO_SETTINGS_MODULE: config.settings.prod

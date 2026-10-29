@@ -10,6 +10,16 @@ CSRF_COOKIE_SECURE = True
 SECURE_HSTS_SECONDS = 60 * 60 * 24 * 7
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
+{% if use_caddy %}
+
+# --- Caddy (reverse proxy, terminates TLS) ---
+# Caddy's reverse_proxy sets X-Forwarded-Proto automatically. Without this,
+# Django can't tell the original request was HTTPS (the connection it
+# actually sees, from Caddy to gunicorn/uvicorn, is plain HTTP), and
+# SECURE_SSL_REDIRECT above would redirect-loop forever.
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+CSRF_TRUSTED_ORIGINS = ["https://{{ domain_name }}"]
+{% endif %}
 
 {% if email_provider == 'ses' %}
 # --- Email (django-anymail: Amazon SES) ---
