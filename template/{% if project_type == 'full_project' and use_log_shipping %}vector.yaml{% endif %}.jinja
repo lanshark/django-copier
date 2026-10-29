@@ -1,0 +1,88 @@
+# Ships container logs to a centralized VictoriaLogs instance (external to
+# this project - no victorialogs service runs here). Configured entirely via
+# env vars (VICTORIALOGS_ENDPOINT/_USER/_PASSWORD in .env) rather than baked
+# in at generation time, since a centralized log store is typically shared
+# across more than one project and can move independently of any one of
+# them. See docs/architecture.md for example LogsQL queries.
+#
+# This reads the whole host's Docker socket, so on a host running more than
+# one project generated from this template, run only one Vector instance per
+# host rather than one per project - otherwise each ships the same logs
+# redundantly.
+data_dir: /var/lib/vector
+
+sources:
+    docker:
+        type: docker_logs
+
+transforms:
+    parse:
+        type: remap
+        inputs: [docker]
+        source: |
+            parsed, err = parse_json(.message)
+            if err == null { . = merge!(., parsed) }
+            .service = .label."com.docker.compose.service"
+            .project = .label."com.docker.compose.project"
+            .host = get_hostname!()
+            .env = get_env_var("DEPLOY_ENV") ?? "prod"
+{% if use_caddy %}
+
+    # Caddy's access log lines need reshaping: `msg` is just "handled
+    # request", duration is in seconds, and the useful fields are nested
+    # under `request`.
+    shape:
+        type: remap
+        inputs: [parse]
+        source: |
+            if .service == "caddy" {
+              logger = string(.logger) ?? ""
+              if starts_with(logger, "http.log.access") {
+                .log_type = "access"
+                method = string(.request.method) ?? "-"
+                host   = string(.request.host) ?? "-"
+                uri    = string(.request.uri) ?? "-"
+                status = to_int(.status) ?? 0
+                ms     = round((to_float(.duration) ?? 0.0) * 1000.0, precision: 1)
+
+                .status      = status
+                .duration_ms = ms
+                .client_ip   = .request.client_ip
+                .user_agent  = .request.headers."User-Agent"[0]
+                .message     = method + " " + host + uri + " " + to_string(status) + " " + to_string(ms) + "ms"
+
+                del(.request.headers)
+                del(.resp_headers)
+              } else {
+                .log_type = "caddy"
+                .message  = .msg
+              }
+              del(.msg)
+              del(.ts)
+            }
+            .level = upcase(string(.level) ?? "INFO")
+{% endif %}
+
+sinks:
+    victorialogs:
+        type: elasticsearch
+        inputs: [{{ "shape" if use_caddy else "parse" }}]
+        endpoints: ["${VICTORIALOGS_ENDPOINT}/insert/elasticsearch/"]
+        api_version: v8
+        compression: gzip
+        healthcheck:
+            enabled: false
+        auth:
+            strategy: basic
+            user: "${VICTORIALOGS_USER}"
+            password: "${VICTORIALOGS_PASSWORD}"
+        query:
+            _msg_field: message
+            _time_field: timestamp
+            _stream_fields: host,project,service
+        buffer:
+            type: disk
+            # Vector's disk buffer needs a minimum of ~256MiB; this gives it
+            # headroom so logs survive a longer network/log-host outage.
+            max_size: 536870912
+            when_full: block

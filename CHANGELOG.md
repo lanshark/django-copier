@@ -4,6 +4,33 @@ All notable changes to this project are documented in this file.
 
 ## Next Release
 
+- Add a `use_log_shipping` question (full_project only, default `false`)
+  wiring Vector to ship container logs to a centralized VictoriaLogs
+  instance. Step 3 of 4 toward observability/ops for the generated
+  full_project (follows #63's structured logging and #64's Caddy reverse
+  proxy; BugSink error tracking is last). New `vector.yaml` (new `vector`
+  service in `docker-compose.yml`, mounting the host's Docker socket
+  read-only): a `docker_logs` source, a `remap` transform tagging
+  `host`/`project`/`service`/`env`, and an `elasticsearch`-protocol sink
+  pointed at `${VICTORIALOGS_ENDPOINT}` with basic auth and a disk buffer
+  (survives a network/log-host outage). When `use_caddy` is also set, a
+  second `remap` transform reshapes Caddy's access-log fields before the
+  sink. Deliberately configured via env vars
+  (`VICTORIALOGS_ENDPOINT`/`_USER`/`_PASSWORD`) rather than at generation
+  time, unlike `domain_name` for Caddy — a centralized log store is
+  typically shared across more than one project and can move independently
+  of any one of them. Sets `VECTOR_DANGEROUSLY_ALLOW_ENV_VAR_INTERPOLATION:
+  "true"` on the `vector` service — found by actually running `vector
+  validate`, not just reading the config format docs: Vector now refuses
+  `${VAR}` interpolation in config files unless explicitly opted in, so
+  without this the sink's endpoint/auth fields would resolve to the literal,
+  unexpanded string `${VICTORIALOGS_ENDPOINT}` and fail with an invalid-URI
+  error. New CI matrix entries `with-log-shipping` and
+  `with-log-shipping-caddy` (exercises the Caddy-aware transform), validated
+  via `vector validate --no-environment` (skips the live Docker-socket and
+  endpoint health checks; no real VictoriaLogs instance or docker.sock mount
+  in CI)
+
 - Add a `use_caddy` question (full_project only, default `false`) and, when
   true, a `domain_name` question, wiring Caddy as a reverse proxy with
   automatic HTTPS (Let's Encrypt). Step 2 of 4 toward observability/ops for
