@@ -28,7 +28,21 @@ All notable changes to this project are documented in this file.
   `DjangoIntegration` when `use_redis`, so RQ task failures (not just web
   request exceptions) get captured too. New CI matrix entry
   `with-error-tracking`, validated via the existing prod-settings
-  `manage.py check` pattern (dummy DSN)
+  `manage.py check` pattern (dummy DSN). GitHub Copilot's PR review caught a
+  real gap: the example `django-tasks` job bound `request_id` to structlog's
+  context but never tagged the error-tracking scope with it, so an exception
+  inside an RQ worker (captured by `RqIntegration` automatically) would
+  reach BugSink/Sentry without the `request_id` tag that ties it back to the
+  request that enqueued it — unlike the web-request path, which already
+  tagged both. Fixed (`apps/<app>/tasks.py` converted to `.jinja`, since
+  this is its first conditional content), and backed by a new
+  `test_error_tracking.py` (only generated when `use_error_tracking`) that
+  initializes `sentry_sdk` with a capturing `Transport` test double and
+  asserts `request_id` actually lands on a captured event — for both the
+  task path (the gap just fixed) and the middleware path (proving the
+  existing tagging isn't just a no-op that happens not to crash, which is
+  all the pre-existing request-id tests in `test_views.py` prove, since
+  they run without `sentry_sdk` ever being initialized)
 
 - Add a `use_log_shipping` question (full_project only, default `false`)
   wiring Vector to ship container logs to a centralized VictoriaLogs
