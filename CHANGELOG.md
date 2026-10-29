@@ -4,12 +4,14 @@ All notable changes to this project are documented in this file.
 
 ## Next Release
 
-- Add a standalone `docker-compose.victorialogs.yml`, generated whenever
-  `use_log_shipping` is set (reusing that toggle rather than adding a new
-  one — most projects will never start it, but it needs no extra question
-  to exist). This is the centralized log store Vector ships to, not
-  previously generated at all; meant to be started on exactly one
-  dedicated log host for a whole fleet (`docker compose -f
+- Add a standalone `docker-compose.victorialogs.yml`, generated when the new
+  `use_victorialogs` question (only asked once `use_log_shipping` is set,
+  default `false`) is true — a dedicated toggle rather than reusing
+  `use_log_shipping`, since most projects only ship logs and should never
+  get this file generated into them at all; it's for whichever single
+  project stands up the shared log host. This is the centralized log store
+  Vector ships to, not previously generated at all; meant to be started on
+  exactly one dedicated log host for a whole fleet (`docker compose -f
   docker-compose.victorialogs.yml up -d`), with the same distinct
   Compose-project-name treatment as the other standalone stacks so
   `--remove-orphans` elsewhere can't remove it. Binds to `127.0.0.1` only

@@ -44,6 +44,8 @@ jobs:
                       extra_args: "--data use_log_shipping=true"
                     - name: with-log-shipping-caddy
                       extra_args: "--data use_log_shipping=true --data use_caddy=true --data domain_name=example.com"
+                    - name: with-victorialogs
+                      extra_args: "--data use_log_shipping=true --data use_victorialogs=true"
                     - name: with-error-tracking
                       extra_args: "--data use_error_tracking=true"
                     - name: with-error-tracking-noredis
@@ -246,7 +248,7 @@ jobs:
               run: docker compose -f docker-compose.vector.yml config > /dev/null
 
             - name: Validate docker-compose.victorialogs.yml
-              if: startsWith(matrix.name, 'with-log-shipping')
+              if: matrix.name == 'with-victorialogs'
               working-directory: ${{ github.workspace }}/../rendered-${{ matrix.name }}
               run: docker compose -f docker-compose.victorialogs.yml config > /dev/null
 
