@@ -139,6 +139,20 @@ use_shinobi:
         example health/token/me API? (No = no API layer, admin site only)
     default: true
 
+use_caddy:
+    type: bool
+    help: >-
+        Front the app with Caddy (reverse proxy + automatic HTTPS via Let's
+        Encrypt)? (No = the app container publishes its port directly, with no
+        TLS termination in this project)
+    default: false
+    when: "{{ project_type == 'full_project' }}"
+
+domain_name:
+    type: str
+    help: Public domain name Caddy requests a TLS certificate for (e.g. example.com)
+    when: "{{ use_caddy }}"
+
 storage_backend:
     type: str
     help: >-

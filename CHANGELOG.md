@@ -4,6 +4,25 @@ All notable changes to this project are documented in this file.
 
 ## Next Release
 
+- Add a `use_caddy` question (full_project only, default `false`) and, when
+  true, a `domain_name` question, wiring Caddy as a reverse proxy with
+  automatic HTTPS (Let's Encrypt). Step 2 of 4 toward observability/ops for
+  the generated full_project (follows #63's structured logging; Vector/
+  VictoriaLogs shipping and BugSink error tracking are next). New
+  `Caddyfile` (JSON logs on stdout, `log_append request_id
+  {http.request.uuid}` so proxy and app logs correlate via the same
+  `request_id` field `config/logging.py` already uses) and `caddy` service
+  in `docker-compose.yml`; `web` stops publishing `8000:8000` directly when
+  `use_caddy` (`docker-compose.override.yml.example` republishes it for
+  local dev instead, since Caddy's automatic HTTPS needs a real public
+  domain and inbound 80/443 that don't exist on a dev machine — it just
+  retries ACME harmlessly in the background there). `prod.py` sets
+  `SECURE_PROXY_SSL_HEADER` (without it, `SECURE_SSL_REDIRECT` would
+  redirect-loop, since Caddy talks to gunicorn/uvicorn over plain HTTP
+  internally) and `CSRF_TRUSTED_ORIGINS`. `.env.example`'s
+  `DJANGO_ALLOWED_HOSTS` includes `domain_name` when set. New CI matrix
+  entry `with-caddy`, validated via `caddy validate` (no real ACME in CI)
+
 - Add structured JSON logging to the generated full_project, via `structlog`
   (new unconditional dependency — no copier toggle, since it has no downside
   and later log-shipping/error-tracking steps assume JSON-on-stdout as their

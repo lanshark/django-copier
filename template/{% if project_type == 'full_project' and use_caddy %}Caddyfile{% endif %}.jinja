@@ -1,0 +1,24 @@
+{
+	# Caddy's own runtime logs (startup, TLS/ACME, errors) - JSON, the same
+	# shape as the Django app's structlog output (see config/logging.py).
+	log {
+		output stdout
+		format json
+	}
+}
+
+{{ domain_name }} {
+	log {
+		output stdout
+		format json
+	}
+
+	# Reuse Caddy's own per-request UUID as the request ID, so proxy and app
+	# logs correlate - config/logging.py's RequestContextMiddleware honors
+	# an incoming X-Request-ID header.
+	log_append request_id {http.request.uuid}
+
+	reverse_proxy web:8000 {
+		header_up X-Request-ID {http.request.uuid}
+	}
+}

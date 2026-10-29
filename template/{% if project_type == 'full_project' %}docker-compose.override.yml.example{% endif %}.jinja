@@ -10,6 +10,14 @@ services:
             - .:/app
         environment:
             DJANGO_SETTINGS_MODULE: config.settings.dev
+{% if use_caddy %}
+        # Caddy's automatic HTTPS needs a real public domain and inbound
+        # 80/443, neither of which exist on a dev machine, so it'll just sit
+        # here retrying certificate issuance in the background — harmless,
+        # but ignorable. Hit the app directly instead:
+        ports:
+            - "8000:8000"
+{% endif %}
 {% if use_redis %}
     worker:
         volumes:

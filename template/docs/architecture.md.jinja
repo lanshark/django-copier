@@ -49,6 +49,17 @@ capture the reasoning in a feature-scoped ADR.
   `X-Request-ID` header), and can be passed along explicitly to a
   `django-tasks` job so its logs correlate back to the request that enqueued
   it (see the example task in `apps/{{ initial_app_name }}/tasks.py`).
+{% if use_caddy %}
+- Caddy reverse-proxies `{{ domain_name }}` to `web`, terminating TLS with
+  automatic HTTPS (Let's Encrypt). Its access logs are JSON on stdout, tagged
+  with the same request ID the app's structlog middleware uses, so proxy and
+  app logs for one request line up. `SECURE_PROXY_SSL_HEADER` in `prod.py`
+  tells Django the original request was HTTPS even though Caddy talks to
+  gunicorn/uvicorn over plain HTTP internally — without it,
+  `SECURE_SSL_REDIRECT` would redirect-loop. Not meant to provide real TLS in
+  local dev (no public DNS/inbound ports there); `docker-compose.override.yml`
+  publishes `web`'s port directly instead.
+{% endif %}
 {% if use_vite %}
 - A Pico.css + Vite frontend build pipeline (django-vite) for the home page.
 {% endif %}
@@ -97,6 +108,9 @@ capture the reasoning in a feature-scoped ADR.
 ├── pyproject.toml
 ├── docker-compose.yml
 ├── docker/                  # Dockerfile + entrypoint
+{% if use_caddy %}
+├── Caddyfile                # reverse proxy + automatic HTTPS for {{ domain_name }}
+{% endif %}
 {% if use_vite %}
 ├── package.json             # Vite + Pico.css frontend tooling
 ├── vite.config.js
