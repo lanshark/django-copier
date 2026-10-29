@@ -4,6 +4,27 @@ All notable changes to this project are documented in this file.
 
 ## Next Release
 
+- Add structured JSON logging to the generated full_project, via `structlog`
+  (new unconditional dependency — no copier toggle, since it has no downside
+  and later log-shipping/error-tracking steps assume JSON-on-stdout as their
+  input). `config/logging.py` (new) provides `RequestContextMiddleware`
+  (works under both WSGI and ASGI), which binds a `request_id` to
+  structlog's context for the life of a request — honoring an incoming
+  `X-Request-ID` header when it looks valid (e.g. set by a future reverse
+  proxy), otherwise generating one, and echoing it back on the response.
+  `config/settings/base.py` wires `structlog.configure(...)` plus a
+  `LOGGING` dict so Django, gunicorn, and the RQ worker all emit the same
+  JSON shape (new `LOG_LEVEL` env var, default `INFO`). `JWTAuth.authenticate`
+  (when `use_shinobi`) binds `user_id` once a user's resolved. The example
+  `django-tasks` job (`apps/<app>/tasks.py`) now accepts an optional
+  `request_id` parameter and binds it before logging, demonstrating
+  request-to-task log correlation; `api.py`'s example endpoint passes
+  `request.request_id` through to it. This is a deliberate simplification
+  of fully-automatic context propagation into task workers (which would
+  need reaching into `django-tasks` internals to intercept `.enqueue()` the
+  way a `django-huey` wrapper could) — callers pass `request_id` explicitly
+  instead. First of four planned steps (structured logging, Caddy reverse
+  proxy, Vector/VictoriaLogs log shipping, BugSink error tracking)
 - Add djLint (`djlint/djLint` `v1.47.0`, `django` profile) to pre-commit in
   both this repo and the generated project, running `djlint-reformat-django`
   (formatter) and `djlint-django` (linter). The generated project gets
