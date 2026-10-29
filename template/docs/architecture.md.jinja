@@ -60,6 +60,20 @@ capture the reasoning in a feature-scoped ADR.
   local dev (no public DNS/inbound ports there); `docker-compose.override.yml`
   publishes `web`'s port directly instead.
 {% endif %}
+{% if use_log_shipping %}
+- Vector ships every container's logs to a centralized VictoriaLogs instance
+  (external to this project — no `victorialogs` service runs here), tagging
+  each log line with `host`/`project`/`service`/`env`{% if use_caddy %} and reshaping
+  Caddy's access-log fields{% endif %}. Configured via `VICTORIALOGS_ENDPOINT`/`_USER`/
+  `_PASSWORD` env vars rather than at generation time, since a centralized
+  log store is typically shared across more than one project. A disk buffer
+  lets logs survive a network or log-host outage. Example LogsQL queries:
+  `request_id:"<id>"` (everything for one request, across every service),
+  `_time:1h level:ERROR` (recent errors, every service).
+  Run only one Vector instance per Docker host, even with multiple projects
+  generated from this template on it — Vector reads the whole host's Docker
+  socket, so one instance per project would ship the same logs redundantly.
+{% endif %}
 {% if use_vite %}
 - A Pico.css + Vite frontend build pipeline (django-vite) for the home page.
 {% endif %}
@@ -110,6 +124,9 @@ capture the reasoning in a feature-scoped ADR.
 ├── docker/                  # Dockerfile + entrypoint
 {% if use_caddy %}
 ├── Caddyfile                # reverse proxy + automatic HTTPS for {{ domain_name }}
+{% endif %}
+{% if use_log_shipping %}
+├── vector.yaml               # ships container logs to centralized VictoriaLogs
 {% endif %}
 {% if use_vite %}
 ├── package.json             # Vite + Pico.css frontend tooling

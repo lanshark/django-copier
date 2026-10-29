@@ -153,6 +153,17 @@ domain_name:
     help: Public domain name Caddy requests a TLS certificate for (e.g. example.com)
     when: "{{ use_caddy }}"
 
+use_log_shipping:
+    type: bool
+    help: >-
+        Ship container logs (via Vector) to a centralized VictoriaLogs
+        instance? Configured entirely via env vars at deploy time
+        (VICTORIALOGS_ENDPOINT/_USER/_PASSWORD) since a centralized log store
+        is typically shared across more than one project. (No = containers
+        just log to stdout, read via `docker compose logs`)
+    default: false
+    when: "{{ project_type == 'full_project' }}"
+
 storage_backend:
     type: str
     help: >-

@@ -40,6 +40,10 @@ jobs:
                       extra_args: "--data storage_backend=azure"
                     - name: with-caddy
                       extra_args: "--data use_caddy=true --data domain_name=example.com"
+                    - name: with-log-shipping
+                      extra_args: "--data use_log_shipping=true"
+                    - name: with-log-shipping-caddy
+                      extra_args: "--data use_log_shipping=true --data use_caddy=true --data domain_name=example.com"
                     - name: custom-username
                       extra_args: "--data user_identifier=username"
                     - name: with-allauth
@@ -203,14 +207,28 @@ jobs:
                   fi
 
             - name: Validate Caddyfile
-              if: matrix.name == 'with-caddy'
+              if: endsWith(matrix.name, 'caddy')
               working-directory: ${{ github.workspace }}/../rendered-${{ matrix.name }}
               run: >
                   docker run --rm -v "$(pwd)/Caddyfile:/etc/caddy/Caddyfile:ro"
                   caddy:2-alpine caddy validate --config /etc/caddy/Caddyfile
 
+            - name: Validate vector.yaml
+              if: startsWith(matrix.name, 'with-log-shipping')
+              working-directory: ${{ github.workspace }}/../rendered-${{ matrix.name }}
+              env:
+                  VICTORIALOGS_ENDPOINT: https://logs.example.com
+                  VICTORIALOGS_USER: dummy
+                  VICTORIALOGS_PASSWORD: dummy
+              run: >
+                  docker run --rm -e VICTORIALOGS_ENDPOINT -e VICTORIALOGS_USER -e VICTORIALOGS_PASSWORD
+                  -v "$(pwd)/vector.yaml:/etc/vector/vector.yaml:ro"
+                  timberio/vector:0.60.0-alpine validate
+                  --dangerously-allow-env-var-interpolation --no-environment
+                  /etc/vector/vector.yaml
+
             - name: Check prod settings (email_provider, storage_backend, use_caddy)
-              if: startsWith(matrix.name, 'email-') || startsWith(matrix.name, 'storage-') || matrix.name == 'with-caddy'
+              if: startsWith(matrix.name, 'email-') || startsWith(matrix.name, 'storage-') || endsWith(matrix.name, 'caddy')
               working-directory: ${{ github.workspace }}/../rendered-${{ matrix.name }}
               env:
                   DJANGO_SETTINGS_MODULE: config.settings.prod
