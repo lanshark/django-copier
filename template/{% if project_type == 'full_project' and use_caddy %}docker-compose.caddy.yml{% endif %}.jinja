@@ -1,0 +1,31 @@
+# Standalone - start independently of docker-compose.yml. caddy_net is an
+# external network so this can be shared across however many projects on
+# this host also join it (see docs/architecture.md for the one-shared-
+# instance-per-host caveat, same reasoning as Vector's). First time on a
+# host:
+#   docker network create caddy_net
+# Then, any time:
+#   docker compose -f docker-compose.caddy.yml up -d
+name: caddy
+
+services:
+    caddy:
+        image: caddy:2-alpine
+        restart: unless-stopped
+        ports:
+            - "80:80"
+            - "443:443"
+        volumes:
+            - ./Caddyfile:/etc/caddy/Caddyfile:ro
+            - caddy_data:/data
+            - caddy_config:/config
+        networks:
+            - caddy_net
+
+networks:
+    caddy_net:
+        external: true
+
+volumes:
+    caddy_data:
+    caddy_config:

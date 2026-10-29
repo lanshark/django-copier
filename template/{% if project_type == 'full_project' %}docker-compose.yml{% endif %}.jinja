@@ -24,7 +24,7 @@ services:
         # Web UI at http://localhost:8025 shows everything sent.
         image: axllent/mailpit:v1.31
         healthcheck:
-            test: ["/mailpit", "readyz"]
+            test: ["CMD", "/mailpit", "readyz"]
             interval: 15s
             timeout: 5s
             retries: 5
@@ -33,20 +33,6 @@ services:
         ports:
             - "127.0.0.1:8025:8025"
             - "127.0.0.1:1025:1025"
-{% if use_caddy %}
-    caddy:
-        image: caddy:2-alpine
-        restart: unless-stopped
-        ports:
-            - "80:80"
-            - "443:443"
-        volumes:
-            - ./Caddyfile:/etc/caddy/Caddyfile:ro
-            - caddy_data:/data
-            - caddy_config:/config
-        depends_on:
-            - web
-{% endif %}
 {% if use_log_shipping %}
     vector:
         image: timberio/vector:0.60.0-alpine
@@ -78,7 +64,17 @@ services:
             redis:
                 condition: service_started
 {% endif %}
-{% if not use_caddy %}
+{% if use_caddy %}
+        # A fixed, project-unique name so the standalone Caddy compose
+        # project (docker-compose.caddy.yml) can reach this container by
+        # name over the shared caddy_net network - "web" alone would
+        # collide with every other project generated from this template
+        # that also joins caddy_net. Must match the Caddyfile's upstream.
+        container_name: {{ project_slug }}-web
+        networks:
+            - default
+            - caddy_net
+{% else %}
         ports:
             - "8000:8000"
 {% endif %}
@@ -104,13 +100,19 @@ services:
 {% endif %}
 volumes:
     postgres_data:
-{% if use_caddy %}
-    caddy_data:
-    caddy_config:
-{% endif %}
 {% if use_log_shipping %}
     vector_data:
 {% endif %}
 {% if use_redis %}
     redis_data:
+{% endif %}
+{% if use_caddy %}
+
+# caddy_net is created and owned by docker-compose.caddy.yml (or by `docker
+# network create caddy_net` directly, if Caddy is managed outside this
+# project entirely) - declared here as external so `web` can join it.
+networks:
+    default: {}
+    caddy_net:
+        external: true
 {% endif %}

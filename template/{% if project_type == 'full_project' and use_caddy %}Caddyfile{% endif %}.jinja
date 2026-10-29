@@ -18,7 +18,11 @@
 	# an incoming X-Request-ID header.
 	log_append request_id {http.request.uuid}
 
-	reverse_proxy web:8000 {
+	# {{ project_slug }}-web is this project's web container's fixed name
+	# (see docker-compose.yml) - not just "web", since this Caddy instance
+	# may be shared over caddy_net with other projects that each have their
+	# own "web" service.
+	reverse_proxy {{ project_slug }}-web:8000 {
 		header_up X-Request-ID {http.request.uuid}
 	}
 }
