@@ -122,7 +122,14 @@ All notable changes to this project are documented in this file.
   the start — no matrix entry had ever actually resolved the generated
   project's own compose files; this is also where the missing explicit
   `default` network declaration was caught, via `docker compose config`
-  actually failing before the fix)
+  actually failing before the fix). That new step also caught a second,
+  genuinely pre-existing and unrelated bug once run against real Docker
+  Compose V2 in CI (podman-compose, used for local verification, doesn't
+  enforce this): `mailpit`'s healthcheck `test: ["/mailpit", "readyz"]` is
+  missing the required `"CMD"` prefix — fixed to `["CMD", "/mailpit",
+  "readyz"]`. This has nothing to do with Caddy; it's been wrong since
+  `mailpit` was first added, just never caught because no CI step had ever
+  resolved the generated project's own `docker-compose.yml` before now
 
 - Add structured JSON logging to the generated full_project, via `structlog`
   (new unconditional dependency — no copier toggle, since it has no downside
