@@ -60,8 +60,8 @@ transforms:
               del(.msg)
               del(.ts)
             }
-            .level = upcase(string(.level) ?? "INFO")
 {% endif %}
+            .level = upcase(string(.level) ?? "INFO")
 
 sinks:
     victorialogs:
