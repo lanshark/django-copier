@@ -240,6 +240,11 @@ jobs:
                   --dangerously-allow-env-var-interpolation --no-environment
                   /etc/vector/vector.yaml
 
+            - name: Validate docker-compose.vector.yml
+              if: startsWith(matrix.name, 'with-log-shipping')
+              working-directory: ${{ github.workspace }}/../rendered-${{ matrix.name }}
+              run: docker compose -f docker-compose.vector.yml config > /dev/null
+
             - name: Check prod settings (email_provider, storage_backend, use_caddy, use_error_tracking)
               if: startsWith(matrix.name, 'email-') || startsWith(matrix.name, 'storage-') || endsWith(matrix.name, 'caddy') || startsWith(matrix.name, 'with-error-tracking')
               working-directory: ${{ github.workspace }}/../rendered-${{ matrix.name }}

@@ -4,6 +4,23 @@ All notable changes to this project are documented in this file.
 
 ## Next Release
 
+- Move Vector into its own standalone `docker-compose.vector.yml`, started
+  independently of `docker-compose.yml` (`docker compose -f
+  docker-compose.vector.yml up -d`), rather than as a `vector` service
+  embedded in the project's own compose file — the same treatment Caddy
+  got in a companion change, applied for the same reason: one Vector
+  instance per host is meant to be shared across however many projects
+  generated from this template also need log shipping (already documented
+  that way), and it needs its own Compose project name
+  (`name: vector`) so `docker compose up --remove-orphans` on the
+  application stack can't remove it. Unlike Caddy, no shared network is
+  needed — Vector reads the host's Docker socket directly, not any
+  container by name, so there's nothing for it to reach. New CI step
+  validates `docker-compose.vector.yml` via `docker compose config`. Also
+  fixes the same pre-existing, unrelated `mailpit` healthcheck bug
+  (missing `"CMD"` prefix) the Caddy change found, since this branched
+  from `main` before that fix had landed — verified against the real
+  Docker Compose V2 plugin, not just podman-compose, same as before
 - Document how to remove the legacy Caddy proxy and migrate its persistent
   volumes when upgrading to the standalone Caddy Compose stack.
 - Give the standalone Caddy Compose stack its own project name so application

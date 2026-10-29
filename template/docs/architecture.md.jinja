@@ -86,6 +86,12 @@ capture the reasoning in a feature-scoped ADR.
   Run only one Vector instance per Docker host, even with multiple projects
   generated from this template on it — Vector reads the whole host's Docker
   socket, so one instance per project would ship the same logs redundantly.
+  Vector lives in its own `docker-compose.vector.yml`, started independently
+  of `docker-compose.yml` (`docker compose -f docker-compose.vector.yml up
+  -d`) with its own Compose project name, so `docker compose up
+  --remove-orphans` on the application stack can't remove it. It needs no
+  shared network to do this (unlike a reverse proxy would): it talks to the
+  Docker socket directly, not to any container by name.
 {% endif %}
 {% if use_error_tracking %}
 - Error tracking via the standard `sentry-sdk`, using `DjangoIntegration`{% if use_redis %}
@@ -152,6 +158,7 @@ capture the reasoning in a feature-scoped ADR.
 ├── Caddyfile                # reverse proxy + automatic HTTPS for {{ domain_name }}
 {% endif %}
 {% if use_log_shipping %}
+├── docker-compose.vector.yml # standalone Vector, started independently (see above)
 ├── vector.yaml               # ships container logs to centralized VictoriaLogs
 {% endif %}
 {% if use_vite %}
