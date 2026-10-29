@@ -1,0 +1,32 @@
+# Standalone - start independently of docker-compose.yml, and reusable
+# across however many projects on this host also need log shipping (see
+# docs/architecture.md for the one-shared-instance-per-host caveat). Needs
+# no networking of its own, unlike Caddy's standalone stack - it reads the
+# host's Docker socket directly, not over any network, so there's no
+# container to reach by name.
+#
+# A distinct project name, same as the standalone Caddy stack: without it,
+# this is just an orphan from docker-compose.yml's point of view once the
+# vector service definition isn't there (it never was, in this file's
+# case, but if you're migrating a project that had it embedded before),
+# and `docker compose up --remove-orphans` on the application stack would
+# remove it, taking log shipping down for every project it serves.
+name: vector
+
+services:
+    vector:
+        image: timberio/vector:0.60.0-alpine
+        restart: unless-stopped
+        volumes:
+            - /var/run/docker.sock:/var/run/docker.sock:ro
+            - ./vector.yaml:/etc/vector/vector.yaml:ro
+            - vector_data:/var/lib/vector
+        environment:
+            # Required for vector.yaml's ${VICTORIALOGS_*} references to resolve -
+            # Vector disables env var interpolation by default now.
+            VECTOR_DANGEROUSLY_ALLOW_ENV_VAR_INTERPOLATION: "true"
+        env_file:
+            - .env
+
+volumes:
+    vector_data:

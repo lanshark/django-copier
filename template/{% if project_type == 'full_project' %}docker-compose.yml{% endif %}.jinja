@@ -24,7 +24,7 @@ services:
         # Web UI at http://localhost:8025 shows everything sent.
         image: axllent/mailpit:v1.31
         healthcheck:
-            test: ["/mailpit", "readyz"]
+            test: ["CMD", "/mailpit", "readyz"]
             interval: 15s
             timeout: 5s
             retries: 5
@@ -46,21 +46,6 @@ services:
             - caddy_config:/config
         depends_on:
             - web
-{% endif %}
-{% if use_log_shipping %}
-    vector:
-        image: timberio/vector:0.60.0-alpine
-        restart: unless-stopped
-        volumes:
-            - /var/run/docker.sock:/var/run/docker.sock:ro
-            - ./vector.yaml:/etc/vector/vector.yaml:ro
-            - vector_data:/var/lib/vector
-        environment:
-            # Required for vector.yaml's ${VICTORIALOGS_*} references to resolve -
-            # Vector disables env var interpolation by default now.
-            VECTOR_DANGEROUSLY_ALLOW_ENV_VAR_INTERPOLATION: "true"
-        env_file:
-            - .env
 {% endif %}
     web:
         build:
@@ -107,9 +92,6 @@ volumes:
 {% if use_caddy %}
     caddy_data:
     caddy_config:
-{% endif %}
-{% if use_log_shipping %}
-    vector_data:
 {% endif %}
 {% if use_redis %}
     redis_data:
