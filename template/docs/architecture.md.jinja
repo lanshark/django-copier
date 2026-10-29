@@ -92,6 +92,12 @@ capture the reasoning in a feature-scoped ADR.
   --remove-orphans` on the application stack can't remove it. It needs no
   shared network to do this (unlike a reverse proxy would): it talks to the
   Docker socket directly, not to any container by name.
+  Also runs under Podman, verified directly (Vector's `docker_logs` source
+  works unchanged against Podman's Docker-compatible API socket) — but
+  Podman's rootless socket isn't at `/var/run/docker.sock` by default, so
+  set `DOCKER_SOCK` in `.env` to wherever `podman info` shows it (usually
+  `/run/user/<uid>/podman/podman.sock`), after enabling it with `systemctl
+  --user enable --now podman.socket`. Leave `DOCKER_SOCK` unset on Docker.
 {% endif %}
 {% if use_error_tracking %}
 - Error tracking via the standard `sentry-sdk`, using `DjangoIntegration`{% if use_redis %}
