@@ -44,6 +44,10 @@ jobs:
                       extra_args: "--data use_log_shipping=true"
                     - name: with-log-shipping-caddy
                       extra_args: "--data use_log_shipping=true --data use_caddy=true --data domain_name=example.com"
+                    - name: with-bugsink
+                      extra_args: "--data use_bugsink=true"
+                    - name: with-bugsink-noredis
+                      extra_args: "--data use_bugsink=true --data use_redis=false"
                     - name: custom-username
                       extra_args: "--data user_identifier=username"
                     - name: with-allauth
@@ -227,8 +231,8 @@ jobs:
                   --dangerously-allow-env-var-interpolation --no-environment
                   /etc/vector/vector.yaml
 
-            - name: Check prod settings (email_provider, storage_backend, use_caddy)
-              if: startsWith(matrix.name, 'email-') || startsWith(matrix.name, 'storage-') || endsWith(matrix.name, 'caddy')
+            - name: Check prod settings (email_provider, storage_backend, use_caddy, use_bugsink)
+              if: startsWith(matrix.name, 'email-') || startsWith(matrix.name, 'storage-') || endsWith(matrix.name, 'caddy') || startsWith(matrix.name, 'with-bugsink')
               working-directory: ${{ github.workspace }}/../rendered-${{ matrix.name }}
               env:
                   DJANGO_SETTINGS_MODULE: config.settings.prod
@@ -244,6 +248,7 @@ jobs:
                   AZURE_ACCOUNT_NAME: dummy
                   AZURE_ACCOUNT_KEY: dummy
                   AZURE_CONTAINER: dummy-container
+                  BUGSINK_DSN: https://dummy@bugsink.example.com/1
               run: uv run python manage.py check
 
     render-and-test-app:

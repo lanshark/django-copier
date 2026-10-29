@@ -4,6 +4,26 @@ All notable changes to this project are documented in this file.
 
 ## Next Release
 
+- Add a `use_bugsink` question (full_project only, default `false`) wiring
+  BugSink (self-hosted, Sentry-protocol-compatible) error tracking via the
+  standard `sentry-sdk`. Step 4 of 4 — last of the observability/ops steps
+  that started with #63's structured logging, #64's Caddy reverse proxy,
+  and #65's Vector/VictoriaLogs log shipping. `sentry_sdk.init(dsn=
+  config("BUGSINK_DSN"), integrations=[DjangoIntegration(){% if use_redis %},
+  RqIntegration(){% endif %}])` only runs in `prod.py`, mirroring
+  `email_provider`'s prod-only pattern — no point reporting local dev noise,
+  and the dev/test settings modules never import `sentry_sdk` at all.
+  `send_default_pii` stays at the sentry-sdk default (`False`); instead,
+  `config/logging.py` (converted to `.jinja`, since this is its first
+  conditional content) tags every event with the same `request_id`
+  structlog's `RequestContextMiddleware` binds, and `apps/<app>/auth.py`'s
+  `JWTAuth` tags the signed-in user's id — so a BugSink event and its
+  correlated log lines share an id without opting into PII capture.
+  `RqIntegration` is added alongside `DjangoIntegration` when `use_redis`,
+  so RQ task failures (not just web request exceptions) get captured too.
+  New CI matrix entry `with-bugsink`, validated via the existing
+  prod-settings `manage.py check` pattern (dummy DSN)
+
 - Add a `use_log_shipping` question (full_project only, default `false`)
   wiring Vector to ship container logs to a centralized VictoriaLogs
   instance. Step 3 of 4 toward observability/ops for the generated

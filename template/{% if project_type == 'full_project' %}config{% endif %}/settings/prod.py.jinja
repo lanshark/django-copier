@@ -1,4 +1,13 @@
+{% if use_bugsink %}
+import sentry_sdk
+{% endif %}
 from decouple import config
+{% if use_bugsink %}
+from sentry_sdk.integrations.django import DjangoIntegration
+{% if use_redis %}
+from sentry_sdk.integrations.rq import RqIntegration
+{% endif %}
+{% endif %}
 
 from .base import *  # noqa: F401,F403
 
@@ -19,6 +28,24 @@ SECURE_HSTS_PRELOAD = True
 # SECURE_SSL_REDIRECT above would redirect-loop forever.
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 CSRF_TRUSTED_ORIGINS = ["https://{{ domain_name }}"]
+{% endif %}
+{% if use_bugsink %}
+
+# --- BugSink (self-hosted, Sentry-protocol-compatible error tracking) ---
+# Uses the standard sentry-sdk; BUGSINK_DSN just points it at your BugSink
+# instance instead of Sentry's. Only initialized here in prod, not in
+# dev/test, to avoid reporting local noise. send_default_pii stays False
+# (the sentry-sdk default) - config.logging and apps/<app>/auth.py tag
+# events with request_id/user_id manually instead of relying on it.
+sentry_sdk.init(
+    dsn=config("BUGSINK_DSN"),
+    integrations=[
+        DjangoIntegration(),
+{% if use_redis %}
+        RqIntegration(),
+{% endif %}
+    ],
+)
 {% endif %}
 
 {% if email_provider == 'ses' %}

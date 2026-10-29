@@ -71,6 +71,9 @@ dependencies = [
 {% if use_allauth %}
     "django-allauth",
 {% endif %}
+{% if use_bugsink %}
+    "sentry-sdk",
+{% endif %}
 {% endif %}
 ]
 
