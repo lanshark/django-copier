@@ -33,7 +33,8 @@ def capturing_sentry():
     try:
         yield transport
     finally:
-        sentry_sdk.init()
+        sentry_sdk.get_client().close()
+        sentry_sdk.init(dsn="")
 
 
 def test_task_request_id_reaches_captured_event(capturing_sentry):
