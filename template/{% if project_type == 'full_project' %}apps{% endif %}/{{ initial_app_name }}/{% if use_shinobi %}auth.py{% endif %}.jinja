@@ -1,7 +1,7 @@
 from datetime import UTC, datetime, timedelta
 
 import jwt
-{% if use_bugsink %}
+{% if use_error_tracking %}
 import sentry_sdk
 {% endif %}
 from django.conf import settings
@@ -50,7 +50,7 @@ class JWTAuth(HttpBearer):
 
         request.user = user
         bind_contextvars(user_id=user.pk)
-{% if use_bugsink %}
+{% if use_error_tracking %}
         sentry_sdk.set_user({"id": user.pk})
 {% endif %}
         return user

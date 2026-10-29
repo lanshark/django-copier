@@ -164,13 +164,14 @@ use_log_shipping:
     default: false
     when: "{{ project_type == 'full_project' }}"
 
-use_bugsink:
+use_error_tracking:
     type: bool
     help: >-
-        Add BugSink error tracking (self-hosted, Sentry-protocol-compatible,
-        via the standard sentry-sdk)? Only initialized in prod, to avoid
-        reporting local dev noise. (No = unhandled exceptions are only
-        visible in logs)
+        Add error tracking via the standard sentry-sdk? Works against Sentry
+        itself or any Sentry-protocol-compatible self-hosted alternative
+        (e.g. BugSink, GlitchTip) - just a DSN, no code changes either way.
+        Only initialized in prod, to avoid reporting local dev noise. (No =
+        unhandled exceptions are only visible in logs)
     default: false
     when: "{{ project_type == 'full_project' }}"
 
