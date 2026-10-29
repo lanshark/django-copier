@@ -164,6 +164,17 @@ use_log_shipping:
     default: false
     when: "{{ project_type == 'full_project' }}"
 
+use_victorialogs:
+    type: bool
+    help: >-
+        Also generate docker-compose.victorialogs.yml, the centralized log
+        store itself? Only the one project standing up the shared log host
+        needs this — every other project just ships logs to it via
+        VICTORIALOGS_ENDPOINT, with use_log_shipping alone. (No = assume
+        VictoriaLogs already exists somewhere, managed outside this project)
+    default: false
+    when: "{{ use_log_shipping }}"
+
 use_error_tracking:
     type: bool
     help: >-

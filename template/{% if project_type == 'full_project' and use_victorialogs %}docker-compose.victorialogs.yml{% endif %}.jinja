@@ -1,0 +1,36 @@
+# Standalone - start independently of docker-compose.yml and
+# docker-compose.vector.yml. This is the centralized log store Vector
+# ships to (see docs/architecture.md) - typically run on one dedicated
+# "log host", not on every machine that also runs this project. Most
+# projects with use_log_shipping enabled will never start this file; only
+# whoever is standing up the shared log host does, once:
+#   docker compose -f docker-compose.victorialogs.yml up -d
+#
+# VictoriaLogs has no authentication of its own, so this binds to
+# 127.0.0.1 only - never expose it directly. If other hosts need to reach
+# it (the usual case for a centralized store), put a reverse proxy with
+# TLS and auth (basic auth or a bearer token on the ingest path) in front
+# of it - Caddy, for example, the same way docker-compose.caddy.yml fronts
+# this project's own web service.
+#
+# A distinct project name, same reasoning as the other standalone stacks:
+# so `docker compose up --remove-orphans` on an unrelated project can't
+# remove it.
+name: victorialogs
+
+services:
+    victorialogs:
+        image: victoriametrics/victoria-logs:v1.53.0 # check for newer releases
+        restart: unless-stopped
+        command:
+            - -storageDataPath=/vlogs
+            - -retentionPeriod=45d
+            - -retention.maxDiskSpaceUsageBytes=50GiB
+        volumes:
+            - victorialogs_data:/vlogs
+        ports:
+            # UI at http://localhost:9428/select/vmui
+            - "127.0.0.1:9428:9428"
+
+volumes:
+    victorialogs_data:
