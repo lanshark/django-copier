@@ -1,0 +1,79 @@
+"""Request-scoped context for structured logging.
+
+Binds a request ID to structlog's context for the life of a request, so
+one `request_id` value ties together every log line a single request
+produces - including, when passed along explicitly, lines logged by a
+background task it enqueues (see `apps/<app>/tasks.py`).
+"""
+
+import re
+import uuid
+from collections.abc import Callable
+from typing import TYPE_CHECKING
+
+from asgiref.sync import iscoroutinefunction, markcoroutinefunction
+from django.http import HttpRequest, HttpResponse
+from structlog.contextvars import bind_contextvars, clear_contextvars
+
+if TYPE_CHECKING:
+
+    class RequestWithId(HttpRequest):
+        """HttpRequest as seen after RequestContextMiddleware has run."""
+
+        request_id: str
+else:
+    RequestWithId = HttpRequest
+
+# A request-supplied X-Request-ID is only trusted when it looks like an id -
+# the header is client-controllable (e.g. set by a load balancer or proxy).
+_VALID_REQUEST_ID = re.compile(r"^[A-Za-z0-9._-]{8,64}$")
+
+
+def new_request_id(prefix: str = "") -> str:
+    """Generate a new opaque request/task identifier."""
+    return f"{prefix}{uuid.uuid4().hex}"
+
+
+class RequestContextMiddleware:
+    """Bind a request ID to structlog's context for the life of a request.
+
+    Honors an incoming `X-Request-ID` header (e.g. set by a reverse proxy)
+    when it looks valid, otherwise generates a new one, and echoes it back
+    on the response. Works under both WSGI (gunicorn) and ASGI (uvicorn).
+    """
+
+    sync_capable = True
+    async_capable = True
+
+    def __init__(self, get_response: Callable[[HttpRequest], HttpResponse]) -> None:
+        self.get_response = get_response
+        if iscoroutinefunction(get_response):
+            markcoroutinefunction(self)
+
+    def _bind_request_id(self, request: RequestWithId) -> str:
+        clear_contextvars()
+        incoming = request.META.get("HTTP_X_REQUEST_ID", "")
+        request_id = incoming if _VALID_REQUEST_ID.match(incoming) else new_request_id()
+        bind_contextvars(request_id=request_id)
+        request.request_id = request_id
+        return request_id
+
+    def __call__(self, request: RequestWithId) -> HttpResponse:
+        if iscoroutinefunction(self):
+            return self.__acall__(request)  # type: ignore[return-value]
+        request_id = self._bind_request_id(request)
+        try:
+            response = self.get_response(request)
+            response["X-Request-ID"] = request_id
+            return response
+        finally:
+            clear_contextvars()
+
+    async def __acall__(self, request: RequestWithId) -> HttpResponse:
+        request_id = self._bind_request_id(request)
+        try:
+            response = await self.get_response(request)  # type: ignore[misc]
+            response["X-Request-ID"] = request_id
+            return response
+        finally:
+            clear_contextvars()

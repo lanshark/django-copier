@@ -4,6 +4,7 @@ import jwt
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from ninja.security import HttpBearer
+from structlog.contextvars import bind_contextvars
 
 User = get_user_model()
 
@@ -45,4 +46,5 @@ class JWTAuth(HttpBearer):
             return None
 
         request.user = user
+        bind_contextvars(user_id=user.pk)
         return user

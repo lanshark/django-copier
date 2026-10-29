@@ -42,6 +42,13 @@ capture the reasoning in a feature-scoped ADR.
   through `django-anymail`.
 - Media file storage:
   {{ {"local": "local filesystem (Django's built-in `FileSystemStorage`, no extra infra needed)", "s3": "Amazon S3 via `django-storages`", "azure": "Azure Blob Storage via `django-storages`"}[storage_backend] }}.
+- Structured JSON logging via `structlog` (stdout only — no file handlers in
+  the container, so a log collector reads it from there). A `request_id` is
+  bound to every log line for the life of a request
+  (`config.logging.RequestContextMiddleware`, honors an incoming
+  `X-Request-ID` header), and can be passed along explicitly to a
+  `django-tasks` job so its logs correlate back to the request that enqueued
+  it (see the example task in `apps/{{ initial_app_name }}/tasks.py`).
 {% if use_vite %}
 - A Pico.css + Vite frontend build pipeline (django-vite) for the home page.
 {% endif %}
@@ -97,6 +104,7 @@ capture the reasoning in a feature-scoped ADR.
 {% endif %}
 ├── config/
 │   ├── settings/            # base / dev / prod / test
+│   ├── logging.py           # structlog config + request-id middleware
 │   ├── urls.py
 │   ├── wsgi.py
 │   └── asgi.py
