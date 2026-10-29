@@ -1,5 +1,8 @@
 import logging
 
+{% if use_error_tracking %}
+import sentry_sdk
+{% endif %}
 import structlog
 from django_tasks import task
 
@@ -15,7 +18,13 @@ def example_background_task(user_id: int, request_id: str = "") -> None:
     ties this task's logs back to the request that enqueued it. django-tasks
     workers run in a separate process, so structlog's request-scoped context
     doesn't cross over on its own - it has to be passed in explicitly.
+{% if use_error_tracking %}
+    The same applies to the error-tracking scope's tags, bound below.
+{% endif %}
     """
     if request_id:
         structlog.contextvars.bind_contextvars(request_id=request_id)
+{% if use_error_tracking %}
+        sentry_sdk.set_tag("request_id", request_id)
+{% endif %}
     logger.info("Running example_background_task for user_id=%s", user_id)

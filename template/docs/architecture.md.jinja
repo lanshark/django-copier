@@ -74,6 +74,18 @@ capture the reasoning in a feature-scoped ADR.
   generated from this template on it — Vector reads the whole host's Docker
   socket, so one instance per project would ship the same logs redundantly.
 {% endif %}
+{% if use_error_tracking %}
+- Error tracking via the standard `sentry-sdk`, using `DjangoIntegration`{% if use_redis %}
+  and `RqIntegration` (so RQ task failures are captured too){% endif %}.
+  `ERROR_TRACKING_DSN` works against Sentry itself or any
+  Sentry-protocol-compatible self-hosted alternative (e.g. BugSink,
+  GlitchTip) — just a DSN, no code changes either way. Only initialized in
+  `prod.py`, not dev/test, to avoid reporting local noise. Events are
+  tagged with the same `request_id` the app's structlog middleware uses and
+  the signed-in user's id (`config/logging.py`,
+  `apps/{{ initial_app_name }}/auth.py`), so an error-tracking event and its
+  correlated log lines are both findable from the same id.
+{% endif %}
 {% if use_vite %}
 - A Pico.css + Vite frontend build pipeline (django-vite) for the home page.
 {% endif %}

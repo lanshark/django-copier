@@ -1,0 +1,69 @@
+import pytest
+import sentry_sdk
+from django.http import HttpResponse
+from sentry_sdk.transport import Transport
+
+from config.logging import RequestContextMiddleware
+
+from ..tasks import example_background_task
+
+
+class _CapturingTransport(Transport):
+    """Records every event sentry-sdk would have sent, instead of sending it."""
+
+    def __init__(self) -> None:
+        super().__init__({"dsn": "https://test@example.com/1"})
+        self.events = []
+
+    def capture_envelope(self, envelope):
+        event = envelope.get_event()
+        if event is not None:
+            self.events.append(event)
+
+
+@pytest.fixture
+def capturing_sentry():
+    """Initialize sentry-sdk with a transport that records events instead of
+    sending them, then restore the uninitialized state `config.settings.test`
+    normally leaves it in (it never calls `sentry_sdk.init()` - only `prod.py`
+    does), so this doesn't leak into other tests.
+    """
+    transport = _CapturingTransport()
+    sentry_sdk.init(dsn="https://test@example.com/1", transport=transport)
+    try:
+        yield transport
+    finally:
+        sentry_sdk.get_client().close()
+        sentry_sdk.init(dsn="")
+
+
+def test_task_request_id_reaches_captured_event(capturing_sentry):
+    """The RQ task's request_id ends up tagged on a captured event, not just
+    bound to structlog's context. Caught by code review: a worker runs
+    example_background_task.call() directly, with no web request or
+    middleware in the loop to tag anything on its own - the task has to do
+    it itself.
+    """
+    example_background_task.call(user_id=1, request_id="test-request-id-123")
+    sentry_sdk.capture_message("task ran")
+    sentry_sdk.flush(timeout=2)
+
+    assert capturing_sentry.events
+    assert capturing_sentry.events[-1]["tags"]["request_id"] == "test-request-id-123"
+
+
+def test_middleware_request_id_reaches_captured_event(capturing_sentry, rf):
+    """RequestContextMiddleware's sentry_sdk.set_tag() call really lands on a
+    captured event, not just a no-op that happens not to crash (which is all
+    the request-id tests in test_views.py prove, since they run without
+    sentry_sdk ever being initialized).
+    """
+    middleware = RequestContextMiddleware(get_response=lambda request: HttpResponse())
+    request = rf.get("/")
+
+    middleware(request)
+    sentry_sdk.capture_message("request handled")
+    sentry_sdk.flush(timeout=2)
+
+    assert capturing_sentry.events
+    assert capturing_sentry.events[-1]["tags"]["request_id"] == request.request_id

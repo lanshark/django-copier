@@ -1,4 +1,13 @@
+{% if use_error_tracking %}
+import sentry_sdk
+{% endif %}
 from decouple import config
+{% if use_error_tracking %}
+from sentry_sdk.integrations.django import DjangoIntegration
+{% if use_redis %}
+from sentry_sdk.integrations.rq import RqIntegration
+{% endif %}
+{% endif %}
 
 from .base import *  # noqa: F401,F403
 
@@ -19,6 +28,27 @@ SECURE_HSTS_PRELOAD = True
 # SECURE_SSL_REDIRECT above would redirect-loop forever.
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 CSRF_TRUSTED_ORIGINS = ["https://{{ domain_name }}"]
+{% endif %}
+{% if use_error_tracking %}
+
+# --- Error tracking (standard sentry-sdk) ---
+# ERROR_TRACKING_DSN works against Sentry itself or any Sentry-protocol-
+# compatible self-hosted alternative (e.g. BugSink, GlitchTip) - just a DSN,
+# no code changes either way. Only initialized here in prod, not in
+# dev/test, to avoid reporting local noise. send_default_pii stays False
+# (the sentry-sdk default, and what Sentry itself recommends; self-hosted
+# alternatives may suggest True instead since the data stays on your own
+# instance) - config.logging and apps/<app>/auth.py tag events with
+# request_id/user_id manually instead of relying on it.
+sentry_sdk.init(
+    dsn=config("ERROR_TRACKING_DSN"),
+    integrations=[
+        DjangoIntegration(),
+{% if use_redis %}
+        RqIntegration(),
+{% endif %}
+    ],
+)
 {% endif %}
 
 {% if email_provider == 'ses' %}

@@ -164,6 +164,17 @@ use_log_shipping:
     default: false
     when: "{{ project_type == 'full_project' }}"
 
+use_error_tracking:
+    type: bool
+    help: >-
+        Add error tracking via the standard sentry-sdk? Works against Sentry
+        itself or any Sentry-protocol-compatible self-hosted alternative
+        (e.g. BugSink, GlitchTip) - just a DSN, no code changes either way.
+        Only initialized in prod, to avoid reporting local dev noise. (No =
+        unhandled exceptions are only visible in logs)
+    default: false
+    when: "{{ project_type == 'full_project' }}"
+
 storage_backend:
     type: str
     help: >-
