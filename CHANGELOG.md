@@ -4,6 +4,8 @@ All notable changes to this project are documented in this file.
 
 ## Next Release
 
+- Document creating the external `caddy_net` before the Quickstart's first
+  `docker compose up` when Caddy is enabled.
 - Add a `use_error_tracking` question (full_project only, default `false`)
   wiring error tracking via the standard `sentry-sdk`. Step 4 of 4 — last of
   the observability/ops steps that started with #63's structured logging,

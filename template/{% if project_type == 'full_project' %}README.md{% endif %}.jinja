@@ -8,6 +8,8 @@ Django{% if use_shinobi %} + django-shinobi{% endif %} starter: Python {{ python
 ```bash
 cp .env.example .env
 cp docker-compose.override.yml.example docker-compose.override.yml
+{% if use_caddy %}docker network create caddy_net   # once per host
+{% endif %}
 docker compose up --build
 ```
 
@@ -22,7 +24,6 @@ In production, Caddy fronts `{{ domain_name }}` and handles HTTPS automatically
 `docker compose up` above:
 
 ```bash
-docker network create caddy_net   # once per host
 docker compose -f docker-compose.caddy.yml up -d
 ```
 
