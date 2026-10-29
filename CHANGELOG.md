@@ -4,6 +4,8 @@ All notable changes to this project are documented in this file.
 
 ## Next Release
 
+- Document how to remove the legacy Caddy proxy and migrate its persistent
+  volumes when upgrading to the standalone Caddy Compose stack.
 - Give the standalone Caddy Compose stack its own project name so application
   `--remove-orphans` cleanup cannot stop the shared proxy.
 - Document creating the external `caddy_net` before the Quickstart's first
