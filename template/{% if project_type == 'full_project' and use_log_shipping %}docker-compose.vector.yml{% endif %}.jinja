@@ -5,6 +5,12 @@
 # host's Docker socket directly, not over any network, so there's no
 # container to reach by name.
 #
+# Also runs under Podman, verified directly: Vector's docker_logs source
+# works unchanged against Podman's Docker-compatible API socket. The path
+# differs, though - Podman's rootless socket isn't at /var/run/docker.sock
+# unless you've aliased it there, so DOCKER_SOCK (below) overrides where
+# the host side of this mount points.
+#
 # A distinct project name, same as the standalone Caddy stack: without it,
 # this is just an orphan from docker-compose.yml's point of view once the
 # vector service definition isn't there (it never was, in this file's
@@ -18,7 +24,7 @@ services:
         image: timberio/vector:0.60.0-alpine
         restart: unless-stopped
         volumes:
-            - /var/run/docker.sock:/var/run/docker.sock:ro
+            - ${DOCKER_SOCK:-/var/run/docker.sock}:/var/run/docker.sock:ro
             - ./vector.yaml:/etc/vector/vector.yaml:ro
             - vector_data:/var/lib/vector
         environment:

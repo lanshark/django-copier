@@ -4,6 +4,24 @@ All notable changes to this project are documented in this file.
 
 ## Next Release
 
+- Add a `DOCKER_SOCK` env var override for `docker-compose.vector.yml`'s
+  socket mount, and document that Vector runs under Podman. Verified
+  directly, not just inferred: started Podman's rootless API socket
+  locally, mounted it into the `timberio/vector` image at the path Vector
+  expects, and confirmed its `docker_logs` source discovered and streamed
+  logs from a real running container. Podman's rootless socket isn't at
+  `/var/run/docker.sock` by default, though (usually
+  `/run/user/<uid>/podman/podman.sock`), so `${DOCKER_SOCK:-/var/run/docker.sock}`
+  — Compose's own variable substitution, read from `.env`, resolved before
+  any container starts — lets the host side of that mount be overridden;
+  `DOCKER_SOCK` is left unset (defaulting to the Docker path) and is never
+  passed into the container, since only the host-side mount target needs
+  it. Re-verified end-to-end with the override set: ran the actual
+  rendered `docker-compose.vector.yml` via `podman compose up` against the
+  real Podman socket and confirmed Vector's logs showed the exact
+  `container_id` of a test container, not just that `docker compose
+  config` resolves the substitution correctly
+
 - Move Vector into its own standalone `docker-compose.vector.yml`, started
   independently of `docker-compose.yml` (`docker compose -f
   docker-compose.vector.yml up -d`), rather than as a `vector` service
