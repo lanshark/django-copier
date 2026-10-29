@@ -9,6 +9,25 @@ pytestmark = pytest.mark.django_db
 def test_index_renders(client):
     response = client.get("/")
     assert response.status_code == 200
+
+
+def test_request_id_header_present(client):
+    """RequestContextMiddleware stamps a request ID on every response."""
+    response = client.get("/")
+    assert "X-Request-ID" in response.headers
+    assert response.headers["X-Request-ID"]
+
+
+def test_request_id_header_honored(client):
+    """A valid incoming X-Request-ID is echoed back rather than replaced."""
+    response = client.get("/", headers={"X-Request-ID": "caller-supplied-id-123"})
+    assert response.headers["X-Request-ID"] == "caller-supplied-id-123"
+
+
+def test_invalid_request_id_header_replaced(client):
+    """An implausible incoming X-Request-ID (too short) is not trusted."""
+    response = client.get("/", headers={"X-Request-ID": "short"})
+    assert response.headers["X-Request-ID"] != "short"
 {% if use_allauth %}
 
 

@@ -36,5 +36,5 @@ def me(request):
 @api.post("/example-task", auth=JWTAuth())
 def trigger_example_task(request):
     """Demonstrates enqueuing a django-tasks job onto the RQ backend."""
-    result = example_background_task.enqueue(request.user.pk)
+    result = example_background_task.enqueue(request.user.pk, request.request_id)
     return {"task_id": str(result.id)}

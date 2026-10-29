@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import dj_database_url
+import structlog
 from decouple import Csv, config
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
@@ -43,6 +44,7 @@ AUTHENTICATION_BACKENDS = [
 {% endif %}
 
 MIDDLEWARE = [
+    "config.logging.RequestContextMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -55,6 +57,57 @@ MIDDLEWARE = [
     "allauth.account.middleware.AccountMiddleware",
 {% endif %}
 ]
+
+# --- Structured logging (structlog) ---
+# JSON lines on stdout: Django, gunicorn, and the RQ worker all go through
+# this formatter, since they log via stdlib logging under the hood. No file
+# handlers here on purpose — a container's stdout is what a log collector
+# (e.g. Vector) reads, and file handlers inside the container just complicate
+# that.
+_shared_log_processors = [
+    structlog.contextvars.merge_contextvars,
+    structlog.stdlib.add_log_level,
+    structlog.stdlib.add_logger_name,
+    structlog.processors.TimeStamper(fmt="iso", utc=True, key="time"),
+]
+
+structlog.configure(
+    processors=[
+        *_shared_log_processors,
+        structlog.processors.StackInfoRenderer(),
+        structlog.stdlib.ProcessorFormatter.wrap_for_formatter,
+    ],
+    logger_factory=structlog.stdlib.LoggerFactory(),
+    wrapper_class=structlog.stdlib.BoundLogger,
+    cache_logger_on_first_use=True,
+)
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "json": {
+            "()": structlog.stdlib.ProcessorFormatter,
+            "foreign_pre_chain": _shared_log_processors,
+            "processors": [
+                structlog.stdlib.ProcessorFormatter.remove_processors_meta,
+                structlog.processors.format_exc_info,
+                structlog.processors.EventRenamer("message"),
+                structlog.processors.JSONRenderer(),
+            ],
+        },
+    },
+    "handlers": {
+        "stdout": {"class": "logging.StreamHandler", "formatter": "json"},
+    },
+    "root": {
+        "handlers": ["stdout"],
+        "level": config("LOG_LEVEL", default="INFO"),
+    },
+    "loggers": {
+        "django.db.backends": {"level": "WARNING"},
+    },
+}
 
 ROOT_URLCONF = "config.urls"
 
