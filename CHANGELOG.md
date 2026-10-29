@@ -4,6 +4,8 @@ All notable changes to this project are documented in this file.
 
 ## Next Release
 
+- Give the standalone Caddy Compose stack its own project name so application
+  `--remove-orphans` cleanup cannot stop the shared proxy.
 - Document creating the external `caddy_net` before the Quickstart's first
   `docker compose up` when Caddy is enabled.
 - Add a `use_error_tracking` question (full_project only, default `false`)
