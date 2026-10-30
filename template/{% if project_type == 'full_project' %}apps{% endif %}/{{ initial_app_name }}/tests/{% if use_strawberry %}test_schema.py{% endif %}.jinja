@@ -1,0 +1,89 @@
+{% set identifier_value = 'scott@example.com' if user_identifier == 'email' else 'scott' %}
+from typing import cast
+
+import pytest
+from model_bakery import baker
+from strawberry.django.test import GraphQLTestClient
+from strawberry.test import Response
+
+pytestmark = pytest.mark.django_db
+
+
+def _query(client, query, **kwargs) -> Response:
+    # GraphQLTestClient.query() is typed to return Coroutine[...] | Response
+    # to also cover async test clients - Django's sync test client never
+    # actually returns a coroutine, so this cast just tells pyright what's
+    # already true at runtime.
+    return cast(Response, GraphQLTestClient(client).query(query, **kwargs))
+
+
+def test_health(client):
+    response = _query(client, "{ health { status } }")
+    assert response.data == {"health": {"status": "ok"}}
+
+
+def test_token_and_me(client):
+    user = baker.make("accounts.User", {{ user_identifier }}="{{ identifier_value }}")
+    user.set_password("s3cret-pw")
+    user.save()
+
+    response = _query(
+        client,
+        "mutation($identifier: String!, $password: String!) {"
+        " obtainToken({{ user_identifier }}: $identifier, password: $password) { access } }",
+        variables={"identifier": "{{ identifier_value }}", "password": "s3cret-pw"},
+    )
+    assert response.data is not None
+    access = response.data["obtainToken"]["access"]
+
+    me_response = _query(
+        client,
+        "{ me { {{ user_identifier }} } }",
+        headers={"Authorization": f"Bearer {access}"},
+    )
+    assert me_response.data == {"me": {"{{ user_identifier }}": "{{ identifier_value }}"}}
+
+
+def test_invalid_credentials_rejected(client):
+    response = _query(
+        client,
+        "mutation($identifier: String!, $password: String!) {"
+        " obtainToken({{ user_identifier }}: $identifier, password: $password) { access } }",
+        variables={"identifier": "nobody@example.com", "password": "wrong"},
+        assert_no_errors=False,
+    )
+    assert response.data is None
+    assert response.errors is not None
+    assert response.errors[0].get("message") == "Invalid credentials"
+
+
+def test_me_requires_authentication(client):
+    response = _query(client, "{ me { {{ user_identifier }} } }", assert_no_errors=False)
+    assert response.data is None
+    assert response.errors is not None
+    assert response.errors[0].get("message") == "Authentication required"
+{% if use_shinobi %}
+
+
+def test_rest_minted_token_works_against_graphql(client):
+    """JWT auth is shared between django-shinobi and Strawberry - a token
+    minted via the REST endpoint works against GraphQL too.
+    """
+    user = baker.make("accounts.User", {{ user_identifier }}="{{ identifier_value }}")
+    user.set_password("s3cret-pw")
+    user.save()
+
+    rest_resp = client.post(
+        "/api/v1/auth/token",
+        data={"{{ user_identifier }}": "{{ identifier_value }}", "password": "s3cret-pw"},
+        content_type="application/json",
+    )
+    access = rest_resp.json()["access"]
+
+    response = _query(
+        client,
+        "{ me { {{ user_identifier }} } }",
+        headers={"Authorization": f"Bearer {access}"},
+    )
+    assert response.data == {"me": {"{{ user_identifier }}": "{{ identifier_value }}"}}
+{% endif %}

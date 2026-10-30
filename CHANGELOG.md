@@ -573,6 +573,29 @@ All notable changes to this project are documented in this file.
   factory, not an instance" requirement already applied to `MaskErrors`.
   Re-verified `manage.py check`, `ruff`, `ruff format`, `pyright`, and the
   full `pytest` suite all pass clean on every variant after these changes.
+- Add `apps/<app>/tests/test_schema.py` (new, unconditional on
+  `use_strawberry`), CI matrix coverage, and docs (step 4 of Strawberry
+  GraphQL support — the last of the originally planned steps): health
+  query, token mutation + authenticated `me` query, invalid-credentials
+  rejection, unauthenticated-`me` rejection, and — only when `use_shinobi`
+  is also on — a test proving a REST-minted token works against GraphQL
+  (the "shared auth" design goal, previously only checked by hand). Uses
+  `strawberry.django.test.GraphQLTestClient`; added a small `_query()`
+  helper that `cast()`s its return to `Response` (not `Coroutine[...] |
+  Response`), since `pyright` can't know Django's sync test client never
+  actually returns a coroutine. Added CI matrix entries `with-strawberry`
+  (both frameworks on, exercising the shared-auth test) and
+  `with-strawberry-no-shinobi` (Strawberry alone). Updated
+  `docs/architecture.md` and `README.md` to describe the GraphQL endpoint
+  across all four `use_shinobi`/`use_strawberry` combinations (neither,
+  either alone, or both) and to list `schema.py`/`auth.py` correctly in
+  the repository-layout tree (`auth.py` is generated whenever either
+  framework is on, not just `use_shinobi` — the tree diagram had drifted
+  from that since an earlier step).
+  Verified by rendering all four combinations: `manage.py check`, `ruff`,
+  `ruff format`, `pyright`, and the full `pytest` suite all pass clean
+  (including the new tests actually passing, not just importing cleanly)
+  on every variant.
 
 ## 2026-09-21: Release-2026.09.21.01
 

@@ -25,13 +25,19 @@ capture the reasoning in a feature-scoped ADR.
 - A custom user model (`apps/accounts`), identified by
   {{ 'email address' if user_identifier == 'email' else 'username' }} (`AUTH_USER_MODEL`).
 - A home page at `apps/{{ initial_app_name }}/` (view, URL, `templates/`).
-{% if use_shinobi %}
+{% if use_shinobi and use_strawberry %}
+- A django-shinobi (Django Ninja) REST API layer and a Strawberry GraphQL
+  API (`/graphql/`), both under `apps/{{ initial_app_name }}/` and sharing
+  the same JWT auth — a token minted via one works against the other.
+{% elif use_shinobi %}
 - A django-shinobi (Django Ninja) API layer with JWT auth under `apps/{{ initial_app_name }}/`.
+{% elif use_strawberry %}
+- A Strawberry GraphQL API (`/graphql/`) with JWT auth under `apps/{{ initial_app_name }}/`.
 {% else %}
 - The Django admin site (no HTTP API layer in this project).
 {% endif %}
 {% if use_allauth %}
-- Session-based login/signup/logout via django-allauth (`/accounts/...`){% if use_shinobi %}, entirely
+- Session-based login/signup/logout via django-allauth (`/accounts/...`){% if use_shinobi or use_strawberry %}, entirely
   separate from the JWT API auth above — allauth handles browser sessions, the API
   issues its own tokens{% endif %}.
 {% endif %}
@@ -217,8 +223,13 @@ capture the reasoning in a feature-scoped ADR.
 │       ├── tasks.py
 {% if use_shinobi %}
 │       ├── api.py           # django-shinobi routes
-│       ├── auth.py          # JWT bearer auth
 │       ├── schemas.py
+{% endif %}
+{% if use_strawberry %}
+│       ├── schema.py        # Strawberry GraphQL types/queries/mutations
+{% endif %}
+{% if use_shinobi or use_strawberry %}
+│       ├── auth.py          # JWT bearer auth
 {% endif %}
 │       ├── views.py         # home page view
 │       ├── urls.py

@@ -1,7 +1,7 @@
 # {{ project_name }}
 
-Django{% if use_shinobi %} + django-shinobi{% endif %} starter: Python {{ python_version }}, Django {{ django_version }}{% if django_version == '5.2' %} LTS{% endif %}, Postgres {{ postgres_version }},
-{% if use_shinobi %}JWT auth, {% endif %}django-tasks{% if use_redis %} on RQ/Redis{% else %} (synchronous backend){% endif %}, PyTest, uv, ruff, djlint, pyright, Docker.
+Django{% if use_shinobi %} + django-shinobi{% endif %}{% if use_strawberry %} + Strawberry GraphQL{% endif %} starter: Python {{ python_version }}, Django {{ django_version }}{% if django_version == '5.2' %} LTS{% endif %}, Postgres {{ postgres_version }},
+{% if use_shinobi or use_strawberry %}JWT auth, {% endif %}django-tasks{% if use_redis %} on RQ/Redis{% else %} (synchronous backend){% endif %}, PyTest, uv, ruff, djlint, pyright, Docker.
 
 ## Quickstart
 
@@ -13,8 +13,15 @@ cp docker-compose.override.yml.example docker-compose.override.yml
 docker compose up --build
 ```
 
-{% if use_shinobi %}
+{% if use_shinobi and use_strawberry %}
+The REST API is live at `http://localhost:8000/api/v1/health`, and the
+GraphQL API (with a GraphiQL explorer in dev) at
+`http://localhost:8000/graphql/`. The same JWT works against either.
+{% elif use_shinobi %}
 The API is live at `http://localhost:8000/api/v1/health`.
+{% elif use_strawberry %}
+The GraphQL API (with a GraphiQL explorer in dev) is live at
+`http://localhost:8000/graphql/`.
 {% else %}
 The admin site is at `http://localhost:8000/admin/`.
 {% endif %}
