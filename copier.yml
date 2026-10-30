@@ -151,6 +151,15 @@ use_shinobi:
         example health/token/me API? (No = no API layer, admin site only)
     default: true
 
+use_strawberry:
+    type: bool
+    help: >-
+        Add a Strawberry GraphQL API at /graphql/, in addition to (or
+        instead of) the django-shinobi REST API? JWT auth is shared between
+        them - a token works against either. (No = no GraphQL endpoint)
+    default: false
+    when: "{{ project_type == 'full_project' }}"
+
 use_caddy:
     type: bool
     help: >-
