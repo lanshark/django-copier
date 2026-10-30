@@ -388,6 +388,35 @@ All notable changes to this project are documented in this file.
   (confirming it's unaffected, since this feature is full_project-only),
   and confirming each `pyproject.toml` parses as valid TOML with the
   expected dependency set
+- Refactor `apps/<app>/auth.py` to share JWT verification between
+  django-shinobi and Strawberry (step 2 of Strawberry GraphQL support):
+  extracted `_authenticate_bearer_token(request, token)` out of `JWTAuth`
+  into its own function, and added `IsAuthenticated(BasePermission)` for
+  Strawberry (attach with `@strawberry.field(permission_classes=
+  [IsAuthenticated])`) that calls the same helper — so there's exactly one
+  place that defines what a valid access token looks like, rather than two
+  implementations that could drift apart once both frameworks are
+  installable together. Renamed the file's own `{% if use_shinobi %}`
+  filename guard to `{% if use_shinobi or use_strawberry %}` so it still
+  generates when only `use_strawberry` is on.
+  Also fixed three settings/infra gaps found while verifying a
+  `use_strawberry`-only render actually boots: `config/settings/base.py`'s
+  `JWT_SIGNING_KEY`/`JWT_ACCESS_TOKEN_LIFETIME_MIN`/
+  `JWT_REFRESH_TOKEN_LIFETIME_DAYS` settings, `.env.example`'s JWT block,
+  and the generated project's own `ci.yml`'s `JWT_SIGNING_KEY` env var were
+  all still gated on `use_shinobi` alone — meaning `_make_token()` would
+  raise `AttributeError` (no default, read via `config()` with no
+  fallback) on a strawberry-only project before this fix. Reproduced the
+  crash locally, then fixed all three gates to `use_shinobi or
+  use_strawberry`.
+  Verified by rendering all four `use_shinobi`/`use_strawberry`
+  combinations plus `project_type=reusable_app` (confirmed unaffected):
+  `manage.py check`, `ruff`, `ruff format`, `pyright`, and the full
+  `pytest` suite all pass clean on every variant, and directly exercised
+  `_authenticate_bearer_token`/`IsAuthenticated` against a real minted JWT
+  (via `make_access_token`) and a real Postgres-backed user — valid token
+  authenticates and sets `request.user`, a tampered token and a missing
+  `Authorization` header are both correctly rejected
 
 ## 2026-09-21: Release-2026.09.21.01
 

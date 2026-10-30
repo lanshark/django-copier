@@ -254,16 +254,16 @@ TASKS = {
     }
 }
 {% endif %}
-{% if use_shinobi %}
+{% if use_shinobi or use_strawberry %}
 
-# --- JWT (used by django-shinobi auth) ---
+# --- JWT (used by {{ 'django-shinobi and Strawberry' if use_shinobi and use_strawberry else 'django-shinobi' if use_shinobi else 'Strawberry' }} auth) ---
 JWT_SIGNING_KEY = config("JWT_SIGNING_KEY")
 JWT_ACCESS_TOKEN_LIFETIME_MIN = config("JWT_ACCESS_TOKEN_LIFETIME_MIN", default=15, cast=int)
 JWT_REFRESH_TOKEN_LIFETIME_DAYS = config("JWT_REFRESH_TOKEN_LIFETIME_DAYS", default=7, cast=int)
 {% endif %}
 {% if use_allauth %}
 
-# --- django-allauth (session-based login{% if use_shinobi %}, separate from the JWT API auth above{% endif %}) ---
+# --- django-allauth (session-based login{% if use_shinobi or use_strawberry %}, separate from the JWT API auth above{% endif %}) ---
 LOGIN_REDIRECT_URL = "/"
 {% if user_identifier == 'email' %}
 # No username field on the custom user model (see apps/accounts) — tell allauth so

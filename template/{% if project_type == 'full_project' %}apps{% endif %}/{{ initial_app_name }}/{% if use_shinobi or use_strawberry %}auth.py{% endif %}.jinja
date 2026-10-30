@@ -1,0 +1,104 @@
+from datetime import UTC, datetime, timedelta
+
+import jwt
+{% if use_error_tracking %}
+import sentry_sdk
+{% endif %}
+from django.conf import settings
+from django.contrib.auth import get_user_model
+{% if use_shinobi %}
+from ninja.security import HttpBearer
+{% endif %}
+{% if use_strawberry %}
+from strawberry.permission import BasePermission
+{% endif %}
+from structlog.contextvars import bind_contextvars
+
+User = get_user_model()
+
+
+def _make_token(user, lifetime: timedelta, token_type: str) -> str:
+    now = datetime.now(tz=UTC)
+    payload = {
+        "sub": str(user.pk),
+        "type": token_type,
+        "iat": now,
+        "exp": now + lifetime,
+    }
+    return jwt.encode(payload, settings.JWT_SIGNING_KEY, algorithm="HS256")
+
+
+def make_access_token(user) -> str:
+    return _make_token(user, timedelta(minutes=settings.JWT_ACCESS_TOKEN_LIFETIME_MIN), "access")
+
+
+def make_refresh_token(user) -> str:
+    return _make_token(user, timedelta(days=settings.JWT_REFRESH_TOKEN_LIFETIME_DAYS), "refresh")
+
+
+def _authenticate_bearer_token(request, token: str):
+    """Decode a JWT access token and attach the resulting user to `request`.
+
+{% if use_shinobi and use_strawberry %}
+    Shared by both `JWTAuth` and `IsAuthenticated` below, so there's exactly
+    one place that defines what a valid access token looks like.
+{% elif use_shinobi %}
+    Used by `JWTAuth` below.
+{% else %}
+    Used by `IsAuthenticated` below.
+{% endif %}
+    """
+    try:
+        payload = jwt.decode(token, settings.JWT_SIGNING_KEY, algorithms=["HS256"])
+    except jwt.PyJWTError:
+        return None
+
+    if payload.get("type") != "access":
+        return None
+
+    try:
+        user = User.objects.get(pk=payload["sub"])
+    except User.DoesNotExist:
+        return None
+
+    request.user = user
+    bind_contextvars(user_id=user.pk)
+{% if use_error_tracking %}
+    sentry_sdk.set_user({"id": user.pk})
+{% endif %}
+    return user
+{% if use_shinobi %}
+
+
+class JWTAuth(HttpBearer):
+    """Bearer-token auth for django-shinobi routers. Attach with `auth=JWTAuth()`."""
+
+    def authenticate(self, request, token: str):
+        return _authenticate_bearer_token(request, token)
+{% endif %}
+{% if use_strawberry %}
+
+
+class IsAuthenticated(BasePermission):
+    """Bearer-token auth for Strawberry fields/mutations.
+
+    Attach with `@strawberry.field(permission_classes=[IsAuthenticated])`.
+{% if use_shinobi %}
+    Sets `request.user` on success, same as `JWTAuth` above, so resolvers
+    read it the same way: `info.context.request.user`.
+{% else %}
+    Sets `request.user` on success, so resolvers can read it via
+    `info.context.request.user`.
+{% endif %}
+    """
+
+    message = "Authentication required"
+
+    def has_permission(self, source, info, **kwargs) -> bool:
+        request = info.context.request
+        auth_header = request.headers.get("Authorization", "")
+        if not auth_header.startswith("Bearer "):
+            return False
+        token = auth_header.removeprefix("Bearer ")
+        return _authenticate_bearer_token(request, token) is not None
+{% endif %}
