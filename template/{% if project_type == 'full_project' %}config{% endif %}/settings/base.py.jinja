@@ -17,9 +17,13 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+{% if task_backend == 'huey' %}
+    "django_huey",
+{% else %}
     "django_tasks",
 {% if use_redis %}
     "django_rq",  # provides the `rqworker` management command used by django-tasks-rq
+{% endif %}
 {% endif %}
 {% if use_shinobi %}
     "ninja",  # django-shinobi
@@ -199,6 +203,25 @@ DJANGO_VITE = {
 {% endif %}
 
 {% if use_redis %}
+{% if task_backend == 'huey' %}
+# --- django-huey (Redis-backed, with built-in periodic/cron tasks) ---
+DJANGO_HUEY = {
+    "default": "default",
+    "queues": {
+        "default": {
+            "huey_class": "huey.RedisHuey",
+            "connection": {
+                "url": config("REDIS_URL", default="redis://redis:6379/0"),
+            },
+            # django-huey otherwise defaults "immediate" to settings.DEBUG,
+            # which would make dev silently skip Redis and run tasks
+            # in-process. Keep dev/test/prod behavior consistent: always
+            # queue through Redis.
+            "immediate": False,
+        },
+    },
+}
+{% else %}
 # --- django-tasks (RQ backend, via django-tasks-rq) ---
 TASKS = {
     "default": {
@@ -219,6 +242,7 @@ RQ_QUEUES = {
 RQ = {
     "JOB_CLASS": "django_tasks_rq.backend.Job",
 }
+{% endif %}
 {% else %}
 # No Redis selected for this project: tasks run synchronously, in-process.
 # This is fine for simple apps/prototypes, but blocks the request while the task
