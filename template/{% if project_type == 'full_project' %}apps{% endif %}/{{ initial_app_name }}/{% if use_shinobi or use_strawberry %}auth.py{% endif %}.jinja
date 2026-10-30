@@ -57,7 +57,9 @@ def _authenticate_bearer_token(request, token: str):
         return None
 
     try:
-        user = User.objects.get(pk=payload["sub"])
+        # is_active=True so disabling an account revokes access immediately,
+        # rather than leaving an already-issued, still-unexpired token valid.
+        user = User.objects.get(pk=payload["sub"], is_active=True)
     except User.DoesNotExist:
         return None
 

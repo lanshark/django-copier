@@ -511,6 +511,68 @@ All notable changes to this project are documented in this file.
   error`/`MaskErrors.anonymise_error` pipeline correctly passing through
   "Invalid credentials" while replacing a simulated `ValueError` with
   "Unexpected error.")
+- Fix four more issues in `schema.py`/`auth.py` found by a second round of
+  GitHub Copilot review on the step-3 PR, after the fixes above:
+  - **(Medium) Disabled accounts kept access until token expiry.**
+    `_authenticate_bearer_token` (shared by `JWTAuth` and `IsAuthenticated`)
+    looked up the user by PK alone, never checking `is_active` — so an
+    access token minted before an account was disabled kept working, on
+    both the REST and GraphQL endpoints, until it naturally expired.
+    Fixed with `User.objects.get(pk=..., is_active=True)` in the one
+    shared helper, covering both auth paths at once. Verified directly:
+    deactivated a user mid-test with a still-valid, unexpired token in
+    hand — the next request now correctly gets "Authentication required"
+    instead of succeeding.
+  - **(High) Logging still wasn't fully safe, and was noisy.** The
+    previous fix's `logger.error(error.message, ...)` isn't actually safe
+    either — GraphQL's own input-coercion errors can echo the rejected
+    value back in `.message` itself (confirmed: sending `password` as a
+    non-string value produces `"Variable '$password' has invalid value:
+    String cannot represent a non string value: ..."`, with the value
+    inlined). Logging every expected failure at `ERROR` was also noisy:
+    with `use_error_tracking` on, Sentry's logging integration would
+    capture every ordinary failed login and malformed client query as an
+    error-level event. Fixed by never logging `.message`/exception text
+    for "safe" errors — only the exception's class name — at `INFO`, not
+    `ERROR`; genuinely unexpected errors still log full `exc_info` at
+    `ERROR`. Verified by capturing the logger's output directly: a wrong
+    password never appears in any log record, and the record's level is
+    `INFO`, not `ERROR`.
+  - **(High) No cost limit on aliased/nested queries.** A single request
+    could alias the same expensive field (or `obtainToken`, running many
+    password hash checks) dozens of times, or nest selections deeply
+    through fragments — including against introspection, which is just a
+    regular query against `__schema` — doing far more work than the
+    request count alone would suggest. Fixed with strawberry's built-in
+    `MaxAliasesLimiter(max_alias_count=15)` and
+    `QueryDepthLimiter(max_depth=10)` extensions (starting points, not
+    tuned to this schema), applied in both dev and prod since this is a
+    DoS protection, not a prod/dev detail difference. Verified directly: a
+    query with 16 aliases is rejected ("16 aliases found. Allowed: 15"),
+    while an ordinary single-field query still succeeds.
+  - **(Medium) Validation errors with no underlying exception got masked
+    anyway.** `_should_mask_error`'s `isinstance(error.original_error,
+    ...)` check assumed `original_error` was always set for an error worth
+    inspecting — but GraphQL's own validation/syntax errors (a missing
+    required variable, a nonexistent field, a parse error) are raised
+    *before* any resolver runs, so `original_error` is `None` by design
+    (confirmed directly). Under the old predicate this meant `not
+    isinstance(None, (...))` → `True` → masked, replacing a genuinely
+    useful "missing required variable" message with "Unexpected error."
+    in prod. Fixed by treating `original_error is None` as always safe —
+    it can only mean a GraphQL-core-internal validation/parse error, never
+    something that wrapped an actual exception from this project's own
+    code. Verified directly under real prod settings (with `MaskErrors`
+    genuinely active): a missing-variable error still returns its full,
+    useful message, not the generic one.
+  All four fixes share a single `_is_safe_error()` predicate now (used by
+  both the client-facing masking and the log-sanitization above), so
+  there's one definition of "safe to show/log" instead of two that could
+  drift apart. Also caught and fixed the two new built-in extensions
+  (`MaxAliasesLimiter`/`QueryDepthLimiter`) hitting the same "pass a
+  factory, not an instance" requirement already applied to `MaskErrors`.
+  Re-verified `manage.py check`, `ruff`, `ruff format`, `pyright`, and the
+  full `pytest` suite all pass clean on every variant after these changes.
 
 ## 2026-09-21: Release-2026.09.21.01
 
