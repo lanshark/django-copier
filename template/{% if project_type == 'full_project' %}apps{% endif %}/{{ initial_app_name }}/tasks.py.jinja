@@ -4,27 +4,56 @@ import logging
 import sentry_sdk
 {% endif %}
 import structlog
+{% if task_backend == 'huey' %}
+from django_huey import db_periodic_task, db_task
+from huey import crontab
+{% else %}
 from django_tasks import task
+{% endif %}
 
 logger = logging.getLogger(__name__)
 
 
+{% if task_backend == 'huey' %}
+@db_task()
+{% else %}
 @task()
+{% endif %}
 def example_background_task(user_id: int, request_id: str = "") -> None:
-    """Trivial example task run via the RQ backend (or immediately in tests).
+    """Trivial example task run via the {{ 'Huey' if task_backend == 'huey' else 'RQ' }} backend (or immediately in tests).
 
     `request_id` is optional and, when passed by the caller (typically
     `request.request_id`, set by `config.logging.RequestContextMiddleware`),
-    ties this task's logs back to the request that enqueued it. django-tasks
-    workers run in a separate process, so structlog's request-scoped context
-    doesn't cross over on its own - it has to be passed in explicitly.
+    ties this task's logs back to the request that enqueued it. A worker
+    process handles many tasks in sequence over its lifetime, so
+    structlog's request-scoped context doesn't cross over on its own - it
+    has to be passed in explicitly, and bound with `bound_contextvars`
+    (not the one-shot `bind_contextvars`) so it's unbound again once this
+    task finishes, rather than leaking into whatever task the same worker
+    picks up next.
 {% if use_error_tracking %}
     The same applies to the error-tracking scope's tags, bound below.
 {% endif %}
     """
-    if request_id:
-        structlog.contextvars.bind_contextvars(request_id=request_id)
+    with structlog.contextvars.bound_contextvars(
+        **({"request_id": request_id} if request_id else {})
+    ):
 {% if use_error_tracking %}
-        sentry_sdk.set_tag("request_id", request_id)
+        if request_id:
+            sentry_sdk.set_tag("request_id", request_id)
 {% endif %}
-    logger.info("Running example_background_task for user_id=%s", user_id)
+        logger.info("Running example_background_task for user_id=%s", user_id)
+{% if task_backend == 'huey' %}
+
+
+@db_periodic_task(crontab(minute="*/15"))
+def example_periodic_task() -> None:
+    """Runs automatically every 15 minutes, via the Huey consumer's scheduler.
+
+    Periodic/cron tasks are Huey-only - django-tasks has no equivalent.
+    Requires the consumer to be running (`manage.py djangohuey --queue
+    default`); nothing triggers this on its own in tests or one-off
+    `manage.py` commands.
+    """
+    logger.info("Running example_periodic_task")
+{% endif %}

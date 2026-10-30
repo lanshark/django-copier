@@ -17,15 +17,11 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "django_tasks",
-{% if use_redis %}
 {% if task_backend == 'huey' %}
-    # Preparatory step: apps/<app>/tasks.py and api.py still use django-tasks'
-    # @task()/.enqueue() API until that fork lands, so django_tasks stays
-    # registered alongside django_huey for now (it harmlessly falls back to
-    # its default ImmediateBackend since no TASKS setting is defined below).
     "django_huey",
 {% else %}
+    "django_tasks",
+{% if use_redis %}
     "django_rq",  # provides the `rqworker` management command used by django-tasks-rq
 {% endif %}
 {% endif %}

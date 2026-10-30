@@ -1,0 +1,26 @@
+import structlog
+
+from ..tasks import example_background_task
+
+
+def test_request_id_does_not_leak_between_sequential_task_runs():
+    """A worker handles many tasks in sequence over its lifetime - request_id
+    bound inside one run must not still be set once that run finishes, or a
+    later task (even one called without a request_id, like a periodic task)
+    would log the previous task's ID. Caught by code review.
+    """
+    structlog.contextvars.clear_contextvars()
+
+{% if task_backend == 'huey' %}
+    example_background_task.call_local(user_id=1, request_id="first-request-id")
+    assert "request_id" not in structlog.contextvars.get_contextvars()
+
+    example_background_task.call_local(user_id=2)
+    assert "request_id" not in structlog.contextvars.get_contextvars()
+{% else %}
+    example_background_task.call(user_id=1, request_id="first-request-id")
+    assert "request_id" not in structlog.contextvars.get_contextvars()
+
+    example_background_task.call(user_id=2)
+    assert "request_id" not in structlog.contextvars.get_contextvars()
+{% endif %}

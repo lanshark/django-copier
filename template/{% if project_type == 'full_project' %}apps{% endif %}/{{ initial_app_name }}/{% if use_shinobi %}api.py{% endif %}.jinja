@@ -35,6 +35,14 @@ def me(request):
 
 @api.post("/example-task", auth=JWTAuth())
 def trigger_example_task(request):
+{% if task_backend == 'huey' %}
+    """Demonstrates enqueuing a task onto the Huey backend."""
+    result = example_background_task(request.user.pk, request.request_id)
+    # huey's return type is Optional[Result] only because results-storage
+    # could be disabled; DJANGO_HUEY never disables it, so this always holds.
+    assert result is not None
+{% else %}
     """Demonstrates enqueuing a django-tasks job onto the RQ backend."""
     result = example_background_task.enqueue(request.user.pk, request.request_id)
+{% endif %}
     return {"task_id": str(result.id)}
