@@ -432,6 +432,147 @@ All notable changes to this project are documented in this file.
   space, and leading/trailing whitespace) against a real minted JWT —
   all five now authenticate correctly; re-ran `ruff`, `ruff format`,
   `pyright`, `pytest`, and `manage.py check` to confirm no regression
+- Add `apps/<app>/schema.py` (new, `use_strawberry`-only) and mount it in
+  `config/urls.py` at `/graphql/` (step 3 of Strawberry GraphQL support):
+  `Query`/`Mutation` types mirroring django-shinobi's health/token/me/
+  example-task trio (`HealthType`, `TokenPairType`, `MeType`,
+  `ExampleTaskType`), using the `IsAuthenticated` permission class and
+  shared JWT helpers added in the previous step. The GraphiQL explorer is
+  only served when `settings.DEBUG`, since it's a live query tool that
+  shouldn't be reachable by default in prod; the view is wrapped in
+  `csrf_exempt` since, unlike django-ninja's router, Strawberry's
+  `GraphQLView` doesn't exempt itself from Django's CSRF checks (confirmed
+  by inspecting both packages' source) — without it, every POST would get
+  a 403 from `CsrfViewMiddleware`.
+  Verified by rendering all `use_shinobi`/`use_strawberry` combinations
+  (plus `task_backend=huey` and `user_identifier=username` with
+  `use_strawberry`): `manage.py check`, `ruff`, `ruff format`, `pyright`,
+  and the full `pytest` suite all pass clean on every variant. Went
+  further and issued real HTTP requests via Django's test client with
+  `enforce_csrf_checks=True` (replicating real CSRF middleware behavior)
+  against the `use_shinobi`+`use_strawberry` combo: health query, token
+  mutation, an authenticated `me` query, a correctly-rejected unauthenticated
+  `me` query, a real task-triggering mutation, and correctly-rejected bad
+  credentials, all over genuine HTTP — and specifically confirmed the
+  "shared auth" design goal: a token minted via the REST endpoint works
+  against GraphQL and vice versa. Also confirmed GraphiQL is reachable in
+  dev and genuinely unreachable (404) under prod settings, while actual
+  POST queries still work fine in prod
+- Fix three issues in `schema.py`/`auth.py` found by GitHub Copilot's
+  review of the step-3 PR above:
+  - **(High) Password leak into logs.** Strawberry's default error logging
+    logs `str(error)`, which embeds a snippet of the raw query source at
+    the error location — including any argument inlined directly in the
+    query, like `obtainToken`'s `password`. Reproduced it directly: a
+    failed `obtainToken` call with an inline password landed that
+    password, verbatim, in the `strawberry.execution` logger's output.
+    Fixed with a `Schema.process_errors` override that logs only
+    `error.message` (confirmed this never includes the source snippet,
+    only whatever string the resolver/graphql-core actually raised).
+  - **(Medium) N+1 bearer-token verification across aliased fields.** Each
+    alias of a permission-gated field (e.g. `{ a: me { id } b: me { id } }`)
+    re-ran `IsAuthenticated`, and the shared helper did a fresh
+    `User.objects.get()` every time. Fixed by caching the verification
+    result on the request, keyed by the exact token string (`request.
+    _jwt_auth_cache`) — deliberately *not* keyed by whether `request.user`
+    looks authenticated already, since some unrelated auth mechanism (a
+    Django admin session cookie riding along on the same request) could
+    have already set that without ever presenting a valid JWT. Verified
+    with `CaptureQueriesContext`: 3 aliases of `me` now cost exactly 1
+    user-table query (previously 3); separately confirmed a session-
+    authenticated user with *no* `Authorization` header is still correctly
+    rejected, proving the cache can't be used to bypass JWT verification.
+  - **(Medium) Unexpected errors reaching clients unmasked in prod.**
+    Strawberry's default behavior sends the raw exception message to
+    clients even with `DEBUG=False` — e.g. a database outage during
+    `obtainToken` would return the DB driver's own error, including
+    host/port. Fixed using strawberry's built-in `MaskErrors` extension
+    (only added when not `settings.DEBUG`, so local dev still shows full
+    detail), with a `should_mask_error` predicate that leaves
+    `GraphQLError`-derived errors unmasked (covers both GraphQL's own
+    validation errors and `IsAuthenticated`'s permission-denied error,
+    both expected-to-be-visible by design) plus a new `ExpectedError`
+    exception (`obtain_token` now raises this instead of a bare
+    `Exception`, for "Invalid credentials") — everything else gets
+    replaced with a generic "Unexpected error." message. Also caught and
+    fixed a `pyright` type error plus a real latent concurrency bug this
+    surfaced: passing a pre-built `MaskErrors(...)` *instance* to
+    `extensions=[...]` is deprecated in current strawberry (confirmed via
+    source) specifically because `MaskErrors` holds per-request mutable
+    state (`_stream_result_processed`) — sharing one instance across every
+    request risks a race between concurrent requests. Fixed by passing a
+    zero-arg factory (`lambda: MaskErrors(...)`) instead, so a fresh
+    instance is built per request.
+  Verified end-to-end: re-ran `manage.py check`, `ruff`, `ruff format`,
+  `pyright`, and the full `pytest` suite (all clean) across the `use_
+  shinobi`/`use_strawberry` combinations; directly confirmed all three
+  fixes against the real schema (password absent from captured log
+  output, query count via `CaptureQueriesContext`, and the `_should_mask_
+  error`/`MaskErrors.anonymise_error` pipeline correctly passing through
+  "Invalid credentials" while replacing a simulated `ValueError` with
+  "Unexpected error.")
+- Fix four more issues in `schema.py`/`auth.py` found by a second round of
+  GitHub Copilot review on the step-3 PR, after the fixes above:
+  - **(Medium) Disabled accounts kept access until token expiry.**
+    `_authenticate_bearer_token` (shared by `JWTAuth` and `IsAuthenticated`)
+    looked up the user by PK alone, never checking `is_active` — so an
+    access token minted before an account was disabled kept working, on
+    both the REST and GraphQL endpoints, until it naturally expired.
+    Fixed with `User.objects.get(pk=..., is_active=True)` in the one
+    shared helper, covering both auth paths at once. Verified directly:
+    deactivated a user mid-test with a still-valid, unexpired token in
+    hand — the next request now correctly gets "Authentication required"
+    instead of succeeding.
+  - **(High) Logging still wasn't fully safe, and was noisy.** The
+    previous fix's `logger.error(error.message, ...)` isn't actually safe
+    either — GraphQL's own input-coercion errors can echo the rejected
+    value back in `.message` itself (confirmed: sending `password` as a
+    non-string value produces `"Variable '$password' has invalid value:
+    String cannot represent a non string value: ..."`, with the value
+    inlined). Logging every expected failure at `ERROR` was also noisy:
+    with `use_error_tracking` on, Sentry's logging integration would
+    capture every ordinary failed login and malformed client query as an
+    error-level event. Fixed by never logging `.message`/exception text
+    for "safe" errors — only the exception's class name — at `INFO`, not
+    `ERROR`; genuinely unexpected errors still log full `exc_info` at
+    `ERROR`. Verified by capturing the logger's output directly: a wrong
+    password never appears in any log record, and the record's level is
+    `INFO`, not `ERROR`.
+  - **(High) No cost limit on aliased/nested queries.** A single request
+    could alias the same expensive field (or `obtainToken`, running many
+    password hash checks) dozens of times, or nest selections deeply
+    through fragments — including against introspection, which is just a
+    regular query against `__schema` — doing far more work than the
+    request count alone would suggest. Fixed with strawberry's built-in
+    `MaxAliasesLimiter(max_alias_count=15)` and
+    `QueryDepthLimiter(max_depth=10)` extensions (starting points, not
+    tuned to this schema), applied in both dev and prod since this is a
+    DoS protection, not a prod/dev detail difference. Verified directly: a
+    query with 16 aliases is rejected ("16 aliases found. Allowed: 15"),
+    while an ordinary single-field query still succeeds.
+  - **(Medium) Validation errors with no underlying exception got masked
+    anyway.** `_should_mask_error`'s `isinstance(error.original_error,
+    ...)` check assumed `original_error` was always set for an error worth
+    inspecting — but GraphQL's own validation/syntax errors (a missing
+    required variable, a nonexistent field, a parse error) are raised
+    *before* any resolver runs, so `original_error` is `None` by design
+    (confirmed directly). Under the old predicate this meant `not
+    isinstance(None, (...))` → `True` → masked, replacing a genuinely
+    useful "missing required variable" message with "Unexpected error."
+    in prod. Fixed by treating `original_error is None` as always safe —
+    it can only mean a GraphQL-core-internal validation/parse error, never
+    something that wrapped an actual exception from this project's own
+    code. Verified directly under real prod settings (with `MaskErrors`
+    genuinely active): a missing-variable error still returns its full,
+    useful message, not the generic one.
+  All four fixes share a single `_is_safe_error()` predicate now (used by
+  both the client-facing masking and the log-sanitization above), so
+  there's one definition of "safe to show/log" instead of two that could
+  drift apart. Also caught and fixed the two new built-in extensions
+  (`MaxAliasesLimiter`/`QueryDepthLimiter`) hitting the same "pass a
+  factory, not an instance" requirement already applied to `MaskErrors`.
+  Re-verified `manage.py check`, `ruff`, `ruff format`, `pyright`, and the
+  full `pytest` suite all pass clean on every variant after these changes.
 
 ## 2026-09-21: Release-2026.09.21.01
 
