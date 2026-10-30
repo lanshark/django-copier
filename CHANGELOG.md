@@ -373,6 +373,21 @@ All notable changes to this project are documented in this file.
   step runs) for `huey`+error-tracking, `rq`+error-tracking, and
   `use_redis=false`+error-tracking — all pass clean, and the huey case no
   longer crashes
+- Add a `use_strawberry` toggle (default `false`), asked only for
+  `project_type == 'full_project'`, as the first step of adding Strawberry
+  GraphQL as a sibling to django-shinobi (not a mutually-exclusive
+  alternative — both can be enabled together, since they mount on separate
+  URL paths and will share the same JWT auth). This step only wires up the
+  new question and its `pyproject.toml` dependency fork
+  (`strawberry-graphql[django]`); the `pyjwt` dependency, previously gated
+  on `use_shinobi` alone, is now gated on `use_shinobi or use_strawberry`
+  since Strawberry's auth will need it too once that fork lands.
+  `auth.py`/`schema.py`/`urls.py`/CI/docs follow in later steps. Verified
+  by rendering `use_strawberry=true` alone, combined with `use_shinobi`
+  true and false, the all-defaults case, and `project_type=reusable_app`
+  (confirming it's unaffected, since this feature is full_project-only),
+  and confirming each `pyproject.toml` parses as valid TOML with the
+  expected dependency set
 
 ## 2026-09-21: Release-2026.09.21.01
 

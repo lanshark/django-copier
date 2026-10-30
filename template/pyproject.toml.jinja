@@ -49,8 +49,11 @@ dependencies = [
     "redis",
 {% endif %}
 {% endif %}
-{% if use_shinobi %}
+{% if use_shinobi or use_strawberry %}
     "pyjwt",
+{% endif %}
+{% if use_strawberry %}
+    "strawberry-graphql[django]",
 {% endif %}
 {% if use_async %}
     "uvicorn[standard]",
