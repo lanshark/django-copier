@@ -35,7 +35,15 @@ capture the reasoning in a feature-scoped ADR.
   separate from the JWT API auth above — allauth handles browser sessions, the API
   issues its own tokens{% endif %}.
 {% endif %}
+{% if use_redis and task_backend == 'huey' %}
+- Background work via `django-huey`, running on the Redis backend with a
+  dedicated worker (`manage.py djangohuey`). Includes a built-in
+  periodic/cron task (`@db_periodic_task`, see
+  `apps/{{ initial_app_name }}/tasks.py`) — django-tasks (the alternative
+  backend) has no equivalent for this.
+{% else %}
 - Background work via `django-tasks`{% if use_redis %}, running on the RQ/Redis backend with a dedicated worker{% else %} (synchronous in-process backend){% endif %}.
+{% endif %}
 - Email via SMTP, caught in dev by a `mailpit` service (web UI at `localhost:8025`)
   and captured in-memory during tests (`locmem` backend); production sends via
   {{ {"ses": "Amazon SES", "postmark": "Postmark", "mailgun": "Mailgun", "sendgrid": "SendGrid"}[email_provider] }}
@@ -47,7 +55,7 @@ capture the reasoning in a feature-scoped ADR.
   bound to every log line for the life of a request
   (`config.logging.RequestContextMiddleware`, honors an incoming
   `X-Request-ID` header), and can be passed along explicitly to a
-  `django-tasks` job so its logs correlate back to the request that enqueued
+  background task so its logs correlate back to the request that enqueued
   it (see the example task in `apps/{{ initial_app_name }}/tasks.py`).
 {% if use_caddy %}
 - Caddy reverse-proxies `{{ domain_name }}` to `web`, terminating TLS with
@@ -112,8 +120,7 @@ capture the reasoning in a feature-scoped ADR.
 {% endif %}
 {% endif %}
 {% if use_error_tracking %}
-- Error tracking via the standard `sentry-sdk`, using `DjangoIntegration`{% if use_redis %}
-  and `RqIntegration` (so RQ task failures are captured too){% endif %}.
+- Error tracking via the standard `sentry-sdk`, using `DjangoIntegration`{% if use_redis %} and `{{ 'HueyIntegration' if task_backend == 'huey' else 'RqIntegration' }}` (so background task failures are captured too){% endif %}.
   `ERROR_TRACKING_DSN` works against Sentry itself or any
   Sentry-protocol-compatible self-hosted alternative (e.g. BugSink,
   GlitchTip) — just a DSN, no code changes either way. Only initialized in
@@ -131,12 +138,14 @@ capture the reasoning in a feature-scoped ADR.
 
 **Known Django 6.1 caveats (not yet addressed, tracked for future work):**
 
+{% if task_backend != 'huey' %}
 - Django 6.0+ ships a built-in `django.tasks` background-task framework using
   the same `TASKS` setting name as the third-party `django-tasks`/
   `django-tasks-rq` packages this project uses (see `config/settings/base.py`).
   They don't currently conflict — this project's own `TASKS` backend classes
   still work — but migrating to Django's native framework hasn't been
   evaluated.
+{% endif %}
 - The `EMAIL_HOST`/`EMAIL_HOST_USER`/`EMAIL_HOST_PASSWORD`/`EMAIL_BACKEND`/
   `EMAIL_PORT`/`EMAIL_USE_TLS` settings this project configures in
   `config/settings/base.py` are deprecated as of Django 6.1

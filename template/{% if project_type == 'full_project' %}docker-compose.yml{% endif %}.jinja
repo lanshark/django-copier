@@ -69,9 +69,15 @@ services:
         build:
             context: .
             dockerfile: docker/Dockerfile
+{% if task_backend == 'huey' %}
+        # Also runs the scheduler for @db_periodic_task-decorated tasks, and
+        # autoloads tasks.py on startup (both are the djangohuey default).
+        command: ["python", "manage.py", "djangohuey", "--queue", "default"]
+{% else %}
         # --job-class is redundant with the RQ.JOB_CLASS setting in base.py, but kept
         # explicit here since it's easy to lose track of when copy-pasting this command.
         command: ["python", "manage.py", "rqworker", "default", "--job-class", "django_tasks_rq.backend.Job"]
+{% endif %}
         env_file:
             - .env
             - docker/mailpit.env

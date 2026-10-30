@@ -5,7 +5,11 @@ from decouple import config
 {% if use_error_tracking %}
 from sentry_sdk.integrations.django import DjangoIntegration
 {% if use_redis %}
+{% if task_backend == 'huey' %}
+from sentry_sdk.integrations.huey import HueyIntegration
+{% else %}
 from sentry_sdk.integrations.rq import RqIntegration
+{% endif %}
 {% endif %}
 {% endif %}
 
@@ -45,7 +49,11 @@ sentry_sdk.init(
     integrations=[
         DjangoIntegration(),
 {% if use_redis %}
+{% if task_backend == 'huey' %}
+        HueyIntegration(),
+{% else %}
         RqIntegration(),
+{% endif %}
 {% endif %}
     ],
 )
