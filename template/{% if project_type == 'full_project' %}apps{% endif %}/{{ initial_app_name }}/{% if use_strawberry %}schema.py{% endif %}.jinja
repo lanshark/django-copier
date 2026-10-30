@@ -1,8 +1,31 @@
+import logging
+
 import strawberry
+from django.conf import settings
 from django.contrib.auth import authenticate
+from graphql import GraphQLError
+from strawberry.extensions import MaskErrors
 
 from .auth import IsAuthenticated, make_access_token, make_refresh_token
 from .tasks import example_background_task
+
+logger = logging.getLogger("strawberry.execution")
+
+
+class ExpectedError(Exception):
+    """Raise this (instead of a bare `Exception`) for an error that's safe
+    to show to the client as-is, e.g. "Invalid credentials". `Schema`
+    below only lets `ExpectedError`/`GraphQLError`-derived errors through
+    unmasked in prod - `GraphQLError` covers both GraphQL's own validation
+    errors and `IsAuthenticated`'s permission-denied error, which are
+    expected-to-be-visible by design. Everything else (a DB outage, a bug,
+    ...) gets replaced with a generic message, so internal details never
+    reach a client in production.
+    """
+
+
+def _should_mask_error(error: GraphQLError) -> bool:
+    return not isinstance(error.original_error, (GraphQLError, ExpectedError))
 
 
 @strawberry.type
@@ -53,7 +76,7 @@ class Mutation:
             # Raised, not returned as a typed error - GraphQL still replies
             # with HTTP 200 and this lands in the response's `errors` array,
             # which is normal GraphQL error-handling, not a bug.
-            raise Exception("Invalid credentials")
+            raise ExpectedError("Invalid credentials")
         return TokenPairType(access=make_access_token(user), refresh=make_refresh_token(user))
 
     @strawberry.mutation(permission_classes=[IsAuthenticated])
@@ -72,4 +95,24 @@ class Mutation:
         return ExampleTaskType(task_id=str(result.id))
 
 
-schema = strawberry.Schema(query=Query, mutation=Mutation)
+class Schema(strawberry.Schema):
+    def process_errors(self, errors, execution_context=None) -> None:
+        # strawberry's default logs str(error), which embeds a snippet of
+        # the raw query source at the error location - including any
+        # argument values inlined directly in that query, like a password
+        # passed to obtain_token. Logging just `.message` avoids that.
+        for error in errors:
+            logger.error(error.message, exc_info=error.original_error)
+
+
+schema = Schema(
+    query=Query,
+    mutation=Mutation,
+    # Only mask in prod - full error detail is exactly what you want
+    # locally, and DEBUG=True there already shows it in Django's own
+    # error pages too. A factory, not an instance, so a fresh MaskErrors
+    # (it holds per-request state) is built for every request.
+    extensions=[lambda: MaskErrors(should_mask_error=_should_mask_error)]
+    if not settings.DEBUG
+    else [],
+)
