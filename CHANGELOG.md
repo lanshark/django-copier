@@ -596,6 +596,25 @@ All notable changes to this project are documented in this file.
   `ruff format`, `pyright`, and the full `pytest` suite all pass clean
   (including the new tests actually passing, not just importing cleanly)
   on every variant.
+- Fix two CI coverage gaps in the Strawberry GraphQL matrix entries, found
+  by a full-repository review: the "Check prod settings" step's `if:`
+  condition didn't match `with-strawberry`/`with-strawberry-no-shinobi`,
+  so `manage.py check` under `config.settings.prod` — the exact check
+  that caught the huey/`RqIntegration` prod crash earlier this session —
+  had never actually run for any Strawberry combination; and no matrix
+  entry combined `task_backend=huey` with `use_strawberry=true`, leaving
+  `schema.py`'s huey-specific `trigger_example_task` branch under
+  Strawberry exercised only by hand, never in CI. Fixed by extending the
+  "Check prod settings" `if:` to also match `with-strawberry` (so the new
+  `with-strawberry-huey` entry below gets it too), and adding
+  `with-strawberry-huey`. Verified all three affected combinations
+  (`with-strawberry`, `with-strawberry-no-shinobi`, the new
+  `with-strawberry-huey`) locally before pushing: `manage.py check`,
+  `ruff`, `ruff format`, `pyright`, and `pytest` all pass clean under
+  `config.settings.dev`, and `manage.py check` also passes clean under
+  `config.settings.prod` with realistic dummy env vars for all three —
+  confirming the newly-exercised prod-settings path doesn't hide a
+  problem it would have caught.
 
 ## 2026-09-21: Release-2026.09.21.01
 

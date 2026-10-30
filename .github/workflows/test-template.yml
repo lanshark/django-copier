@@ -24,6 +24,8 @@ jobs:
                       extra_args: "--data use_strawberry=true"
                     - name: with-strawberry-no-shinobi
                       extra_args: "--data use_strawberry=true --data use_shinobi=false"
+                    - name: with-strawberry-huey
+                      extra_args: "--data use_strawberry=true --data task_backend=huey"
                     - name: custom-app-async
                       extra_args: "--data initial_app_name=widgets --data use_async=true"
                     - name: apache-license
@@ -260,8 +262,8 @@ jobs:
               working-directory: ${{ github.workspace }}/../rendered-${{ matrix.name }}
               run: docker compose -f docker-compose.victorialogs.yml config > /dev/null
 
-            - name: Check prod settings (email_provider, storage_backend, use_caddy, use_error_tracking)
-              if: startsWith(matrix.name, 'email-') || startsWith(matrix.name, 'storage-') || endsWith(matrix.name, 'caddy') || startsWith(matrix.name, 'with-error-tracking')
+            - name: Check prod settings (email_provider, storage_backend, use_caddy, use_error_tracking, use_strawberry)
+              if: startsWith(matrix.name, 'email-') || startsWith(matrix.name, 'storage-') || endsWith(matrix.name, 'caddy') || startsWith(matrix.name, 'with-error-tracking') || startsWith(matrix.name, 'with-strawberry')
               working-directory: ${{ github.workspace }}/../rendered-${{ matrix.name }}
               env:
                   DJANGO_SETTINGS_MODULE: config.settings.prod
