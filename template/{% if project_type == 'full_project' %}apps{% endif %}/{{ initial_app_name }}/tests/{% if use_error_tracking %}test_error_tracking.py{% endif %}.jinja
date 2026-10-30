@@ -38,13 +38,21 @@ def capturing_sentry():
 
 
 def test_task_request_id_reaches_captured_event(capturing_sentry):
-    """The RQ task's request_id ends up tagged on a captured event, not just
-    bound to structlog's context. Caught by code review: a worker runs
+    """The {{ 'Huey' if task_backend == 'huey' else 'RQ' }} task's request_id ends up tagged on a captured event, not
+    just bound to structlog's context. Caught by code review: a worker runs
+{% if task_backend == 'huey' %}
+    example_background_task.call_local() directly, with no web request or
+{% else %}
     example_background_task.call() directly, with no web request or
+{% endif %}
     middleware in the loop to tag anything on its own - the task has to do
     it itself.
     """
+{% if task_backend == 'huey' %}
+    example_background_task.call_local(user_id=1, request_id="test-request-id-123")
+{% else %}
     example_background_task.call(user_id=1, request_id="test-request-id-123")
+{% endif %}
     sentry_sdk.capture_message("task ran")
     sentry_sdk.flush(timeout=2)
 

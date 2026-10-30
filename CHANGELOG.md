@@ -283,6 +283,44 @@ All notable changes to this project are documented in this file.
   `django-tasks` installed in both this and the prior step rather than
   leaving a broken intermediate state); confirmed `DJANGO_HUEY` configures a
   real `huey.RedisHuey` instance via `django_huey.get_queue("default")`
+- Fork `apps/<app>/tasks.py`, `api.py`, and the error-tracking test on
+  `task_backend` (step 3 of django-huey support, closing the gap the prior
+  two steps left open): `task_backend=huey` now uses `@db_task()`/direct-call
+  enqueue from `django_huey` instead of `@task()`/`.enqueue()` from
+  `django_tasks`, and `tasks.py` gains a second example,
+  `example_periodic_task`, using `@db_periodic_task(crontab(minute="*/15"))`
+  — Huey's built-in periodic/cron support, which django-tasks has no
+  equivalent for (the design's agreed-on scope addition). The
+  `test_error_tracking.py` test (`use_error_tracking=true`) now calls
+  `.call_local()` instead of `.call()` to invoke the task function directly
+  on the huey path. Since `tasks.py`/`api.py` no longer import `django_tasks`
+  at all when `task_backend=huey`, this step also removes the "install both"
+  shim from the `pyproject.toml`/`INSTALLED_APPS` forks added in steps 1–2 —
+  `django-tasks`/`django_tasks` and `django-huey`/`django_huey` are an
+  either/or choice again, as originally intended once this gap closed.
+  Renamed `config/settings/test.py` to `test.py.jinja` and forked it too:
+  it previously only overrode `TASKS` to force the immediate/no-Redis
+  backend for tests, which does nothing for huey (which reads `DJANGO_HUEY`,
+  not `TASKS`) — found by inspection, not a failing test, since no generated
+  test exercised the real enqueue path. Fixed by overriding `DJANGO_HUEY`
+  with `"immediate": True` on the huey path instead, and verified by
+  stopping the real Redis service entirely and confirming
+  `apps/<app>/tests/test_api.py` and `test_error_tracking.py` still pass.
+  Also fixed a `pyright` `reportAttributeAccessIssue` on `api.py`'s huey
+  branch: huey's direct-call `__call__` is typed `Result | None` (`None`
+  only if results-storage were disabled, which `DJANGO_HUEY` never does
+  here), so accessing `.id` needed an explicit `assert result is not None`.
+  Verified by rendering `task_backend=huey` alone and combined with
+  `use_error_tracking=true`/`use_shinobi=true` (and the existing `rq`/
+  `use_redis=false`/defaults cases, to confirm no regression): `manage.py
+  check`, `ruff check`/`ruff format --check`, `pyright`, and the full
+  `pytest` suite (12 passed on the plain cases, 14 on the full combo) all
+  pass clean on every variant; additionally proved the huey path end-to-end
+  by hand — enqueuing `example_background_task` against the real Redis
+  service, confirming `pending_count() == 1` before a manual dequeue+execute
+  (matching what the `djangohuey` consumer does), and confirming
+  `example_periodic_task` registers in Huey's task registry with a crontab
+  schedule attached
 
 ## 2026-09-21: Release-2026.09.21.01
 
