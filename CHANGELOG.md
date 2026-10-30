@@ -321,6 +321,24 @@ All notable changes to this project are documented in this file.
   (matching what the `djangohuey` consumer does), and confirming
   `example_periodic_task` registers in Huey's task registry with a crontab
   schedule attached
+- Fix a `request_id` leak in `example_background_task` found by GitHub
+  Copilot's review of the step-3 PR above: `structlog.contextvars.
+  bind_contextvars()` binds `request_id` but never unbinds it, and a worker
+  handles many tasks in sequence over its lifetime (this is most visible on
+  the huey path, where `example_periodic_task` passes no `request_id` at
+  all and would log whatever ID a prior task on the same worker left
+  behind). Fixed by switching to `structlog.contextvars.bound_contextvars()`
+  — a context manager that unbinds (or restores the previous value) in a
+  `finally` block, so it's correct even if the task raises — applied
+  unconditionally, since the leak risk isn't actually backend-specific.
+  Added a new, unconditional `test_tasks.py` asserting two sequential calls
+  to `example_background_task` (the second with no `request_id`) leave no
+  `request_id` in `structlog.contextvars.get_contextvars()` afterwards;
+  confirmed this test fails against the old `bind_contextvars`-only pattern
+  before passing against the fix. Verified by re-rendering and re-running
+  `manage.py check`, `ruff`, `ruff format`, `pyright`, and the full `pytest`
+  suite (now 13/13 and 15/15 respectively) across all four
+  `task_backend`/`use_redis` combinations
 
 ## 2026-09-21: Release-2026.09.21.01
 
