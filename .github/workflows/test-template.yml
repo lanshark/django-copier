@@ -20,6 +20,10 @@ jobs:
                       extra_args: "--data task_backend=huey"
                     - name: with-error-tracking-huey
                       extra_args: "--data task_backend=huey --data use_error_tracking=true"
+                    - name: with-strawberry
+                      extra_args: "--data use_strawberry=true"
+                    - name: with-strawberry-no-shinobi
+                      extra_args: "--data use_strawberry=true --data use_shinobi=false"
                     - name: custom-app-async
                       extra_args: "--data initial_app_name=widgets --data use_async=true"
                     - name: apache-license
