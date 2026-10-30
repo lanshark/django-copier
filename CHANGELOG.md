@@ -417,6 +417,21 @@ All notable changes to this project are documented in this file.
   (via `make_access_token`) and a real Postgres-backed user — valid token
   authenticates and sets `request.user`, a tampered token and a missing
   `Authorization` header are both correctly rejected
+- Fix a case-sensitivity/whitespace bug in `IsAuthenticated` found by
+  GitHub Copilot's review of the step-2 PR above:
+  `auth_header.startswith("Bearer ")` rejected valid-but-differently-cased
+  schemes (`bearer`/`BEARER`, both legal per RFC 7235 — scheme names are
+  case-insensitive), and `removeprefix("Bearer ")` only ever stripped
+  exactly one space, leaving a leading space in the token (and thus a
+  decode failure) on a header like `Bearer  <token>` (two spaces) or with
+  leading/trailing whitespace. Fixed by splitting the header with
+  `.split()` (no args — collapses repeated whitespace and ignores
+  leading/trailing spaces) into exactly two parts, comparing only the
+  scheme name case-insensitively via `.lower()`. Verified by exercising
+  all five cases directly (`bearer`, `BEARER`, normal `Bearer`, a double
+  space, and leading/trailing whitespace) against a real minted JWT —
+  all five now authenticate correctly; re-ran `ruff`, `ruff format`,
+  `pyright`, `pytest`, and `manage.py check` to confirm no regression
 
 ## 2026-09-21: Release-2026.09.21.01
 
