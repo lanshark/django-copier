@@ -253,6 +253,15 @@ All notable changes to this project are documented in this file.
   content is unchanged for every repo YAML file and for every YAML file
   rendered across six template variants; `pre-commit run --all-files` passes
   in the repo and in rendered projects
+- Add a `task_backend` choice (`rq`, default; `huey`), asked only when
+  `use_redis` is true, as the first step of adding `django-huey` as an
+  alternative to `django-tasks`/`django-tasks-rq`. This step only wires up
+  the new question and its dependency fork in `pyproject.toml` (`django-huey`
+  + `redis` instead of `django-tasks`/`django-tasks-rq`/`redis`); settings,
+  task/view code, the worker command, and CI coverage follow in later steps.
+  Verified by rendering `task_backend=rq`, `task_backend=huey`,
+  `use_redis=false`, and the all-defaults case, and confirming each
+  `pyproject.toml` parses as valid TOML with the expected dependency set
 
 ## 2026-09-21: Release-2026.09.21.01
 

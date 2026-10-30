@@ -110,6 +110,18 @@ use_redis:
     default: true
     when: "{{ project_type == 'full_project' }}"
 
+task_backend:
+    type: str
+    help: >-
+        Background task backend. RQ (django-tasks-rq) is the Django 6
+        native-API backport; Huey (django-huey) adds built-in periodic/cron
+        tasks and a lighter dependency footprint.
+    default: rq
+    choices:
+        "RQ (django-tasks-rq)": rq
+        "Huey (django-huey)": huey
+    when: "{{ project_type == 'full_project' and use_redis }}"
+
 use_async:
     type: bool
     help: Serve via ASGI/uvicorn instead of WSGI/gunicorn?
