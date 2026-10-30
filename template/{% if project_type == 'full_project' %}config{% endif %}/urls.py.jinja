@@ -1,14 +1,43 @@
+{% if use_strawberry %}
+from django.conf import settings
+{% endif %}
 from django.contrib import admin
 from django.urls import include, path
-{% if use_shinobi %}
+{% if use_strawberry %}
+from django.views.decorators.csrf import csrf_exempt
+from strawberry.django.views import GraphQLView
+{% endif %}
+{% if use_shinobi or use_strawberry %}
 
+{% endif %}
+{% if use_shinobi %}
 from apps.{{ initial_app_name }}.api import api
+{% endif %}
+{% if use_strawberry %}
+from apps.{{ initial_app_name }}.schema import schema as graphql_schema
 {% endif %}
 
 urlpatterns = [
     path("admin/", admin.site.urls),
 {% if use_shinobi %}
     path("api/v1/", api.urls),
+{% endif %}
+{% if use_strawberry %}
+    # GraphiQL (the in-browser query explorer at this same URL on a GET
+    # request) is only served when DEBUG - it's a live query tool, not
+    # something to leave reachable in prod by default. csrf_exempt is
+    # needed because, unlike django-ninja's router, Strawberry's
+    # GraphQLView doesn't exempt itself - this is a Bearer-token API, not
+    # session/cookie-based, so Django's CSRF checks don't apply to it.
+    path(
+        "graphql/",
+        csrf_exempt(
+            GraphQLView.as_view(
+                schema=graphql_schema,
+                graphql_ide="graphiql" if settings.DEBUG else None,
+            )
+        ),
+    ),
 {% endif %}
 {% if use_allauth %}
     path("accounts/", include("allauth.urls")),

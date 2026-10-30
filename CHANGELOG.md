@@ -432,6 +432,32 @@ All notable changes to this project are documented in this file.
   space, and leading/trailing whitespace) against a real minted JWT —
   all five now authenticate correctly; re-ran `ruff`, `ruff format`,
   `pyright`, `pytest`, and `manage.py check` to confirm no regression
+- Add `apps/<app>/schema.py` (new, `use_strawberry`-only) and mount it in
+  `config/urls.py` at `/graphql/` (step 3 of Strawberry GraphQL support):
+  `Query`/`Mutation` types mirroring django-shinobi's health/token/me/
+  example-task trio (`HealthType`, `TokenPairType`, `MeType`,
+  `ExampleTaskType`), using the `IsAuthenticated` permission class and
+  shared JWT helpers added in the previous step. The GraphiQL explorer is
+  only served when `settings.DEBUG`, since it's a live query tool that
+  shouldn't be reachable by default in prod; the view is wrapped in
+  `csrf_exempt` since, unlike django-ninja's router, Strawberry's
+  `GraphQLView` doesn't exempt itself from Django's CSRF checks (confirmed
+  by inspecting both packages' source) — without it, every POST would get
+  a 403 from `CsrfViewMiddleware`.
+  Verified by rendering all `use_shinobi`/`use_strawberry` combinations
+  (plus `task_backend=huey` and `user_identifier=username` with
+  `use_strawberry`): `manage.py check`, `ruff`, `ruff format`, `pyright`,
+  and the full `pytest` suite all pass clean on every variant. Went
+  further and issued real HTTP requests via Django's test client with
+  `enforce_csrf_checks=True` (replicating real CSRF middleware behavior)
+  against the `use_shinobi`+`use_strawberry` combo: health query, token
+  mutation, an authenticated `me` query, a correctly-rejected unauthenticated
+  `me` query, a real task-triggering mutation, and correctly-rejected bad
+  credentials, all over genuine HTTP — and specifically confirmed the
+  "shared auth" design goal: a token minted via the REST endpoint works
+  against GraphQL and vice versa. Also confirmed GraphiQL is reachable in
+  dev and genuinely unreachable (404) under prod settings, while actual
+  POST queries still work fine in prod
 
 ## 2026-09-21: Release-2026.09.21.01
 

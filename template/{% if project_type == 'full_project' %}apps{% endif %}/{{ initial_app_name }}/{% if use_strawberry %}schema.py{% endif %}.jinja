@@ -1,0 +1,75 @@
+import strawberry
+from django.contrib.auth import authenticate
+
+from .auth import IsAuthenticated, make_access_token, make_refresh_token
+from .tasks import example_background_task
+
+
+@strawberry.type
+class HealthType:
+    status: str
+
+
+@strawberry.type
+class TokenPairType:
+    access: str
+    refresh: str
+
+
+@strawberry.type
+class MeType:
+    id: strawberry.ID
+    {{ user_identifier }}: str
+
+
+@strawberry.type
+class ExampleTaskType:
+    task_id: str
+
+
+@strawberry.type
+class Query:
+    @strawberry.field
+    def health(self) -> HealthType:
+        return HealthType(status="ok")
+
+    @strawberry.field(permission_classes=[IsAuthenticated])
+    def me(self, info: strawberry.Info) -> MeType:
+        user = info.context.request.user
+        return MeType(id=strawberry.ID(str(user.pk)), {{ user_identifier }}=user.{{ user_identifier }})
+
+
+@strawberry.type
+class Mutation:
+    @strawberry.mutation
+    def obtain_token(self, info: strawberry.Info, {{ user_identifier }}: str, password: str) -> TokenPairType:
+        request = info.context.request
+{% if user_identifier == 'email' %}
+        # ModelBackend's `authenticate()` kwarg is always named `username`, regardless
+        # of AUTH_USER_MODEL.USERNAME_FIELD — it's mapped internally, so this is correct.
+{% endif %}
+        user = authenticate(request, username={{ user_identifier }}, password=password)
+        if user is None:
+            # Raised, not returned as a typed error - GraphQL still replies
+            # with HTTP 200 and this lands in the response's `errors` array,
+            # which is normal GraphQL error-handling, not a bug.
+            raise Exception("Invalid credentials")
+        return TokenPairType(access=make_access_token(user), refresh=make_refresh_token(user))
+
+    @strawberry.mutation(permission_classes=[IsAuthenticated])
+    def trigger_example_task(self, info: strawberry.Info) -> ExampleTaskType:
+        request = info.context.request
+{% if task_backend == 'huey' %}
+        # Demonstrates enqueuing a task onto the Huey backend.
+        result = example_background_task(request.user.pk, request.request_id)
+        # huey's return type is Optional[Result] only because results-storage
+        # could be disabled; DJANGO_HUEY never disables it, so this always holds.
+        assert result is not None
+{% else %}
+        # Demonstrates enqueuing a django-tasks job onto the RQ backend.
+        result = example_background_task.enqueue(request.user.pk, request.request_id)
+{% endif %}
+        return ExampleTaskType(task_id=str(result.id))
+
+
+schema = strawberry.Schema(query=Query, mutation=Mutation)
