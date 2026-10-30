@@ -39,15 +39,17 @@ dependencies = [
     "python-decouple",
     "dj-database-url",
     "structlog",
-{% if task_backend == 'huey' %}
-    "django-huey",
-    "redis",
-{% else %}
     "django-tasks",
 {% if use_redis %}
+{% if task_backend == 'huey' %}
+    # Preparatory step: apps/<app>/tasks.py and api.py still use django-tasks'
+    # @task()/.enqueue() API until that fork lands, so django-tasks stays
+    # installed alongside django-huey for now.
+    "django-huey",
+{% else %}
     "django-tasks-rq",
-    "redis",
 {% endif %}
+    "redis",
 {% endif %}
 {% if use_shinobi %}
     "pyjwt",

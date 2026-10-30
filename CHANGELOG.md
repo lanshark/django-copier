@@ -256,12 +256,33 @@ All notable changes to this project are documented in this file.
 - Add a `task_backend` choice (`rq`, default; `huey`), asked only when
   `use_redis` is true, as the first step of adding `django-huey` as an
   alternative to `django-tasks`/`django-tasks-rq`. This step only wires up
-  the new question and its dependency fork in `pyproject.toml` (`django-huey`
-  + `redis` instead of `django-tasks`/`django-tasks-rq`/`redis`); settings,
-  task/view code, the worker command, and CI coverage follow in later steps.
-  Verified by rendering `task_backend=rq`, `task_backend=huey`,
-  `use_redis=false`, and the all-defaults case, and confirming each
-  `pyproject.toml` parses as valid TOML with the expected dependency set
+  the new question and its dependency fork in `pyproject.toml`: `django-huey`
+  is added alongside the existing `django-tasks`/`redis` dependencies (not
+  instead of them) when `task_backend=huey`, since `apps/<app>/tasks.py` and
+  `api.py` still use django-tasks' `@task()`/`.enqueue()` API until that fork
+  lands in a later step; `django-tasks-rq` itself is still skipped since
+  nothing imports it on the huey path. Settings, task/view code, the worker
+  command, and CI coverage follow in later steps. Verified by rendering
+  `task_backend=rq`, `task_backend=huey`, `use_redis=false`, and the
+  all-defaults case, and confirming each `pyproject.toml` parses as valid
+  TOML with the expected dependency set
+- Fork `config/settings/base.py`'s `INSTALLED_APPS` and task-queue settings
+  on `task_backend` (step 2 of django-huey support): `task_backend=huey`
+  adds `django_huey` to `INSTALLED_APPS` alongside `django_tasks` (not
+  instead of it, for the same preparatory reason as the `pyproject.toml`
+  fork above — `django_tasks` harmlessly falls back to its default
+  `ImmediateBackend` since no `TASKS` setting is defined on this path) and
+  configures `DJANGO_HUEY` with a Redis-backed queue, explicitly pinning
+  `"immediate": False` so dev/test/prod all queue through Redis rather than
+  falling back to django-huey's `settings.DEBUG`-based default. `apps/<app>/
+  tasks.py` and `api.py` are updated in the next step. Verified by rendering
+  all four `task_backend`/`use_redis` combinations: `manage.py check` and
+  `ruff check`/`ruff format --check` now pass clean for all four, including
+  `huey` (previously a `ModuleNotFoundError` on `django_tasks`, caught after
+  this PR had already been opened — fixed by keeping `django_tasks`/
+  `django-tasks` installed in both this and the prior step rather than
+  leaving a broken intermediate state); confirmed `DJANGO_HUEY` configures a
+  real `huey.RedisHuey` instance via `django_huey.get_queue("default")`
 
 ## 2026-09-21: Release-2026.09.21.01
 
