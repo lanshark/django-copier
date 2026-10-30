@@ -339,6 +339,40 @@ All notable changes to this project are documented in this file.
   `manage.py check`, `ruff`, `ruff format`, `pyright`, and the full `pytest`
   suite (now 13/13 and 15/15 respectively) across all four
   `task_backend`/`use_redis` combinations
+- Fork the `worker` service's `command` in `docker-compose.yml` on
+  `task_backend` (step 4 of django-huey support, the last of the originally
+  planned steps): `huey` runs `manage.py djangohuey --queue default`
+  instead of `rqworker`. `manage.py djangohuey` also runs Huey's scheduler
+  (for `@db_periodic_task`) and autoloads `tasks.py` by default, so no extra
+  flags are needed. Added CI matrix entries `with-huey` and
+  `with-error-tracking-huey` (named to match the existing
+  `with-error-tracking-*` prefix so the existing "Check prod settings" CI
+  step, gated on that prefix, picks it up too) and updated
+  `docs/architecture.md` to describe the huey backend, its periodic-task
+  support, and its `HueyIntegration` (see next bullet) — and to skip the
+  Django 6.1 `TASKS`-setting-collision caveat, which only applies to the
+  `django-tasks`/RQ path (huey reads `DJANGO_HUEY`, not `TASKS`, so there's
+  no collision with Django's own built-in `django.tasks` framework).
+  Also fixed a double-space rendering artifact in the error-tracking
+  bullet's `{% if %}` line split, pre-existing but touched by this change,
+  by keeping the whole bullet on one source line like the rest of the file
+  already does elsewhere.
+- Fix a real crash found while adding the `with-error-tracking-huey` CI
+  entry above: `config/settings/prod.py`'s `from sentry_sdk.integrations.rq
+  import RqIntegration` was gated only on `use_redis`, not `task_backend`,
+  but the `rq` package itself isn't installed on the huey path (only
+  `redis`, `huey`, and `django-huey` are) — and `sentry_sdk.integrations.rq`
+  raises `DidNotEnable` at *import time* if `rq` isn't installed, crashing
+  `manage.py check`/startup under `config.settings.prod` for
+  `task_backend=huey` + `use_error_tracking=true`. Reproduced the crash
+  locally before fixing it. Fixed by forking the import and the
+  `integrations=[...]` list on `task_backend`, using `HueyIntegration`
+  instead (confirmed it exists in the installed `sentry-sdk` package).
+  Verified by re-running `manage.py check` under `config.settings.prod`
+  with realistic dummy env vars (the same check CI's "Check prod settings"
+  step runs) for `huey`+error-tracking, `rq`+error-tracking, and
+  `use_redis=false`+error-tracking — all pass clean, and the huey case no
+  longer crashes
 
 ## 2026-09-21: Release-2026.09.21.01
 

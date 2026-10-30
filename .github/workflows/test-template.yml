@@ -16,6 +16,10 @@ jobs:
                       extra_args: ""
                     - name: no-redis
                       extra_args: "--data use_redis=false"
+                    - name: with-huey
+                      extra_args: "--data task_backend=huey"
+                    - name: with-error-tracking-huey
+                      extra_args: "--data task_backend=huey --data use_error_tracking=true"
                     - name: custom-app-async
                       extra_args: "--data initial_app_name=widgets --data use_async=true"
                     - name: apache-license
