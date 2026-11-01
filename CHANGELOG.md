@@ -669,6 +669,14 @@ All notable changes to this project are documented in this file.
   confirmed corsheaders' own system check genuinely fires
   (`corsheaders.E013`) on a malformed `CORS_ALLOWED_ORIGINS` value via
   `manage.py check`.
+- Add CI matrix coverage (`with-cors`) and docs for CORS support (step 2 of
+  #44 — the last of the originally planned steps): `docs/architecture.md`
+  documents the `CORS_ALLOWED_ORIGINS` env var and notes it applies in
+  every environment, not just prod; the root `README.md`'s options table
+  and "What's been verified" flag list both gained a `use_cors` mention.
+  Verified by rendering `use_cors=true`/`false` and confirming
+  `manage.py check`, `ruff`, `ruff format`, `pyright`, and `pytest` all
+  pass clean.
 
 ## 2026-09-21: Release-2026.09.21.01
 

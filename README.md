@@ -50,6 +50,7 @@ You'll be prompted for:
 | `use_log_shipping` / `use_victorialogs` | *(full_project only)* `true` → ship container logs (via Vector) to a centralized VictoriaLogs instance, configured via env vars; `use_victorialogs` additionally generates the standalone VictoriaLogs store itself (only needed on the one host that runs it) |
 | `use_error_tracking` | *(full_project only)* `true` → add error tracking via `sentry-sdk`, against Sentry or any Sentry-protocol-compatible self-host (BugSink, GlitchTip, ...), initialized only in prod; `false` → unhandled exceptions are only visible in logs |
 | `storage_backend` | *(full_project only)* `Local filesystem` (default), `Amazon S3`, or `Azure Blob Storage` — file storage backend for user-uploaded media via django-storages |
+| `use_cors` | *(full_project only)* `true` → add django-cors-headers, allowing cross-origin requests from origins configured via `CORS_ALLOWED_ORIGINS` (none allowed by default); `false` → same-origin only |
 | `task_runner` | `Makefile` (default) or `Justfile` — which tool wraps the dev commands (`up`/`migrate`/`test`/`lint`/`new-feature`/etc.) |
 | `email_provider` | *(full_project only)* `Amazon SES` (default), `Postmark`, `Mailgun`, or `SendGrid` — production email backend via django-anymail (local dev defaults to localhost SMTP, with Docker wiring Mailpit automatically) |
 | `user_identifier` | *(full_project only)* `Email address` (default) or `Username` — how the custom user model (`apps/accounts`) identifies users |
@@ -223,8 +224,9 @@ are covered — this list has drifted out of sync with it before, so treat `grep
 As of this writing it covers both `project_type`s, every individual flag at least
 once (Python/Postgres/Django version choices, `task_backend`, `use_shinobi`/
 `use_strawberry`, `use_caddy`, `use_log_shipping`/`use_victorialogs`,
-`use_error_tracking`, `storage_backend`, `email_provider`, `use_vite`, `use_allauth`,
-both `task_runner`s, a custom `initial_app_name`, and `user_identifier=username`),
+`use_error_tracking`, `storage_backend`, `use_cors`, `email_provider`, `use_vite`,
+`use_allauth`, both `task_runner`s, a custom `initial_app_name`, and
+`user_identifier=username`),
 plus several combinations picked because they'd historically caused real bugs here
 (e.g. a feature combined with `use_redis=false`, or two optional frameworks enabled
 together) — see `CHANGELOG.md` for the specifics of what broke and when.

@@ -136,6 +136,15 @@ capture the reasoning in a feature-scoped ADR.
   `apps/{{ initial_app_name }}/auth.py`), so an error-tracking event and its
   correlated log lines are both findable from the same id.
 {% endif %}
+{% if use_cors %}
+- Cross-origin requests via `django-cors-headers`. No origins are allowed
+  until explicitly configured through the `CORS_ALLOWED_ORIGINS` env var
+  (comma-separated, each needs a scheme — e.g. `https://example.com`, no
+  path or trailing slash); malformed entries are caught by `manage.py
+  check` (`corsheaders.E013`). Applies in every environment, not just
+  prod — a locally-running separate frontend dev server is as much a
+  cross-origin case as a deployed one.
+{% endif %}
 {% if use_vite %}
 - A Pico.css + Vite frontend build pipeline (django-vite) for the home page.
 {% endif %}
