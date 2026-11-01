@@ -220,6 +220,16 @@ storage_backend:
         "Azure Blob Storage": azure
     when: "{{ project_type == 'full_project' }}"
 
+use_cors:
+    type: bool
+    help: >-
+        Add django-cors-headers, allowing cross-origin requests from specific
+        allowed origins (e.g. a separately-hosted frontend)? Configured via the
+        CORS_ALLOWED_ORIGINS env var (comma-separated, no origins allowed by
+        default). (No = same-origin only, browsers block cross-origin requests)
+    default: false
+    when: "{{ project_type == 'full_project' }}"
+
 task_runner:
     type: str
     help: Task runner for common dev commands (build/test/lint/etc.)
