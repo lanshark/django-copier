@@ -715,6 +715,12 @@ All notable changes to this project are documented in this file.
   `django_version=5.2`/`6.1` and `use_allauth=true`: `manage.py check`,
   `ruff`, `ruff format`, `pyright`, and the full `pytest` suite all pass
   clean on every variant, including under `config.settings.prod`.
+  Added CI matrix entries `with-csp` and `with-csp-django-6.1` (one per
+  `django_version` fork), and extended the "Check prod settings" step's
+  `if:` condition to match `with-csp` — CSP lives exclusively in `prod.py`,
+  the same situation `use_strawberry`/`use_error_tracking` were in, and
+  the exact class of gap a full-repository review caught once before;
+  fixed here before it could repeat.
   Rate limiting (the remaining item from #41's scope) follows in the next
   step.
 
