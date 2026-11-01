@@ -1,0 +1,16 @@
+def client_ip_from_forwarded_for(request):
+    """Extract the real client IP from X-Forwarded-For.
+
+    Without this, django-ratelimit's default (`request.META["REMOTE_ADDR"]`)
+    would be Caddy's own address for every request once it's fronting the
+    app - collapsing every client onto one shared rate-limit bucket. Trusted
+    here only because Caddy is this deployment's sole public entry point
+    (the app's own port isn't meant to be reachable directly) - the same
+    trust assumption `SECURE_PROXY_SSL_HEADER` in `prod.py` already makes
+    for `X-Forwarded-Proto`. The first entry in X-Forwarded-For is the
+    original client; anything Caddy itself appends comes after it.
+    """
+    forwarded = request.META.get("HTTP_X_FORWARDED_FOR")
+    if forwarded:
+        return forwarded.split(",")[0].strip()
+    return request.META.get("REMOTE_ADDR")

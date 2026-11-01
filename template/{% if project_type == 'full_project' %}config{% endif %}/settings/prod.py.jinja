@@ -61,6 +61,12 @@ CONTENT_SECURITY_POLICY = {
 # SECURE_SSL_REDIRECT above would redirect-loop forever.
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 CSRF_TRUSTED_ORIGINS = ["https://{{ domain_name }}"]
+{% if use_rate_limiting %}
+# Without this, django-ratelimit sees Caddy's own address for every
+# request (REMOTE_ADDR, its default), not the real client's - see
+# config/ratelimit.py for why trusting X-Forwarded-For is safe here.
+RATELIMIT_IP_META_KEY = "config.ratelimit.client_ip_from_forwarded_for"
+{% endif %}
 {% endif %}
 {% if use_error_tracking %}
 

@@ -3,6 +3,9 @@ import logging
 import strawberry
 from django.conf import settings
 from django.contrib.auth import authenticate
+{% if use_rate_limiting %}
+from django_ratelimit.core import is_ratelimited
+{% endif %}
 from graphql import GraphQLError
 from strawberry.extensions import MaskErrors, MaxAliasesLimiter, QueryDepthLimiter
 
@@ -78,6 +81,13 @@ class Mutation:
     @strawberry.mutation
     def obtain_token(self, info: strawberry.Info, {{ user_identifier }}: str, password: str) -> TokenPairType:
         request = info.context.request
+{% if use_rate_limiting %}
+        # Shares a budget with django-shinobi's /auth/token (same
+        # group/key), so switching API doesn't let an attacker dodge the
+        # limit.
+        if is_ratelimited(request, group="auth-token", key="ip", rate="5/m", increment=True):
+            raise ExpectedError("Too many requests")
+{% endif %}
 {% if user_identifier == 'email' %}
         # ModelBackend's `authenticate()` kwarg is always named `username`, regardless
         # of AUTH_USER_MODEL.USERNAME_FIELD — it's mapped internally, so this is correct.

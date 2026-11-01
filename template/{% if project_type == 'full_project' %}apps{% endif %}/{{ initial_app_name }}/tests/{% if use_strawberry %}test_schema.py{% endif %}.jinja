@@ -2,6 +2,10 @@
 from typing import cast
 
 import pytest
+{% if use_rate_limiting %}
+from django.core.cache import cache
+from django.test import override_settings
+{% endif %}
 from model_bakery import baker
 from strawberry.django.test import GraphQLTestClient
 from strawberry.test import Response
@@ -62,6 +66,34 @@ def test_me_requires_authentication(client):
     assert response.data is None
     assert response.errors is not None
     assert response.errors[0].get("message") == "Authentication required"
+{% if use_rate_limiting %}
+
+
+@override_settings(RATELIMIT_ENABLE=True)
+def test_obtain_token_rate_limited(client):
+    """5 attempts/minute per IP on obtainToken - the 6th in the same window
+    gets rejected. RATELIMIT_ENABLE is False by default in tests (see
+    config/settings/test.py) so unrelated tests don't trip each other's
+    shared budget; re-enabled here just for this one test.
+    """
+    cache.clear()
+    baker.make("accounts.User", {{ user_identifier }}="{{ identifier_value }}")
+
+    mutation = (
+        "mutation($identifier: String!, $password: String!) {"
+        " obtainToken({{ user_identifier }}: $identifier, password: $password) { access } }"
+    )
+    variables = {"identifier": "{{ identifier_value }}", "password": "wrong"}
+
+    for _ in range(5):
+        response = _query(client, mutation, variables=variables, assert_no_errors=False)
+        assert response.errors is not None
+        assert response.errors[0].get("message") == "Invalid credentials"
+
+    response = _query(client, mutation, variables=variables, assert_no_errors=False)
+    assert response.errors is not None
+    assert response.errors[0].get("message") == "Too many requests"
+{% endif %}
 {% if use_shinobi %}
 
 

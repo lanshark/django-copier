@@ -79,6 +79,9 @@ dependencies = [
 {% if use_csp and django_version != '6.1' %}
     "django-csp",
 {% endif %}
+{% if use_rate_limiting %}
+    "django-ratelimit",
+{% endif %}
 {% if use_vite %}
     "django-vite",
 {% endif %}

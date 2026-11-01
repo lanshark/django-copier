@@ -273,6 +273,18 @@ JWT_SIGNING_KEY = config("JWT_SIGNING_KEY")
 JWT_ACCESS_TOKEN_LIFETIME_MIN = config("JWT_ACCESS_TOKEN_LIFETIME_MIN", default=15, cast=int)
 JWT_REFRESH_TOKEN_LIFETIME_DAYS = config("JWT_REFRESH_TOKEN_LIFETIME_DAYS", default=7, cast=int)
 {% endif %}
+{% if use_rate_limiting and use_redis %}
+
+# --- Cache (django-ratelimit needs one shared across workers to count
+# attempts correctly; without this it'd default to Django's per-process
+# LocMemCache, under-counting once there's more than one worker process) ---
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.redis.RedisCache",
+        "LOCATION": config("REDIS_URL", default="redis://redis:6379/0"),
+    }
+}
+{% endif %}
 {% if use_cors %}
 
 # --- django-cors-headers ---

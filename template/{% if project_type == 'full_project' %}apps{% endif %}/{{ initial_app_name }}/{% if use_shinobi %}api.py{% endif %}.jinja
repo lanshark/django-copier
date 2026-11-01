@@ -1,4 +1,7 @@
 from django.contrib.auth import authenticate
+{% if use_rate_limiting %}
+from django_ratelimit.core import is_ratelimited
+{% endif %}
 from ninja import NinjaAPI
 
 from .auth import JWTAuth, make_access_token, make_refresh_token
@@ -15,6 +18,12 @@ def health(request):
 
 @api.post("/auth/token", response=TokenPairOut, auth=None)
 def obtain_token(request, payload: TokenObtainIn):
+{% if use_rate_limiting %}
+    # Shares a budget with Strawberry's obtainToken (same group/key), so
+    # switching API doesn't let an attacker dodge the limit.
+    if is_ratelimited(request, group="auth-token", key="ip", rate="5/m", increment=True):
+        return api.create_response(request, {"detail": "Too many requests"}, status=429)
+{% endif %}
 {% if user_identifier == 'email' %}
     # ModelBackend's `authenticate()` kwarg is always named `username`, regardless
     # of AUTH_USER_MODEL.USERNAME_FIELD — it's mapped internally, so this is correct.

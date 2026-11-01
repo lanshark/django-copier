@@ -145,6 +145,43 @@ capture the reasoning in a feature-scoped ADR.
   prod — a locally-running separate frontend dev server is as much a
   cross-origin case as a deployed one.
 {% endif %}
+{% if use_csp %}
+- A Content-Security-Policy (`default-src 'self'`) in production only
+  ({{ 'Django' if django_version == '6.1' else 'django-csp' }}'s own
+  support{% if django_version != '6.1' %}, since Django's own isn't
+  available before 6.1{% endif %}). Not enabled in dev/test, where
+  GraphiQL/Vite's dev server would otherwise need carve-outs.
+{% endif %}
+{% if use_rate_limiting %}
+{% if use_shinobi and use_strawberry %}
+- Rate limiting via `django-ratelimit` on the token-issuing endpoints
+  (REST `/auth/token` and GraphQL `obtainToken`), 5/minute per IP,
+  sharing one budget across both so switching API doesn't let an
+  attacker dodge the limit.
+{% elif use_shinobi %}
+- Rate limiting via `django-ratelimit` on the token-issuing endpoint
+  (REST `/auth/token`), 5/minute per IP.
+{% else %}
+- Rate limiting via `django-ratelimit` on the token-issuing endpoint
+  (GraphQL `obtainToken`), 5/minute per IP.
+{% endif %}
+{% if use_redis %}
+  Backed by a real shared cache (`CACHES`, Redis) so the count is correct
+  across multiple worker processes.
+{% else %}
+  Falls back to Django's default per-process cache since `use_redis` is
+  off here — less precise across multiple workers, but still better than
+  no limit.
+{% endif %}
+{% if use_caddy %}
+  `config/ratelimit.py` reads the real client IP from `X-Forwarded-For`
+  rather than `REMOTE_ADDR` (which would otherwise be Caddy's own address
+  for every request), trusted for the same reason
+  `SECURE_PROXY_SSL_HEADER` already is.
+{% endif %}
+  Disabled in tests (`config/settings/test.py`) so unrelated tests don't
+  trip each other's shared budget.
+{% endif %}
 {% if use_vite %}
 - A Pico.css + Vite frontend build pipeline (django-vite) for the home page.
 {% endif %}
