@@ -40,10 +40,16 @@ You'll be prompted for:
 | `postgres_version` | *(full_project only)* `18` (default), `17`, or `16` — PostgreSQL version to target |
 | `django_version` | `5.2` LTS (default) or `6.1` — Django 6.1 is newer and not yet fully vetted here; the generated `docs/architecture.md` documents known caveats (`django-tasks`/`django-rq` vs. Django's built-in tasks framework, unverified email settings) when selected |
 | `use_redis` | *(full_project only)* `true` → django-tasks on RQ/Redis with a `worker` compose service; `false` → synchronous `ImmediateBackend`, no Redis needed |
+| `task_backend` | *(full_project only, when `use_redis`)* `RQ` (default, django-tasks-rq) or `Huey` (django-huey, adds built-in periodic/cron tasks) |
 | `use_async` | *(full_project only)* `true` → serve via uvicorn/ASGI; `false` → gunicorn/WSGI |
 | `use_shinobi` | `true` → include a django-shinobi (Django Ninja) API layer with JWT auth and an example health/token/me API; `false` → no API layer |
+| `use_strawberry` | *(full_project only)* `true` → also add a Strawberry GraphQL API at `/graphql/`, sharing the same JWT auth as django-shinobi (a token works against either); `false` → no GraphQL endpoint |
 | `use_vite` | *(full_project only)* `true` → Pico.css + Vite frontend build pipeline (django-vite, HMR dev server) for the home page; `false` → no frontend tooling |
 | `use_allauth` | *(full_project only)* `true` → django-allauth for session-based login/signup/logout (separate from the JWT API auth), with a login/logout link on the home page; `false` → no allauth |
+| `use_caddy` / `domain_name` | *(full_project only)* `true` → front the app with a standalone Caddy reverse proxy (automatic HTTPS via Let's Encrypt) for `domain_name`; `false` → the app container publishes its port directly |
+| `use_log_shipping` / `use_victorialogs` | *(full_project only)* `true` → ship container logs (via Vector) to a centralized VictoriaLogs instance, configured via env vars; `use_victorialogs` additionally generates the standalone VictoriaLogs store itself (only needed on the one host that runs it) |
+| `use_error_tracking` | *(full_project only)* `true` → add error tracking via `sentry-sdk`, against Sentry or any Sentry-protocol-compatible self-host (BugSink, GlitchTip, ...), initialized only in prod; `false` → unhandled exceptions are only visible in logs |
+| `storage_backend` | *(full_project only)* `Local filesystem` (default), `Amazon S3`, or `Azure Blob Storage` — file storage backend for user-uploaded media via django-storages |
 | `task_runner` | `Makefile` (default) or `Justfile` — which tool wraps the dev commands (`up`/`migrate`/`test`/`lint`/`new-feature`/etc.) |
 | `email_provider` | *(full_project only)* `Amazon SES` (default), `Postmark`, `Mailgun`, or `SendGrid` — production email backend via django-anymail (local dev defaults to localhost SMTP, with Docker wiring Mailpit automatically) |
 | `user_identifier` | *(full_project only)* `Email address` (default) or `Username` — how the custom user model (`apps/accounts`) identifies users |
@@ -205,38 +211,23 @@ byte-for-byte with no substitution.
 
 ## What's been verified
 
-CI (`.github/workflows/test-template.yml`) renders and runs each combination below —
-not just writes it — against a real Postgres 17 (and Redis, where relevant): `migrate`,
-the pytest suite, `ruff check`, and `pyright` all pass clean in each case.
+CI (`.github/workflows/test-template.yml`) renders and runs each matrix entry there —
+not just writes it — against a real Postgres (and Redis, where relevant): `migrate`,
+the pytest suite, `ruff check`, `ruff format --check`, and `pyright` all pass clean in
+each case, plus real config-syntax validation (`docker compose config`, `caddy
+validate`, `vector validate`) for infrastructure-touching features.
 
-`full_project`:
-
-- Default answers (`use_redis=true`, `use_async=false`, `user_identifier=email`);
-  the smoke test suite includes an email test confirming `config/settings/test.py`'s
-  `locmem` backend captures mail instead of needing a live `mailpit` SMTP server in
-  CI, and `apps/accounts` tests confirming the custom user manager
-- `user_identifier=username` (custom user model with Django's default `AbstractUser`
-  fields instead of the email-only variant; both variants' checked-in
-  `migrations/0001_initial.py` are confirmed to exactly match
-  `manage.py makemigrations --check`)
-- `use_redis=false` (synchronous task backend, no Redis/worker service generated)
-- Custom `initial_app_name` + `use_async=true` (app directory renamed correctly, all
-  internal imports follow, Dockerfile CMD switches to uvicorn)
-- `open_source_license=Apache-2.0`
-- `use_shinobi=false` (no API layer; an always-present smoke test keeps the suite
-  non-empty)
-- `use_vite=true` (Pico.css + Vite build pipeline, django-vite, home page rendered
-  and `collectstatic` run against a `npm run build` manifest)
-- `task_runner=justfile` + `use_vite=true` (`migrate`, `collectstatic`, `test`, `lint`,
-  `typecheck`, and the frontend recipes all run through `just` rather than directly)
-- `use_allauth=true` (login/signup/logout wired for the default email identifier;
-  the home page's login/logout link and "Logged in user" text are covered by a new
-  test)
-
-`reusable_app`:
-
-- Default answers, and `use_shinobi=false` — both also verified to `uv build` cleanly
-- `task_runner=justfile` (`test`, `lint`, `typecheck`, and `build` run through `just`)
+That workflow file is the source of truth for exactly which flags and combinations
+are covered — this list has drifted out of sync with it before, so treat `grep
+"name:" .github/workflows/test-template.yml` as more current than this paragraph.
+As of this writing it covers both `project_type`s, every individual flag at least
+once (Python/Postgres/Django version choices, `task_backend`, `use_shinobi`/
+`use_strawberry`, `use_caddy`, `use_log_shipping`/`use_victorialogs`,
+`use_error_tracking`, `storage_backend`, `email_provider`, `use_vite`, `use_allauth`,
+both `task_runner`s, a custom `initial_app_name`, and `user_identifier=username`),
+plus several combinations picked because they'd historically caused real bugs here
+(e.g. a feature combined with `use_redis=false`, or two optional frameworks enabled
+together) — see `CHANGELOG.md` for the specifics of what broke and when.
 
 ## Known limitations
 
