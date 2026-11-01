@@ -76,6 +76,9 @@ dependencies = [
 {% if use_cors %}
     "django-cors-headers",
 {% endif %}
+{% if use_csp and django_version != '6.1' %}
+    "django-csp",
+{% endif %}
 {% if use_vite %}
     "django-vite",
 {% endif %}
