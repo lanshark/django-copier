@@ -645,6 +645,30 @@ All notable changes to this project are documented in this file.
   issues above before they were fixed), and the full `pytest` suite all
   pass clean, with the new test genuinely executing (not just importing
   cleanly) wherever it's generated and correctly absent otherwise.
+- Add a `use_cors` toggle (default `false`, `full_project`-only; closes
+  issue #44), as the first step of adding CORS support via
+  `django-cors-headers`. Independent of `use_shinobi`/`use_strawberry`,
+  since CORS is a cross-cutting app concern, not tied to either API
+  framework. This step wires up the full functional core: the question,
+  the `pyproject.toml` dependency, `corsheaders` in `INSTALLED_APPS`,
+  `CorsMiddleware` inserted right after `SecurityMiddleware` (before
+  `CommonMiddleware`, per the package's own requirement — confirmed via
+  its source, not assumed), and `CORS_ALLOWED_ORIGINS = config(...,
+  default="", cast=Csv())` — secure by default, since `Csv()` on an empty
+  string returns `[]` (confirmed directly) rather than e.g. `['']`, which
+  would otherwise trip corsheaders' own origin-format validation. CI
+  matrix coverage and docs follow in the next step.
+  Verified by rendering `use_cors=true`/`false`, combined with
+  `use_allauth=true` and `use_async=true`: `manage.py check`, `ruff`,
+  `ruff format`, `pyright`, and the full `pytest` suite all pass clean on
+  every variant, including under `config.settings.prod`. Went further and
+  issued real HTTP requests: confirmed no `Access-Control-Allow-Origin`
+  header is added for any cross-origin request when no origins are
+  configured (the secure default), confirmed an explicitly-configured
+  origin genuinely gets the header while any other origin doesn't, and
+  confirmed corsheaders' own system check genuinely fires
+  (`corsheaders.E013`) on a malformed `CORS_ALLOWED_ORIGINS` value via
+  `manage.py check`.
 
 ## 2026-09-21: Release-2026.09.21.01
 

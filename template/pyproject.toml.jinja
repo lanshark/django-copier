@@ -73,6 +73,9 @@ dependencies = [
 {% elif storage_backend == 'azure' %}
     "django-storages[azure]",
 {% endif %}
+{% if use_cors %}
+    "django-cors-headers",
+{% endif %}
 {% if use_vite %}
     "django-vite",
 {% endif %}
