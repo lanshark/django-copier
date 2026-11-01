@@ -37,7 +37,7 @@ jobs:
             - name: Create Pull Request
               uses: peter-evans/create-pull-request@v8.1.1
               with:
-                  token: ${{ secrets.GITHUB_TOKEN }}
+                  token: ${{ secrets.WORKFLOW_UPDATE_TOKEN }}
                   branch: update/dependency-autoupdate
                   title: Auto-update pre-commit hooks and GitHub Actions
                   commit-message: Auto-update pre-commit hooks and GitHub Actions
