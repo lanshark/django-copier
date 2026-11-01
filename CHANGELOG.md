@@ -4,6 +4,10 @@ All notable changes to this project are documented in this file.
 
 ## Next Release
 
+- Use a dedicated `WORKFLOW_UPDATE_TOKEN` secret to let the dependency
+  auto-update workflow open PRs that update workflow files; the default
+  `GITHUB_TOKEN` cannot push changes to workflows.
+
 - Add a standalone `docker-compose.victorialogs.yml`, generated when the new
   `use_victorialogs` question (only asked once `use_log_shipping` is set,
   default `false`) is true — a dedicated toggle rather than reusing
