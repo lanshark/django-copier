@@ -23,6 +23,35 @@ CSRF_COOKIE_SECURE = True
 SECURE_HSTS_SECONDS = 60 * 60 * 24 * 7
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
+{% if use_csp %}
+
+# --- Content Security Policy ---
+# default-src 'self' is deliberately strict - Django's own admin templates
+# and django-vite's output never use inline scripts/styles (verified before
+# choosing this default), so this doesn't need 'unsafe-inline' or nonces to
+# work. Only enabled here in prod: GraphiQL and Vite's HMR dev server (both
+# dev-only) would otherwise need carve-outs this policy doesn't give them.
+# Tune this if your own templates/JS need more - e.g. add specific origins
+# to script-src/style-src/img-src rather than loosening default-src itself.
+MIDDLEWARE = MIDDLEWARE + [  # noqa: F405
+{% if django_version == '6.1' %}
+    "django.middleware.csp.ContentSecurityPolicyMiddleware",
+{% else %}
+    "csp.middleware.CSPMiddleware",
+{% endif %}
+]
+{% if django_version == '6.1' %}
+SECURE_CSP = {
+    "default-src": ["'self'"],
+}
+{% else %}
+CONTENT_SECURITY_POLICY = {
+    "DIRECTIVES": {
+        "default-src": ["'self'"],
+    },
+}
+{% endif %}
+{% endif %}
 {% if use_caddy %}
 
 # --- Caddy (reverse proxy, terminates TLS) ---

@@ -677,6 +677,46 @@ All notable changes to this project are documented in this file.
   Verified by rendering `use_cors=true`/`false` and confirming
   `manage.py check`, `ruff`, `ruff format`, `pyright`, and `pytest` all
   pass clean.
+- Add a `use_csp` toggle (default `false`, `full_project`-only; first of two
+  steps closing issue #41's "HSTS, CSP, rate limiting" scope — HSTS was
+  already fully in place in `prod.py`, nothing needed there). Adds a
+  Content-Security-Policy header in production only: `default-src 'self'`,
+  using Django's own CSP support on `django_version=6.1` (native since
+  6.1; `django.middleware.csp.ContentSecurityPolicyMiddleware`,
+  `SECURE_CSP` setting) or the third-party `django-csp` package on `5.2`
+  (Django's own support doesn't exist before 6.1; `csp.middleware.
+  CSPMiddleware`, `CONTENT_SECURITY_POLICY = {"DIRECTIVES": {...}}` — a
+  genuinely different setting name and shape from Django's native one,
+  confirmed by reading both packages' source rather than assumed).
+  Only wired into `prod.py`, not `base.py` — deliberately, since both
+  dev-only features that could otherwise need CSP carve-outs (Strawberry's
+  GraphiQL explorer and Vite's HMR dev server, which runs on a different
+  origin/port in dev) are already gated to `DEBUG`/dev-only from earlier
+  work, so prod-only CSP sidesteps needing any carve-out for either.
+  Audited for breakage risk before picking `default-src 'self'` as strict
+  as it is: confirmed via source that Django's own admin templates (both
+  5.2 and 6.1) have zero inline `<script>` bodies or `style="..."`
+  attributes — everything is `src=`/`href=`-based and same-origin;
+  django-vite's generated tags are always `<script src="...">`, never
+  inline; and allauth's one inline `<script>` (`account/email.html`) is
+  `type="application/json"` — a non-executable data island browsers don't
+  subject to `script-src` at all. Went well beyond static reading: rendered
+  real projects for both Django versions with `use_csp=true`, ran
+  `collectstatic`, and issued genuine HTTP requests under real
+  `config.settings.prod` settings — confirmed the exact header value
+  (`default-src 'self'`) on both versions; confirmed the admin login page
+  renders at 200 with the header present and, on inspection of the actual
+  rendered HTML (not just source), zero inline `<script>` tags or `style=`
+  attributes on either version; and specifically rendered the allauth
+  email-management page (logged in) to confirm its one inline script is
+  exactly the predicted non-executable JSON data island, with no other
+  inline scripts anywhere on the page.
+  Verified by rendering `use_csp=true`/`false` combined with
+  `django_version=5.2`/`6.1` and `use_allauth=true`: `manage.py check`,
+  `ruff`, `ruff format`, `pyright`, and the full `pytest` suite all pass
+  clean on every variant, including under `config.settings.prod`.
+  Rate limiting (the remaining item from #41's scope) follows in the next
+  step.
 
 ## 2026-09-21: Release-2026.09.21.01
 

@@ -38,6 +38,9 @@ INSTALLED_APPS = [
 {% if use_cors %}
     "corsheaders",
 {% endif %}
+{% if use_csp and django_version != '6.1' %}
+    "csp",  # registers django-csp's system checks; 6.1 has CSP built in
+{% endif %}
     "apps.accounts",
     "apps.{{ initial_app_name }}",
 ]
