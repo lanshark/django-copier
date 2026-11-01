@@ -1,3 +1,4 @@
+{% set identifier_value = 'scott@example.com' if user_identifier == 'email' else 'scott' %}
 import pytest
 import sentry_sdk
 from django.http import HttpResponse
@@ -5,6 +6,9 @@ from sentry_sdk.transport import Transport
 
 from config.logging import RequestContextMiddleware
 
+{% if use_shinobi or use_strawberry %}
+from ..auth import _authenticate_bearer_token, make_access_token
+{% endif %}
 from ..tasks import example_background_task
 
 
@@ -75,3 +79,28 @@ def test_middleware_request_id_reaches_captured_event(capturing_sentry, rf):
 
     assert capturing_sentry.events
     assert capturing_sentry.events[-1]["tags"]["request_id"] == request.request_id
+{% if use_shinobi or use_strawberry %}
+
+
+@pytest.mark.django_db
+def test_authenticated_user_reaches_captured_event(capturing_sentry, django_user_model):
+    """`_authenticate_bearer_token`'s sentry_sdk.set_user() call really
+    lands on a captured event, not just a no-op that happens not to crash.
+    Shared by {{ 'JWTAuth and IsAuthenticated' if use_shinobi and use_strawberry else 'JWTAuth' if use_shinobi else 'IsAuthenticated' }} - exercised directly here rather
+    than through either one, since the behavior under test belongs to the
+    shared helper, not either auth class.
+    """
+    user = django_user_model.objects.create_user({{ user_identifier }}="{{ identifier_value }}")
+    token = make_access_token(user)
+
+    class _FakeRequest:
+        headers: dict = {}
+
+    assert _authenticate_bearer_token(_FakeRequest(), token) is not None
+
+    sentry_sdk.capture_message("authenticated request")
+    sentry_sdk.flush(timeout=2)
+
+    assert capturing_sentry.events
+    assert capturing_sentry.events[-1]["user"]["id"] == user.pk
+{% endif %}

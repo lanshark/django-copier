@@ -615,6 +615,36 @@ All notable changes to this project are documented in this file.
   `config.settings.prod` with realistic dummy env vars for all three —
   confirming the newly-exercised prod-settings path doesn't hide a
   problem it would have caught.
+- Fix stale documentation and a missing regression test, found by the same
+  full-repository review: the root `README.md`'s options table was missing
+  six questions added across this session (`task_backend`, `use_strawberry`,
+  `use_caddy`/`domain_name`, `use_log_shipping`/`use_victorialogs`,
+  `use_error_tracking`, `storage_backend`); its "What's been verified"
+  section said "Postgres 17" (the default is now 18) and hand-duplicated an
+  increasingly-incomplete list of CI combinations. Replaced that section
+  with a pointer at `.github/workflows/test-template.yml` as the actual
+  source of truth, rather than re-listing every combination by hand again
+  (the exact kind of drift that caused the staleness in the first place).
+  Also added `test_authenticated_user_reaches_captured_event` to
+  `test_error_tracking.py` (generated whenever `use_error_tracking` and
+  either `use_shinobi` or `use_strawberry` are on): the shared
+  `_authenticate_bearer_token` helper's `sentry_sdk.set_user()` call had no
+  regression test, unlike its `request_id` tagging, which already had two.
+  Caught two real issues while writing it: the top-level `get_user_model`
+  import was unused (and a `ruff` error) whenever neither `use_shinobi` nor
+  `use_strawberry` is on, since the new test is conditional on that but the
+  import wasn't; and calling `get_user_model().objects.create_user(...)`
+  directly triggers a real `pyright` error (`Manager[_UserModel]` has no
+  known `create_user`) — fixed both by switching to pytest-django's
+  `django_user_model` fixture, matching the convention already used
+  elsewhere in this exact codebase (`test_views.py`'s allauth tests) for
+  this exact reason.
+  Verified by rendering all four `use_error_tracking`/`use_shinobi`/
+  `use_strawberry`-relevant combinations: `manage.py check`, `ruff`, `ruff
+  format`, `pyright` (0 errors on every variant, including the two real
+  issues above before they were fixed), and the full `pytest` suite all
+  pass clean, with the new test genuinely executing (not just importing
+  cleanly) wherever it's generated and correctly absent otherwise.
 
 ## 2026-09-21: Release-2026.09.21.01
 
