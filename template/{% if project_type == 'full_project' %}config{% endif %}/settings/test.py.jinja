@@ -25,3 +25,16 @@ TASKS = {
 
 # Captured in django.core.mail.outbox instead of sent — no mailpit dependency in CI.
 EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
+{% if use_rate_limiting %}
+
+# Same reasoning as TASKS above: no Redis dependency in CI, and disabled by
+# default so unrelated tests don't trip each other's rate limit by sharing
+# state - the one test that exercises this explicitly re-enables it via
+# @override_settings(RATELIMIT_ENABLE=True).
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+    }
+}
+RATELIMIT_ENABLE = False
+{% endif %}

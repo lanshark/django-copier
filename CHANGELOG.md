@@ -723,6 +723,67 @@ All notable changes to this project are documented in this file.
   fixed here before it could repeat.
   Rate limiting (the remaining item from #41's scope) follows in the next
   step.
+- Add a `use_rate_limiting` toggle (default `false`, only offered `when:
+  use_shinobi or use_strawberry`), the second and last step closing issue
+  #41's scope. Adds `django-ratelimit` on the token-issuing endpoint(s) —
+  REST `/auth/token` and/or GraphQL `obtainToken`, whichever are enabled —
+  via an explicit `is_ratelimited(...)` call in the resolver body rather
+  than stacking `@ratelimit` as a decorator: confirmed via
+  `django-ninja`'s source that its route decorators return the view
+  function unchanged (so stacking order wouldn't break registration), but
+  decided against relying on `functools.wraps`' `__wrapped__`-following
+  for ninja's own parameter/schema introspection to keep working
+  correctly — not worth the risk for what an explicit call does just as
+  well. Both endpoints share one `group="auth-token"` budget so switching
+  API doesn't let an attacker dodge the limit; rate `5/m` per IP.
+  Gets a real shared cache (`CACHES`, Django's built-in
+  `django.core.cache.backends.redis.RedisCache` — no extra dependency
+  beyond `redis`, already present whenever `use_redis` is on) when
+  `use_redis` is also on, added in `base.py`; falls back to Django's
+  default per-process cache otherwise (documented as less precise across
+  multiple workers, but still better than no limit).
+  Found and fixed a real correctness gap while designing the `use_caddy`
+  interaction: `django-ratelimit`'s `key="ip"` reads `request.META
+  ["REMOTE_ADDR"]` by default, which is Caddy's own address for every
+  request once it's fronting the app — collapsing every real client onto
+  one shared bucket. Reproduced this directly with two requests carrying
+  different `X-Forwarded-For` values but the same simulated Caddy
+  `REMOTE_ADDR`: without a fix, the second "client" was wrongly limited
+  by the first's attempts. Fixed with a new `config/ratelimit.py`
+  (generated only when `use_rate_limiting and use_caddy`) that reads the
+  real client IP from `X-Forwarded-For`'s first entry, wired in via
+  `RATELIMIT_IP_META_KEY` in `prod.py` — trusted for the same reason
+  `SECURE_PROXY_SSL_HEADER` already is (Caddy is this deployment's sole
+  public entry point). Re-ran the same two-request scenario after the fix
+  and confirmed the second client is no longer wrongly limited.
+  `config/settings/test.py` sets `RATELIMIT_ENABLE = False` and forces a
+  local (non-Redis) cache by default, matching the existing precedent for
+  `TASKS`/django-tasks in the same file — so unrelated tests can't trip
+  each other's shared rate-limit budget and tests never depend on a real
+  Redis connection; added regression tests
+  (`test_obtain_token_rate_limited` in both `test_api.py` and
+  `test_schema.py`, when generated) that explicitly
+  `@override_settings(RATELIMIT_ENABLE=True)` and `cache.clear()` first,
+  then confirm 5 attempts succeed and the 6th gets HTTP 429 (REST) or a
+  "Too many requests" GraphQL error — verified these fail without the
+  `RATELIMIT_ENABLE=True` override (proving they'd catch a regression)
+  before confirming they pass with it.
+  Added CI matrix entries `with-rate-limiting`, `with-rate-limiting-
+  strawberry`, `with-rate-limiting-noredis`, and `with-rate-limiting-
+  caddy` (named to end in "caddy" so the existing `endsWith(matrix.name,
+  'caddy')` prod-settings check condition picks it up automatically, same
+  precedent as `with-log-shipping-caddy`). Also caught and fixed two
+  earlier gaps while writing this entry: `use_csp` was never added to
+  `docs/architecture.md` or the root `README.md`'s options table/flag
+  list during its own step — fixed both here alongside the new
+  `use_rate_limiting` additions.
+  Verified by rendering `use_rate_limiting=true` alone, combined with
+  `use_strawberry=true`/`use_shinobi=false`, `use_redis=false`, and
+  `use_caddy=true`: `manage.py check` (including under
+  `config.settings.prod` for the caddy combination), `ruff`, `ruff
+  format`, `pyright`, and the full `pytest` suite all pass clean on every
+  variant, with the new regression tests genuinely executing (not just
+  importing cleanly) wherever they're generated.
 
 ## 2026-09-21: Release-2026.09.21.01
 

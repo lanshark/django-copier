@@ -66,6 +66,14 @@ jobs:
                       extra_args: "--data use_csp=true"
                     - name: with-csp-django-6.1
                       extra_args: "--data use_csp=true --data django_version=6.1"
+                    - name: with-rate-limiting
+                      extra_args: "--data use_rate_limiting=true"
+                    - name: with-rate-limiting-strawberry
+                      extra_args: "--data use_rate_limiting=true --data use_strawberry=true --data use_shinobi=false"
+                    - name: with-rate-limiting-noredis
+                      extra_args: "--data use_rate_limiting=true --data use_redis=false"
+                    - name: with-rate-limiting-caddy
+                      extra_args: "--data use_rate_limiting=true --data use_caddy=true --data domain_name=example.com"
                     - name: custom-username
                       extra_args: "--data user_identifier=username"
                     - name: with-allauth
