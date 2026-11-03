@@ -4,6 +4,20 @@ All notable changes to this project are documented in this file.
 
 ## Next Release
 
+- Add a `use_mkdocs` question (default `false`, no `project_type`
+  restriction — both `full_project` and `reusable_app` already generate
+  `docs/vision.md`, `docs/architecture.md`, and `docs/adr/`) that adds
+  MkDocs: the `mkdocs` dev dependency, a minimal `mkdocs.yml` (no explicit
+  `nav:` on purpose — new ADRs show up automatically from the file tree),
+  `site/` added to `.gitignore`, and `docs-serve`/`docs-build` recipes in
+  all four Makefile/Justfile variants. Verified by rendering both
+  `project_type`s with both task runners, installing deps, and running
+  `mkdocs build --strict` (and the `make`/`just docs-build` recipes
+  directly) — confirms it discovers `vision.md`, `architecture.md`, and
+  `adr/0001-template.md` with no broken links. New `with-mkdocs` (full
+  project) and `app-mkdocs` (reusable app) CI matrix entries, each running
+  `mkdocs build --strict`.
+
 - Add a `use_feature_flags` question (`full_project` only, default `false`)
   that wires in `django-waffle` for feature flags (flags/switches/samples,
   managed through the admin UI) — `"waffle"` in `INSTALLED_APPS`,

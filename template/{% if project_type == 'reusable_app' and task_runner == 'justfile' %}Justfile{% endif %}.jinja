@@ -60,6 +60,18 @@ publish $force_yes=env_var_or_default("FORCE_YES", ""):
 	@uv build
 	@uv publish
 
+{% if use_mkdocs %}
+## Documentation (MkDocs)
+
+# Serve the docs site locally with live reload
+docs-serve:
+	@uv run mkdocs serve
+
+# Build the docs site into site/
+docs-build:
+	@uv run mkdocs build
+
+{% endif %}
 ## Document-first workflow
 
 # Scaffold a feature folder + skill symlinks (pass <feature-slug> positionally)
