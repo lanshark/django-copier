@@ -389,6 +389,16 @@ ADRs live in one of two places, depending on scope:
 
 ADR numbering is independent per folder — each `adr/` folder starts its own
 `0001-...` sequence.
+{% if use_mkdocs %}
+
+## Documentation Site
+
+`docs/vision.md`, `docs/architecture.md`, and everything under `docs/adr/`
+are also built into a browsable site with MkDocs (`mkdocs.yml`, no explicit
+`nav:` — new ADRs show up automatically). `{{ runner_cmd }} docs-serve` runs
+it locally with live reload; `{{ runner_cmd }} docs-build` builds the static
+site into `site/` (gitignored).
+{% endif %}
 
 ## Open Architecture Questions
 

@@ -149,6 +149,16 @@ frontend-build: # Build frontend assets with Vite
 	@npm run build
 
 {% endif %}
+{% if use_mkdocs %}
+## Documentation (MkDocs)
+.PHONY: docs-serve docs-build
+docs-serve: # Serve the docs site locally with live reload
+	@uv run mkdocs serve
+
+docs-build: # Build the docs site into site/
+	@uv run mkdocs build
+
+{% endif %}
 ## Document-first workflow
 .PHONY: new-feature
 new-feature: # Scaffold a feature folder + skill symlinks (name=<slug>)

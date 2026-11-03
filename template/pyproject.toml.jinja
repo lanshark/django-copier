@@ -111,6 +111,9 @@ dev = [
     "djlint",
     "pyright",
     "django-stubs",
+{% if use_mkdocs %}
+    "mkdocs",
+{% endif %}
 ]
 {% if project_type == 'reusable_app' %}
 
