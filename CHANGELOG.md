@@ -4,6 +4,8 @@ All notable changes to this project are documented in this file.
 
 ## Next Release
 
+## 2026-11-02: Release-2026.11.02.01
+
 - Add a `use_mkdocs` question (default `false`, no `project_type`
   restriction — both `full_project` and `reusable_app` already generate
   `docs/vision.md`, `docs/architecture.md`, and `docs/adr/`) that adds
