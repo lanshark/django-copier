@@ -82,6 +82,9 @@ dependencies = [
 {% if use_rate_limiting %}
     "django-ratelimit",
 {% endif %}
+{% if use_feature_flags %}
+    "django-waffle",
+{% endif %}
 {% if use_vite %}
     "django-vite",
 {% endif %}

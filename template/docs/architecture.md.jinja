@@ -185,6 +185,11 @@ capture the reasoning in a feature-scoped ADR.
 {% if use_vite %}
 - A Pico.css + Vite frontend build pipeline (django-vite) for the home page.
 {% endif %}
+{% if use_feature_flags %}
+- Feature flags via `django-waffle` (flags/switches/samples, managed through
+  the admin UI). An undefined flag evaluates to off everywhere by default —
+  no settings beyond `INSTALLED_APPS`/`MIDDLEWARE` are needed to get that.
+{% endif %}
 - Tooling: uv, ruff, pyright, pytest, and Docker Compose.
 {% if django_version == '6.1' %}
 
