@@ -41,6 +41,9 @@ INSTALLED_APPS = [
 {% if use_csp and django_version != '6.1' %}
     "csp",  # registers django-csp's system checks; 6.1 has CSP built in
 {% endif %}
+{% if use_feature_flags %}
+    "waffle",
+{% endif %}
     "apps.accounts",
     "apps.{{ initial_app_name }}",
 ]
@@ -71,6 +74,9 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 {% if use_allauth %}
     "allauth.account.middleware.AccountMiddleware",
+{% endif %}
+{% if use_feature_flags %}
+    "waffle.middleware.WaffleMiddleware",
 {% endif %}
 ]
 

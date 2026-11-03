@@ -53,6 +53,7 @@ You'll be prompted for:
 | `use_cors` | *(full_project only)* `true` → add django-cors-headers, allowing cross-origin requests from origins configured via `CORS_ALLOWED_ORIGINS` (none allowed by default); `false` → same-origin only |
 | `use_csp` | *(full_project only)* `true` → add a Content-Security-Policy (`default-src 'self'`) in production, via Django's own support on `django_version=6.1` or django-csp on `5.2`; `false` → no CSP header |
 | `use_rate_limiting` | *(when `use_shinobi` or `use_strawberry`)* `true` → rate-limit the token-issuing endpoint(s) via django-ratelimit (5/minute per IP, shared across REST and GraphQL); `false` → no rate limit on these endpoints |
+| `use_feature_flags` | *(full_project only)* `true` → add django-waffle for feature flags (flags/switches/samples, managed via the admin UI); `false` → no feature flag support |
 | `task_runner` | `Makefile` (default) or `Justfile` — which tool wraps the dev commands (`up`/`migrate`/`test`/`lint`/`new-feature`/etc.) |
 | `email_provider` | *(full_project only)* `Amazon SES` (default), `Postmark`, `Mailgun`, or `SendGrid` — production email backend via django-anymail (local dev defaults to localhost SMTP, with Docker wiring Mailpit automatically) |
 | `user_identifier` | *(full_project only)* `Email address` (default) or `Username` — how the custom user model (`apps/accounts`) identifies users |
@@ -227,7 +228,8 @@ As of this writing it covers both `project_type`s, every individual flag at leas
 once (Python/Postgres/Django version choices, `task_backend`, `use_shinobi`/
 `use_strawberry`, `use_caddy`, `use_log_shipping`/`use_victorialogs`,
 `use_error_tracking`, `storage_backend`, `use_cors`, `use_csp`,
-`use_rate_limiting`, `email_provider`, `use_vite`, `use_allauth`, both
+`use_rate_limiting`, `use_feature_flags`, `email_provider`, `use_vite`,
+`use_allauth`, both
 `task_runner`s, a custom `initial_app_name`, and `user_identifier=username`),
 plus several combinations picked because they'd historically caused real bugs here
 (e.g. a feature combined with `use_redis=false`, or two optional frameworks enabled

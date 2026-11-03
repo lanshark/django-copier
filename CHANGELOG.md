@@ -4,6 +4,19 @@ All notable changes to this project are documented in this file.
 
 ## Next Release
 
+- Add a `use_feature_flags` question (`full_project` only, default `false`)
+  that wires in `django-waffle` for feature flags (flags/switches/samples,
+  managed through the admin UI) — `"waffle"` in `INSTALLED_APPS`,
+  `"waffle.middleware.WaffleMiddleware"` in `MIDDLEWARE`, and the
+  `django-waffle` dependency. No extra settings needed: an undefined flag
+  evaluates to off everywhere by default. New `with-feature-flags` CI
+  matrix entry; also added `with-feature-flags-django-6.1` since
+  django-waffle 5.0.0's own PyPI classifiers only list Django up through
+  5.2 — verified directly (rendered, migrated, ran the full test suite,
+  `ruff`/`pyright`/`manage.py check --deploy`) that it works fine against
+  6.1 anyway, and confirmed Flag/Switch/Sample all auto-register in
+  `admin.site`.
+
 - Add a standalone `docker-compose.victorialogs.yml`, generated when the new
   `use_victorialogs` question (only asked once `use_log_shipping` is set,
   default `false`) is true — a dedicated toggle rather than reusing
