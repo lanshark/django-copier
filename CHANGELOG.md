@@ -4,10 +4,6 @@ All notable changes to this project are documented in this file.
 
 ## Next Release
 
-- Use a dedicated `WORKFLOW_UPDATE_TOKEN` secret to let the dependency
-  auto-update workflow open PRs that update workflow files; the default
-  `GITHUB_TOKEN` cannot push changes to workflows.
-
 - Add a standalone `docker-compose.victorialogs.yml`, generated when the new
   `use_victorialogs` question (only asked once `use_log_shipping` is set,
   default `false`) is true — a dedicated toggle rather than reusing
@@ -788,6 +784,27 @@ All notable changes to this project are documented in this file.
   format`, `pyright`, and the full `pytest` suite all pass clean on every
   variant, with the new regression tests genuinely executing (not just
   importing cleanly) wherever they're generated.
+- Fix `.github/workflows/pre-commit-autoupdate.yml`'s "Create Pull Request"
+  step, which had two separate problems: the default `GITHUB_TOKEN` can't
+  push changes to files under `.github/workflows/` at all (a hardcoded
+  GitHub restriction, independent of the `permissions:` block) — and this
+  job's own `update_action_pins.py` step modifies exactly those files, so
+  almost every real run hit that; and — confirmed from
+  `peter-evans/create-pull-request`'s own docs — a PR opened with the
+  default `GITHUB_TOKEN` can't trigger other workflows either (GitHub's
+  own anti-recursion rule), so `test-template.yml`'s `pull_request:`
+  trigger would never have run on these PRs regardless. A prior attempt at
+  fixing the first problem (merged separately, introducing a
+  `WORKFLOW_UPDATE_TOKEN` secret) addressed the right root cause but the
+  secret was never actually created, so every scheduled run since then
+  failed with `Input 'token' not supplied` — confirmed by inspecting the
+  failed runs' logs before reusing the same approach. Fixed by switching
+  to a `secrets.AUTOUPDATE_PAT` (a personal access token scoped to just
+  this repo, Contents + Pull requests read/write) that was actually
+  created this time, sidestepping both problems at once. Also dropped the
+  job's now-unneeded `contents: write`/`pull-requests: write` permissions
+  override — the default `GITHUB_TOKEN` no longer does anything requiring
+  them, since the PAT isn't subject to that block at all.
 
 ## 2026-09-21: Release-2026.09.21.01
 

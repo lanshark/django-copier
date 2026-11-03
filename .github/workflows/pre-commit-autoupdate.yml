@@ -15,9 +15,9 @@ jobs:
     auto-update:
         # Don't run this scheduled job in a fork of the repo.
         if: github.repository_owner == 'lanshark'
-        permissions:
-            contents: write # for peter-evans/create-pull-request to create a branch
-            pull-requests: write # for peter-evans/create-pull-request to create a PR
+        # No elevated permissions needed here for the default GITHUB_TOKEN -
+        # Create Pull Request below uses a PAT instead (see its own comment),
+        # which isn't subject to this block at all.
 
         runs-on: ubuntu-latest
         steps:
@@ -37,7 +37,23 @@ jobs:
             - name: Create Pull Request
               uses: peter-evans/create-pull-request@v8.1.1
               with:
-                  token: ${{ secrets.WORKFLOW_UPDATE_TOKEN }}
+                  # The default GITHUB_TOKEN can't push changes to files under
+                  # .github/workflows/ at all (a hardcoded GitHub restriction,
+                  # regardless of the permissions: block above) - and this job's
+                  # own update_action_pins.py step modifies exactly those files,
+                  # so almost every real run would hit that. Separately, even if
+                  # it could push, a PR opened with the default GITHUB_TOKEN can't
+                  # trigger other workflows (GitHub's own anti-recursion rule),
+                  # so test-template.yml's `pull_request:` trigger would never run
+                  # on it either. AUTOUPDATE_PAT (a personal access token scoped
+                  # to this repo, Contents + Pull requests read/write, set as a
+                  # repo secret) sidesteps both at once. A prior attempt at this
+                  # fix (#85) used a secret named WORKFLOW_UPDATE_TOKEN that was
+                  # never actually created, so every scheduled run since then
+                  # failed with "Input 'token' not supplied" - confirmed by
+                  # inspecting the failed runs' logs before reusing the same
+                  # approach under this name instead.
+                  token: ${{ secrets.AUTOUPDATE_PAT }}
                   branch: update/dependency-autoupdate
                   title: Auto-update pre-commit hooks and GitHub Actions
                   commit-message: Auto-update pre-commit hooks and GitHub Actions
