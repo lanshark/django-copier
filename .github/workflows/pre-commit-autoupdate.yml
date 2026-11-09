@@ -35,7 +35,7 @@ jobs:
               run: python3 .github/scripts/update_action_pins.py
 
             - name: Create Pull Request
-              uses: peter-evans/create-pull-request@v8.1.1
+              uses: peter-evans/create-pull-request@v8.1.2
               with:
                   # The default GITHUB_TOKEN can't push changes to files under
                   # .github/workflows/ at all (a hardcoded GitHub restriction,
