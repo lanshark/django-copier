@@ -4,6 +4,8 @@ All notable changes to this project are documented in this file.
 
 ## Next Release
 
+## 2026-11-28: Release-2026.11.28.02
+
 - Fix `copier update` for generated projects: the template now renders a
   `.copier-answers.yml` (`template/{{ _copier_conf.answers_file }}.jinja`)
   recording the template source, version, and answers. Previously no
