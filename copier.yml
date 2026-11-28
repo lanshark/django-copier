@@ -1,7 +1,4 @@
 _subdirectory: template
-# Keep the .agents/skills and .claude/skills entries as symlinks to the feature
-# folders instead of dereferencing them into copies.
-_preserve_symlinks: true
 _envops:
     trim_blocks: true
     lstrip_blocks: true

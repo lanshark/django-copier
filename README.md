@@ -4,10 +4,9 @@ A [copier](https://copier.readthedocs.io/) template for generating Django projec
 Python 3.14, Django 5.2 LTS, Postgres 18, django-tasks, PyTest, uv, ruff, pyright,
 and GitHub Actions CI. It can produce either a full runnable site (Docker Compose,
 optional django-shinobi API layer with JWT auth) or a pip-installable reusable Django
-app (hatchling package, sqlite tests, PyPI release workflow). Every generated project
-also ships a document-first AI-development scaffold (`docs/vision.md`,
-`docs/architecture.md`,
-per-feature docs and skills) for working with Claude Code or Codex.
+app (hatchling package, sqlite tests, PyPI release workflow). Pair it with
+[agent-copier-template](https://github.com/lanshark/agent-copier-template) to add a
+document-first AI-development workflow for Claude Code or Codex.
 
 ## Usage
 
@@ -55,7 +54,7 @@ You'll be prompted for:
 | `use_rate_limiting` | *(when `use_shinobi` or `use_strawberry`)* `true` → rate-limit the token-issuing endpoint(s) via django-ratelimit (5/minute per IP, shared across REST and GraphQL); `false` → no rate limit on these endpoints |
 | `use_feature_flags` | *(full_project only)* `true` → add django-waffle for feature flags (flags/switches/samples, managed via the admin UI); `false` → no feature flag support |
 | `use_mkdocs` | `true` → add MkDocs, building `docs/` (vision, architecture, ADRs) into a browsable site via `make`/`just docs-serve`/`docs-build`; `false` → docs stay plain Markdown files |
-| `task_runner` | `Makefile` (default) or `Justfile` — which tool wraps the dev commands (`up`/`migrate`/`test`/`lint`/`new-feature`/etc.) |
+| `task_runner` | `Makefile` (default) or `Justfile` — which tool wraps the dev commands (`up`/`migrate`/`test`/`lint`/etc.) |
 | `email_provider` | *(full_project only)* `Amazon SES` (default), `Postmark`, `Mailgun`, or `SendGrid` — production email backend via django-anymail (local dev defaults to localhost SMTP, with Docker wiring Mailpit automatically) |
 | `user_identifier` | *(full_project only)* `Email address` (default) or `Username` — how the custom user model (`apps/accounts`) identifies users |
 | `open_source_license` | `MIT`, `BSD-3-Clause`, `Apache-2.0`, `GNU GPLv3`, `GNU AGPLv3`, `Proprietary`, or `None` |
@@ -184,23 +183,26 @@ generation time:
 These are only read in prod (see `.env.example` for the full list); local dev and CI
 never need them.
 
-## Document-first AI development scaffold
+## Pairing with agent-copier-template
 
-Every generated project ships a workflow for developing with an AI coding agent
-(Claude Code, Codex, etc.):
+The document-first AI-development workflow (`AGENTS.md`, `CLAUDE.md`,
+`docs/vision.md`, `docs/adr/`, `docs/ai/`, `features/`, and the
+`.agents/skills/` / `.claude/skills/` symlinks) lives in a separate Copier
+template, [agent-copier-template](https://github.com/lanshark/agent-copier-template),
+so it can be applied to any project. Generate the Django project first, then
+apply agent-copier-template on top:
 
-- `docs/vision.md` — project vision, goals, scope, success criteria, open product questions
-- `docs/architecture.md` — architecture principles, repository layout, conventions
-- `AGENTS.md` (with a `CLAUDE.md` that imports it via `@AGENTS.md`) — how the agent
-  should work in the repo, including the document-first workflow and source-of-truth
-  order
-- `features/<feature-slug>/` — one folder per feature, each with `feature.md` (current
-  state), `history.md` (append-only prompt log), `SKILL.md`, and `adr/`
+```bash
+copier copy gh:lanshark/django-copier my-project
+cd my-project
+copier copy --data adoption_date=$(date +%F) gh:lanshark/agent-copier-template .
+```
 
-Each feature folder is discoverable as a skill through `.agents/skills/<slug>` and
-`.claude/skills/<slug>` symlinks, and `make new-feature name=<slug>` (or `just
-new-feature <slug>`, depending on `task_runner`) scaffolds a new feature with both
-symlinks in place.
+The two templates keep separate answers files (`.copier-answers.yml` and
+`.copier-answers.agents.yml`) and update independently. django-copier still
+generates module-level `AGENTS.md` files (`apps/<app>/AGENTS.md` or
+`src/<package>/AGENTS.md`) with Django-specific invariants; they layer on top
+of agent-copier-template's root `AGENTS.md`.
 
 ## Structure of this repo
 
