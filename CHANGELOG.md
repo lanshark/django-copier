@@ -4,6 +4,8 @@ All notable changes to this project are documented in this file.
 
 ## Next Release
 
+## 2026-11-28: Release-2026.11.28.01
+
 - **Breaking:** remove the document-first AI-development scaffold from the
   generated project; it now lives in the separate agent-copier-template
   Copier template (`gh:lanshark/agent-copier-template`), which works on any
@@ -21,6 +23,17 @@ All notable changes to this project are documented in this file.
   `copier update`, otherwise the update deletes their unmodified root
   `AGENTS.md`, `CLAUDE.md`, and feature scaffolding. README now documents
   pairing the two templates.
+
+- Update pinned pre-commit hook versions in the generated project's
+  `.pre-commit-config.yaml` — `djlint/djLint` `v1.49.3` → `v1.54.2`,
+  `astral-sh/ruff-pre-commit` `v0.17.3` → `v0.17.6` — and pinned GitHub
+  Actions versions: `astral-sh/setup-uv` `v10.3.3` → `v10.4.0` (this
+  repo's `test-template.yml` and `pre-commit-autoupdate.yml`, and the
+  generated `ci.yml` variants, `pre-commit-autoupdate.yml`, and
+  `release.yml`), `peter-evans/create-pull-request` `v8.1.1` → `v8.1.3`
+  (this repo's and the generated `pre-commit-autoupdate.yml`), and
+  `docker/login-action` `v4.7.0` → `v4.8.0` (generated `build.yml`).
+  From the automated dependency-update PRs #93 and #95.
 
 ## 2026-11-02: Release-2026.11.02.01
 
