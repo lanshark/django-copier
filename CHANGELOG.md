@@ -4,6 +4,13 @@ All notable changes to this project are documented in this file.
 
 ## Next Release
 
+- Add an `all-checks` job to this repo's `test-template.yml` that depends
+  on both matrix jobs (`render-and-test`, `render-and-test-app`) and fails
+  unless every matrix entry succeeded. It is the single required status
+  check in the `main` ruleset, so pull requests (including
+  `gh pr merge --auto`) can't merge until the whole template matrix passes,
+  and matrix entries can be added or removed without editing the ruleset.
+
 ## 2026-11-28: Release-2026.11.28.02
 
 - Fix `copier update` for generated projects: the template now renders a
