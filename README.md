@@ -68,7 +68,21 @@ copier update
 ```
 
 Copier will re-apply the template's latest changes on top of the project, respecting any
-local modifications where possible.
+local modifications where possible. It reads `.copier-answers.yml` (written at
+generation time) to know the template source, version, and your answers.
+
+Projects generated before the answers file was added (v2026.11.28.01 and earlier)
+don't have it. Create it once by hand, then run `copier update`:
+
+```yaml
+# .copier-answers.yml
+_commit: v2026.11.28.01          # the release the project was generated from
+_src_path: gh:lanshark/django-copier
+project_type: full_project       # ...plus every answer you gave originally
+```
+
+Answers you leave out fall back to their defaults on update, so list any you
+changed.
 
 ## Project types
 
