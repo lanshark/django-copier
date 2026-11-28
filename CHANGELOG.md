@@ -4,6 +4,24 @@ All notable changes to this project are documented in this file.
 
 ## Next Release
 
+- **Breaking:** remove the document-first AI-development scaffold from the
+  generated project; it now lives in the separate agent-copier-template
+  Copier template (`gh:lanshark/agent-copier-template`), which works on any
+  project. Removed `AGENTS.md`, `CLAUDE.md`,
+  `docs/vision.md`, `docs/adr/`, `features/` (`_template/` and
+  `ai-driven-development/`), the `.agents/skills` and `.claude/skills`
+  symlinks, the `new-feature` recipe from all four Makefile/Justfile
+  variants, and `_preserve_symlinks` from `copier.yml`.
+  `docs/architecture.md` keeps its Django content but drops the AI layout
+  entries and the Development Flow, Feature Folder Convention, and ADR
+  Convention sections in favour of agent-copier-template's
+  `docs/ai/workflow.md`.
+  Module-level `AGENTS.md` files are unchanged. Projects already generated
+  from this template should apply agent-copier-template **before** running
+  `copier update`, otherwise the update deletes their unmodified root
+  `AGENTS.md`, `CLAUDE.md`, and feature scaffolding. README now documents
+  pairing the two templates.
+
 ## 2026-11-02: Release-2026.11.02.01
 
 - Add a `use_mkdocs` question (default `false`, no `project_type`

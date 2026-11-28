@@ -6,7 +6,7 @@
 
 Early development. This document is the source of truth for architecture and
 conventions in {{ project_name }}. Update it as durable decisions are made, and
-capture the reasoning in a feature-scoped ADR.
+capture the reasoning in an ADR.
 
 ## Architecture Principles
 
@@ -226,12 +226,8 @@ capture the reasoning in a feature-scoped ADR.
 {% if project_type == 'full_project' %}
 ```text
 .
-├── AGENTS.md                # how the AI coding agent works here (+ workflow)
-├── CLAUDE.md                # imports AGENTS.md for Claude Code
 ├── docs/
-│   ├── vision.md             # product vision
-│   ├── architecture.md       # this document
-│   └── adr/                  # project-wide architecture decision records
+│   └── architecture.md       # this document
 ├── {{ runner_file }}                 # docker compose + manage.py task wrappers
 ├── manage.py
 ├── pyproject.toml
@@ -286,26 +282,13 @@ capture the reasoning in a feature-scoped ADR.
 │       ├── urls.py
 │       ├── templates/{{ initial_app_name }}/  # base.html + index.html
 │       └── tests/
-├── scripts/
-├── .agents/skills/          # Codex skill symlinks -> features/<slug>
-├── .claude/skills/          # Claude Code skill symlinks -> features/<slug>
-└── features/                # document-first workflow (this scaffold)
-    ├── _template/           # copy (or `{{ runner_cmd }} new-feature`) to start a feature
-    │   ├── feature.md        # current normative state
-    │   ├── SKILL.md          # feature-specific agent guidance
-    │   ├── history.md        # append-only prompt/impl/verification log
-    │   └── adr/
-    └── ai-driven-development/
+└── scripts/
 ```
 {% else %}
 ```text
 .
-├── AGENTS.md                # how the AI coding agent works here (+ workflow)
-├── CLAUDE.md                # imports AGENTS.md for Claude Code
 ├── docs/
-│   ├── vision.md             # product vision
-│   ├── architecture.md       # this document
-│   └── adr/                  # project-wide architecture decision records
+│   └── architecture.md       # this document
 ├── {{ runner_file }}                 # uv dev + packaging task wrappers
 ├── pyproject.toml           # hatchling build; deps; tool config
 ├── src/
@@ -321,33 +304,26 @@ capture the reasoning in a feature-scoped ADR.
 │       ├── migrations/
 │       └── py.typed
 ├── tests/                   # pytest-django settings + tests (sqlite)
-├── example/                 # runnable project that installs this app
-├── .agents/skills/          # Codex skill symlinks -> features/<slug>
-├── .claude/skills/          # Claude Code skill symlinks -> features/<slug>
-└── features/                # document-first workflow (this scaffold)
-    ├── _template/           # copy (or `{{ runner_cmd }} new-feature`) to start a feature
-    │   ├── feature.md        # current normative state
-    │   ├── SKILL.md          # feature-specific agent guidance
-    │   ├── history.md        # append-only prompt/impl/verification log
-    │   └── adr/
-    └── ai-driven-development/
+└── example/                 # runnable project that installs this app
 ```
 {% endif %}
 
+Applying agent-copier-template (a separate Copier template) adds the
+AI development workflow on top of this layout: `AGENTS.md`, `CLAUDE.md`,
+`docs/vision.md`, `docs/adr/`, `docs/ai/`, `features/`, and the
+`.agents/skills/` / `.claude/skills/` symlinks.
+
 ## Development Flow
 
-1. Read `AGENTS.md`, `docs/vision.md`, and `docs/architecture.md`.
-2. Select or create the relevant `features/<feature-slug>/` folder (from `features/_template/`).
-3. Record the modifying prompt in `features/<feature-slug>/feature.md`.
-4. Update requirements, acceptance criteria, and open questions.
-5. Add or update ADRs for architectural choices.
-6. Implement only what the documents specify.
-7. Validate with focused tests or checks (`{{ runner_cmd }} test`, `{{ runner_cmd }} lint`, `{{ runner_cmd }} typecheck`).
-8. Record implementation and verification notes in the feature document.
+When agent-copier-template is applied, the development flow, feature folder
+convention, and ADR convention are defined in `docs/ai/workflow.md`. Validate
+changes with `{{ runner_cmd }} test`, `{{ runner_cmd }} lint`, and
+`{{ runner_cmd }} typecheck`.
 
 ## Conventions
 
-- Python style, formatting, and code-change behavior are defined in `AGENTS.md`.
+- Agent working rules and Python style come from agent-copier-template
+  (`AGENTS.md`, `docs/ai/`) when it is applied.
 - Lint with ruff, lint and format Django templates with djlint, and type-check
   with pyright; all must stay clean.
 - Test with pytest (`pytest-django`); keep tests close to the app they cover.
@@ -358,46 +334,15 @@ capture the reasoning in a feature-scoped ADR.
 - Run tasks through the `{{ runner_file }}` targets (`{{ runner_cmd }} test`, `{{ runner_cmd }} lint`, `{{ runner_cmd }} build`, …).
 - Ship migrations with the package; keep the public import surface stable and typed (`py.typed`).
 {% endif %}
-
-## Feature Folder Convention
-
-Each feature folder contains:
-
-- `feature.md`: current normative state — purpose, requirements, acceptance criteria, constraints.
-- `SKILL.md`: instructions the AI coding agent follows when changing the feature; discoverable via `.agents/skills/` (Codex) and `.claude/skills/` (Claude Code).
-- `history.md`: append-only prompt log, implementation summaries, and verification results.
-- `adr/`: feature-scoped architecture decision records.
-
-Create a new feature with
-`{{ 'make new-feature name=<slug>' if task_runner == 'makefile'
-    else 'just new-feature <slug>' }}`, which copies `_template/` and adds both skill
-symlinks.
-
-## ADR Convention
-
-Use an ADR when a choice has durable consequences: runtime/framework/library/storage
-choices, data-model or API-contract decisions, security or privacy decisions,
-cross-feature abstractions, or significant tradeoffs. Each ADR records Title, Status,
-Date, Context, Decision, Consequences, and Alternatives Considered.
-
-ADRs live in one of two places, depending on scope:
-
-- `docs/adr/`: project-wide decisions that span multiple features or the whole
-  project (for example, runtime/framework choices, cross-cutting infrastructure,
-  or project-wide security/privacy posture).
-- `features/<feature-slug>/adr/`: decisions confined to that feature.
-
-ADR numbering is independent per folder — each `adr/` folder starts its own
-`0001-...` sequence.
 {% if use_mkdocs %}
 
 ## Documentation Site
 
-`docs/vision.md`, `docs/architecture.md`, and everything under `docs/adr/`
-are also built into a browsable site with MkDocs (`mkdocs.yml`, no explicit
-`nav:` — new ADRs show up automatically). `{{ runner_cmd }} docs-serve` runs
-it locally with live reload; `{{ runner_cmd }} docs-build` builds the static
-site into `site/` (gitignored).
+Everything under `docs/` (including `docs/vision.md` and `docs/adr/` when
+agent-copier-template is applied) is also built into a browsable site with MkDocs
+(`mkdocs.yml`, no explicit `nav:` — new ADRs show up automatically).
+`{{ runner_cmd }} docs-serve` runs it locally with live reload;
+`{{ runner_cmd }} docs-build` builds the static site into `site/` (gitignored).
 {% endif %}
 
 ## Open Architecture Questions
