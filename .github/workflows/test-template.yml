@@ -419,3 +419,18 @@ jobs:
               if: matrix.name == 'app-mkdocs'
               working-directory: ${{ github.workspace }}/../rendered-${{ matrix.name }}
               run: uv run mkdocs build --strict
+
+    # Single required status check for the "Main" ruleset: passes only if every
+    # matrix job above passed, so matrix entries can change without editing the
+    # ruleset.
+    all-checks:
+        if: always()
+        needs: [render-and-test, render-and-test-app]
+        runs-on: ubuntu-latest
+        steps:
+            - name: Require every matrix job to pass
+              run: |
+                  echo "render-and-test: ${{ needs.render-and-test.result }}"
+                  echo "render-and-test-app: ${{ needs.render-and-test-app.result }}"
+                  test "${{ needs.render-and-test.result }}" = "success"
+                  test "${{ needs.render-and-test-app.result }}" = "success"
