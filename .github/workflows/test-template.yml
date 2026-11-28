@@ -145,6 +145,10 @@ jobs:
                   uv tool run copier copy --defaults --force ${{ matrix.extra_args }}
                   "${{ github.workspace }}" "${{ github.workspace }}/../rendered-${{ matrix.name }}"
 
+            - name: Check answers file (copier update support)
+              working-directory: ${{ github.workspace }}/../rendered-${{ matrix.name }}
+              run: grep -q "^_src_path:" .copier-answers.yml
+
             - name: Write .env for rendered project
               working-directory: ${{ github.workspace }}/../rendered-${{ matrix.name }}
               run: |
@@ -347,6 +351,10 @@ jobs:
               run: >
                   uv tool run copier copy --defaults --force ${{ matrix.extra_args }}
                   "${{ github.workspace }}" "${{ github.workspace }}/../rendered-${{ matrix.name }}"
+
+            - name: Check answers file (copier update support)
+              working-directory: ${{ github.workspace }}/../rendered-${{ matrix.name }}
+              run: grep -q "^_src_path:" .copier-answers.yml
 
             - name: Install rendered app deps
               working-directory: ${{ github.workspace }}/../rendered-${{ matrix.name }}

@@ -4,6 +4,14 @@ All notable changes to this project are documented in this file.
 
 ## Next Release
 
+- Fix `copier update` for generated projects: the template now renders a
+  `.copier-answers.yml` (`template/{{ _copier_conf.answers_file }}.jinja`)
+  recording the template source, version, and answers. Previously no
+  answers file was written, so `copier update` could not run on any
+  generated project. Projects generated before this release need the file
+  created by hand once (see README, "Updating an existing generated
+  project"). New CI step asserts every rendered project has the file.
+
 ## 2026-11-28: Release-2026.11.28.01
 
 - **Breaking:** remove the document-first AI-development scaffold from the
