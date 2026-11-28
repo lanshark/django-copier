@@ -4,6 +4,8 @@ All notable changes to this project are documented in this file.
 
 ## Next Release
 
+## 2026-11-28: Release-2026.11.28.03
+
 - Add an `all-checks` job to this repo's `test-template.yml` that depends
   on both matrix jobs (`render-and-test`, `render-and-test-app`) and fails
   unless every matrix entry succeeded. It is the single required status
